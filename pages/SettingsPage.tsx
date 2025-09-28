@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { GeminiLogo, StripeLogo, SupabaseLogo, GithubIcon } from '../components/icons';
+import { GeminiLogo, StripeLogo, SupabaseLogo, GithubIcon, SparklesIcon } from '../components/icons';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -17,6 +17,7 @@ export const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
   const [localSettings, setLocalSettings] = useState<Settings>(settings);
   const [saved, setSaved] = useState(false);
+  const [isPro, setIsPro] = useLocalStorage<boolean>('silo-build-is-pro', false);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -180,6 +181,53 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
           </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <SparklesIcon className="h-6 w-6 text-yellow-400" />
+            <h2 className="text-xl font-semibold">Pro Plan</h2>
+            {isPro && (
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2.5 py-0.5 rounded-full text-xs font-bold">
+                PRO
+              </span>
+            )}
+          </div>
+          {isPro ? (
+            <div>
+              <p className="text-sm text-gray-400 mb-4">
+                Thank you for your support! Your Pro badge is now active on your profile.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsPro(false)}
+                className="bg-white/10 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-white/20 transition-colors"
+              >
+                Deactivate Pro Badge
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-gray-400 mb-4">
+                Support the development of Silo Build and get a "PRO" badge next to your name.
+              </p>
+              <a
+                href="https://pay.digitalfemsa.io/link/3dfd409c47a041e9bdc310578db6a91e"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-yellow-500 text-black px-6 py-2 rounded-md font-bold hover:bg-yellow-600 transition-colors"
+              >
+                Upgrade to Pro
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsPro(true)}
+                className="ml-4 text-xs text-gray-400 hover:text-white underline"
+              >
+                Already upgraded? Activate badge.
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
