@@ -18,11 +18,16 @@ const FloatingIcon: React.FC<{ icon: React.ReactNode; className: string }> = ({ 
 );
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
-    <div className="bg-white/5 p-6 rounded-lg border border-white/10 transition-all duration-300 hover:border-white/20 hover:bg-white/10">
-        {/* FIX: Correctly type the cloned element to allow passing a className prop, resolving a TypeScript error. */}
-        <div className="text-blue-400 mb-4">{React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-8 h-8' })}</div>
-        <h4 className="text-lg font-bold mb-2 text-white">{title}</h4>
-        <p className="text-gray-400 text-sm">{description}</p>
+    <div className="relative p-6 rounded-xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[.07] hover:-translate-y-1">
+        <div className="flex items-start gap-4">
+             <div className="flex-shrink-0 bg-black/30 p-3 rounded-lg border border-white/10">
+                 {React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-6 h-6 text-blue-400' })}
+             </div>
+             <div>
+                <h4 className="text-lg font-bold text-white">{title}</h4>
+                <p className="text-gray-400 text-sm mt-1">{description}</p>
+             </div>
+        </div>
     </div>
 );
 
@@ -266,18 +271,18 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
             
-            <section id="features" className="py-20 bg-white/5 border-y border-white/10">
+            <section id="features" className="py-20 bg-black border-y border-white/10">
                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-16">
                         <h3 className="text-4xl font-bold">A New Way to Build Software</h3>
-                        <p className="text-gray-400 mt-2">Everything you need to go from concept to code, powered by AI.</p>
+                        <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Everything you need to go from concept to code, powered by AI.</p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        <FeatureCard icon={<CodeIcon />} title="AI-Powered Generation" description="Just describe the app you want, and watch as the AI scaffolds a complete multi-file React application with TypeScript." />
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                        <FeatureCard icon={<SparklesIcon />} title="AI-Powered Generation" description="Just describe the app you want, and watch as the AI scaffolds a complete multi-file React application with TypeScript." />
                         <FeatureCard icon={<ChatIcon />} title="Conversational Refinement" description="Your app isn't static. Chat with the AI to make changes, add features, or fix bugs, iterating as you go." />
                         <FeatureCard icon={<LayoutIcon />} title="Live Code & Preview" description="See your generated code and a live, interactive preview of your app side-by-side, updating in real-time." />
                         <FeatureCard icon={<MobileIcon />} title="PWA-Ready by Default" description="Every app is generated as a Progressive Web App, complete with a manifest and service worker for offline capabilities." />
-                        <FeatureCard icon={<DownloadIcon />} title="Full Project Download" description="Receive a complete project with a logical file structure. Download a ZIP file, `npm install`, and you're ready to run locally." />
+                        <FeatureCard icon={<DownloadIcon />} title="Full Project Download" description="Receive a complete project with a logical file structure. Download a ZIP file and you're ready to run locally." />
                         <FeatureCard icon={<DatabaseIcon />} title="Service Integrations" description="The AI can automatically integrate with services like Supabase and Stripe if you provide your keys, wiring them up for you." />
                     </div>
                 </div>
