@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Spinner } from './Spinner';
 
 interface PublishFormProps {
   onPublish: (token: string) => void;
   initialToken?: string;
+  isDeploying: boolean;
 }
 
-export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToken = '' }) => {
+export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToken = '', isDeploying }) => {
   const [token, setToken] = useState(initialToken);
 
   useEffect(() => {
@@ -19,10 +21,10 @@ export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToke
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+    <div className="flex flex-col items-center justify-center p-8 text-center">
       <h3 className="text-2xl font-bold mb-2">Publish to Vercel</h3>
       <p className="text-gray-400 mb-6 max-w-sm">
-        Enter your Vercel Access Token to deploy your application. This is a simulation.
+        Enter your Vercel Access Token to create a new deployment.
       </p>
       <form onSubmit={handleSubmit} className="w-full max-w-sm">
         <input
@@ -34,10 +36,10 @@ export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToke
         />
         <button
           type="submit"
-          disabled={!token.trim()}
-          className="w-full bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+          disabled={!token.trim() || isDeploying}
+          className="w-full bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          Publish
+          {isDeploying ? <Spinner className="w-5 h-5 text-black" /> : 'Publish'}
         </button>
       </form>
     </div>

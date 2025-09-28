@@ -214,6 +214,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onFileUpdate={handleFileUpdate}
             onFileDelete={handleFileDelete}
             onFileAdd={handleFileAdd}
+            projectName={currentProject?.name}
           />
         );
       case 'CODE':
@@ -226,7 +227,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           />
         );
       case 'PREVIEW':
-        return <PreviewView file={previewFile} vercelToken={settings.vercelApiKey} />;
+        return <PreviewView 
+          file={previewFile} 
+          vercelToken={settings.vercelApiKey}
+          multiFileCode={multiFileCode}
+          projectName={currentProject?.name}
+        />;
       default:
         return null;
     }

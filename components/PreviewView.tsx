@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { GeneratedFile } from '../types';
 import { PublishForm } from './PublishForm';
-import { EyeIcon } from './icons';
+import { Spinner } from './Spinner';
 
 interface Deployment {
   url: string;
   timestamp: Date;
-  content: string; // Snapshot of the preview file content
+}
+
+interface PreviewViewProps {
+  file: GeneratedFile | null;
+  vercelToken: string;
+  multiFileCode: GeneratedFile[];
+  projectName?: string;
 }
 
 const timeAgo = (date: Date): string => {
@@ -25,96 +31,135 @@ const timeAgo = (date: Date): string => {
   return Math.floor(seconds) + " seconds ago";
 };
 
-export const PreviewView: React.FC<{ file: GeneratedFile | null, vercelToken: string }> = ({ file, vercelToken }) => {
+export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, multiFileCode, projectName }) => {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
-  const [activeDeployment, setActiveDeployment] = useState<Deployment | null>(null);
-  const [iframeKey, setIframeKey] = useState(0);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentError, setDeploymentError] = useState<string | null>(null);
 
   useEffect(() => {
-    // When the underlying file changes, it's a new "version", so clear old deployments.
+    // When the underlying code changes, it's a new "version", so clear old deployments.
     setDeployments([]);
-    setActiveDeployment(null);
-    setIframeKey(prev => prev + 1);
-  }, [file]);
+  }, [multiFileCode]);
 
-  const handlePublish = (token: string) => {
-    if (token && file) {
-      const randomName = Math.random().toString(36).substring(2, 10);
+  const handleDeploy = async (token: string) => {
+    if (!token || multiFileCode.length === 0) {
+      setDeploymentError("Vercel token is missing or there are no files to deploy.");
+      return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentError(null);
+
+    try {
+      const filesForApi = multiFileCode.map(({ path, content }) => ({
+        file: path,
+        data: content,
+      }));
+
+      const sanitizedProjectName = (projectName || 'ai-builder-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+
+      filesForApi.push({
+        file: 'package.json',
+        data: JSON.stringify({
+          name: sanitizedProjectName,
+          version: '0.1.0',
+          private: true,
+        }),
+      });
+
+      const response = await fetch('https://api.vercel.com/v13/deployments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: sanitizedProjectName,
+          files: filesForApi,
+          projectSettings: {
+            framework: null, // Let Vercel auto-detect
+          },
+          target: 'production',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
+      }
+
       const newDeployment: Deployment = {
-        url: `https://${randomName}.vercel.app`,
+        url: `https://${result.url}`,
         timestamp: new Date(),
-        content: file.content, // Create a snapshot of the content
       };
       setDeployments(prev => [newDeployment, ...prev]);
-      setActiveDeployment(newDeployment);
+
+    } catch (error) {
+      console.error("Vercel deployment failed:", error);
+      const message = error instanceof Error ? error.message : "An unknown error occurred during deployment.";
+      setDeploymentError(`Deployment failed: ${message}`);
+    } finally {
+      setIsDeploying(false);
     }
   };
 
-  if (!file) {
-    return (
-      <div className="h-full flex items-center justify-center text-gray-500 bg-gray-900">
-        <p>No preview available yet. Generate an app first.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4">
-      <div className="w-full h-full aspect-[16/9] max-h-full bg-black border border-white/10 rounded-lg shadow-lg overflow-hidden flex flex-col">
-        {activeDeployment ? (
-          <>
-            <div className="flex items-center justify-between py-2 px-4 bg-gray-900 border-b border-white/10 text-sm flex-shrink-0">
-              <a href={activeDeployment.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate font-mono">
-                {activeDeployment.url}
-              </a>
-              <button
-                onClick={() => setActiveDeployment(null)}
-                className="text-gray-300 hover:text-white font-semibold text-xs py-1 px-3 rounded-full hover:bg-white/10 transition-colors"
-              >
-                Close Preview
-              </button>
-            </div>
-            <iframe
-              key={`${iframeKey}-${activeDeployment.url}`}
-              srcDoc={activeDeployment.content}
-              title="App Preview"
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin"
-            />
-          </>
+    <div className="w-full h-full bg-gray-900 flex flex-col p-4 gap-4">
+      <div className="flex-1 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden">
+        <div className="p-2 bg-gray-950/50 border-b border-white/10 flex-shrink-0">
+          <h3 className="text-sm font-semibold text-gray-200">Live Preview</h3>
+        </div>
+        {file ? (
+          <iframe
+            key={file.content} // Re-mount iframe on content change
+            srcDoc={file.content}
+            title="Live App Preview"
+            className="w-full h-full border-0 bg-white"
+            sandbox="allow-scripts allow-same-origin"
+          />
         ) : (
-          <div className="w-full h-full flex flex-col overflow-hidden">
-            <PublishForm onPublish={handlePublish} initialToken={vercelToken} />
-            {deployments.length > 0 && (
-              <div className="flex-1 p-8 pt-0 overflow-y-auto">
-                <div className="border-t border-white/20 pt-6">
-                  <h4 className="text-lg font-semibold mb-4 text-center text-gray-200">Deployments for this version</h4>
-                  <ul className="space-y-3 max-w-lg mx-auto">
-                    {deployments.map((dep) => (
-                      <li key={dep.url} className="bg-white/5 border border-white/10 rounded-md p-3 flex justify-between items-center text-sm">
-                        <div>
-                          <a href={dep.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-mono">
-                            {dep.url.replace('https://', '')}
-                          </a>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {timeAgo(dep.timestamp)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setActiveDeployment(dep)}
-                          className="bg-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-blue-600 flex items-center gap-1.5 transition-colors"
-                        >
-                          <EyeIcon className="w-4 h-4" />
-                          Preview
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
+          <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-900 p-4 text-center">
+            <p>No preview available yet. Generate an app first.</p>
           </div>
         )}
+      </div>
+
+      <div className="h-1/2 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-y-auto">
+          <PublishForm onPublish={handleDeploy} initialToken={vercelToken} isDeploying={isDeploying} />
+          {deploymentError && <p className="text-red-400 text-center text-sm px-4 pb-4 -mt-4">{deploymentError}</p>}
+          
+          {deployments.length > 0 && (
+            <div className="flex-1 px-8 pb-8 pt-0 overflow-y-auto">
+              <div className="border-t border-white/20 pt-6">
+                <h4 className="text-base font-semibold mb-4 text-center text-gray-200">Deployments for this version</h4>
+                <ul className="space-y-3 max-w-lg mx-auto">
+                  {deployments.map((dep) => (
+                    <li key={dep.url} className="bg-white/5 border border-white/10 rounded-md p-3 flex justify-between items-center text-sm">
+                      <div>
+                        <a href={dep.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-mono truncate">
+                          {dep.url}
+                        </a>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {timeAgo(dep.timestamp)}
+                        </p>
+                      </div>
+                      <a
+                        href={dep.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white/10 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-white/20 transition-colors"
+                      >
+                        Open
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

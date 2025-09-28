@@ -87,14 +87,13 @@ export const LoginPage: React.FC = () => {
                         {user ? (
                             <form onSubmit={handlePromptSubmit} className="w-full max-w-2xl mx-auto">
                                 <div className="relative">
-                                    <input
-                                        type="text"
+                                    <textarea
                                         value={prompt}
                                         onChange={(e) => setPrompt(e.target.value)}
-                                        placeholder="e.g., a pomodoro timer with a clean, minimalist interface"
-                                        className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl p-4 pr-16 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                                        placeholder="e.g., a pomodoro timer with a clean, minimalist interface and a task list..."
+                                        className="w-full h-32 resize-none bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl p-4 pr-16 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
                                     />
-                                    <button type="submit" disabled={!prompt.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white rounded-md p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                    <button type="submit" disabled={!prompt.trim()} className="absolute top-4 right-4 bg-blue-500 text-white rounded-md p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed">
                                         <SendIcon />
                                     </button>
                                 </div>
