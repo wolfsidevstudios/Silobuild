@@ -45,12 +45,15 @@ export const generateAppStream = (
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = settings.geminiApiKey || process.env.API_KEY;
+      if (!apiKey) {
+        reject(new Error("Gemini API key is not configured. Please add it in the Settings page."));
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = createSystemInstruction(settings);
       
-      // By combining the system instruction with the user prompt, we ensure that the model
-      // receives all context in a single block, which can resolve potential issues with
-      // streaming responses while still adhering to API key usage guidelines.
       const fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
 
       const responseStream = await ai.models.generateContentStream({
@@ -99,7 +102,7 @@ export const generateAppStream = (
     } catch (error) {
       console.error("Error calling Gemini API:", error);
       if (error instanceof Error && error.message.includes('API key not valid')) {
-          reject(new Error("The configured Gemini API key is invalid. Please check your environment configuration."));
+          reject(new Error("The configured Gemini API key is invalid. Please check it in the Settings page or your environment configuration."));
       } else {
           const detailedError = error instanceof Error ? error.message : String(error);
           reject(new Error(`Failed to get a valid response from the AI model. Please check your prompt and API key. Details: ${detailedError}`));

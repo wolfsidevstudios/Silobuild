@@ -9,8 +9,8 @@ import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings } from
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-// FIX: `geminiApiKey` is removed from settings per guidelines.
 const initialSettings: Settings = {
+  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
@@ -54,9 +54,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
-
-    // FIX: Removed check for user-provided Gemini API key. The key is now sourced
-    // from environment variables per coding guidelines.
 
     const userMessage: ChatMessage = { role: 'user', content: prompt };
     setMessages(prev => [...prev, userMessage]);

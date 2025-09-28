@@ -20,7 +20,7 @@ export interface Project {
 }
 
 export interface Settings {
-  // Note: geminiApiKey is removed as per guidelines to use process.env.API_KEY
+  geminiApiKey: string;
   vercelApiKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;

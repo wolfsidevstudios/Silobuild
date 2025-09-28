@@ -78,6 +78,13 @@ export const SettingsIcon = ({ className = 'w-5 h-5' }) => (
   </svg>
 );
 
+export const GeminiLogo = ({ className = 'h-6' }) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" color="#8e83f3">
+        <title>Gemini</title>
+        <path d="M12.003 24C5.37 24 0 18.623 0 11.996 0 5.375 5.37 0 12.003 0c6.63 0 11.998 5.375 11.998 11.996 0 6.627-5.368 12.004-11.998 12.004zM12.003 1.13c-6.002 0-10.87 4.868-10.87 10.866 0 6.005 4.868 10.87 10.87 10.87 6.002 0 10.87-4.865 10.87-10.87 0-5.998-4.868-10.866-10.87-10.866zm-5.02 14.532h10.04V14.15H6.983v1.512zm2.008-3.023h8.032V11.13H8.99v1.51zm0-3.023h8.032V8.106H8.99v1.512z"/>
+    </svg>
+);
+
 export const SupabaseLogo = ({ className = 'h-6' }) => (
     <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" color="#3ecf8e">
         <title>Supabase</title>

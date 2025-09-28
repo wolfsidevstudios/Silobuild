@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { StripeLogo, SupabaseLogo } from '../components/icons';
+import { GeminiLogo, StripeLogo, SupabaseLogo } from '../components/icons';
 
 const initialSettings: Settings = {
+  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
@@ -37,6 +38,29 @@ export const SettingsPage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6">Settings</h1>
       
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
+        
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <GeminiLogo />
+            <h2 className="text-xl font-semibold">Gemini API</h2>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Your Google AI Gemini API Key. This is stored in your browser's local storage and is required to generate applications.
+          </p>
+          <div>
+            <label htmlFor="geminiApiKey" className="block text-sm font-medium text-gray-300 mb-1">
+              Gemini API Key
+            </label>
+            <input
+              type="password"
+              id="geminiApiKey"
+              name="geminiApiKey"
+              value={localSettings.geminiApiKey}
+              onChange={handleInputChange}
+              className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
         
         <div className="bg-white/5 border border-white/10 rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Vercel</h2>
