@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatMessage, GeneratedFile, ViewMode, TechStack } from '../types';
+import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment } from '../types';
 import { CodeIcon, EyeIcon, CheckIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
@@ -25,6 +25,8 @@ interface ChatViewProps {
   showStackSelector: boolean;
   onSelectStack: (stack: TechStack) => void;
   onToggleMacPreview: () => void;
+  deployments: Deployment[];
+  onNewDeployment: (deployment: Deployment) => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -101,7 +103,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   projectName,
   showStackSelector,
   onSelectStack,
-  onToggleMacPreview
+  onToggleMacPreview,
+  deployments,
+  onNewDeployment,
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
@@ -174,6 +178,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   multiFileCode={multiFileCode}
                   projectName={projectName}
                   onToggleMacPreview={onToggleMacPreview}
+                  deployments={deployments}
+                  onNewDeployment={onNewDeployment}
                 />
             )}
             </div>

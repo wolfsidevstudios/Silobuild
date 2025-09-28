@@ -5,7 +5,7 @@ import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -44,6 +44,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [techStack, setTechStack] = useState<TechStack | null>(null);
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
 
 
   const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack) => {
@@ -89,6 +90,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       // Handle app generation/editing
       setGenerationPlan([]);
       setGeneratedFilesProgress([]);
+      // Clear old deployments for a new generation
+      if (!isGenerated) {
+        setDeployments([]);
+      }
 
       const isEdit = isGenerated;
       const filesForContext = isEdit ? multiFileCode : undefined;
@@ -151,6 +156,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
         setTechStack(project.stack || 'react'); // Default old projects to react
+        setDeployments(project.deployments || []);
       }
     } else {
         // This is a new project. Reset everything.
@@ -160,6 +166,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setMessages([]);
         setIsGenerated(false);
         setTechStack(null);
+        setDeployments([]);
 
         const promptFromStorage = sessionStorage.getItem('initialPrompt');
         if (promptFromStorage) {
@@ -189,7 +196,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         createdAt: currentProject?.createdAt || new Date().toISOString(),
         files: multiFileCode,
         previewFile: previewFile,
-        stack: techStack
+        stack: techStack,
+        deployments: deployments
       };
 
       if (currentProject) {
@@ -226,6 +234,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     return true;
   };
 
+  const handleNewDeployment = (deployment: Deployment) => {
+    // Add new deployment to the front, replacing any previous one with the same URL
+    setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
+    setIsGenerated(true); // Enable save button if a deployment is made
+  };
+
+
   const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
 
   const renderContent = () => {
@@ -251,6 +266,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             showStackSelector={showStackSelector}
             onSelectStack={handleSelectStack}
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
+            deployments={deployments}
+            onNewDeployment={handleNewDeployment}
           />
         );
       case 'CODE':
@@ -269,6 +286,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           multiFileCode={multiFileCode}
           projectName={currentProject?.name}
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
+          deployments={deployments}
+          onNewDeployment={handleNewDeployment}
         />;
       default:
         return null;

@@ -22,7 +22,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToke
 
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center">
-      <h3 className="text-2xl font-bold mb-2">Publish to Vercel</h3>
+      <h3 className="text-2xl font-bold mb-2">Deploy to Vercel</h3>
       <p className="text-gray-400 mb-6 max-w-sm">
         Enter your Vercel Access Token to create a new deployment.
       </p>
@@ -39,7 +39,7 @@ export const PublishForm: React.FC<PublishFormProps> = ({ onPublish, initialToke
           disabled={!token.trim() || isDeploying}
           className="w-full bg-white text-black px-6 py-3 rounded-md font-semibold hover:bg-gray-200 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          {isDeploying ? <Spinner className="w-5 h-5 text-black" /> : 'Publish'}
+          {isDeploying ? <Spinner className="w-5 h-5 text-black" /> : 'Deploy to Vercel'}
         </button>
       </form>
     </div>

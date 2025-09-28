@@ -1,13 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { GeneratedFile } from '../types';
+import React, { useState } from 'react';
+import { GeneratedFile, Deployment } from '../types';
 import { PublishForm } from './PublishForm';
-import { Spinner } from './Spinner';
 import { DesktopIcon } from './icons';
-
-interface Deployment {
-  url: string;
-  timestamp: Date;
-}
 
 interface PreviewViewProps {
   file: GeneratedFile | null;
@@ -15,9 +9,12 @@ interface PreviewViewProps {
   multiFileCode: GeneratedFile[];
   projectName?: string;
   onToggleMacPreview: () => void;
+  deployments: Deployment[];
+  onNewDeployment: (deployment: Deployment) => void;
 }
 
-const timeAgo = (date: Date): string => {
+const timeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
   let interval = seconds / 31536000;
   if (interval > 1) return Math.floor(interval) + " years ago";
@@ -33,15 +30,17 @@ const timeAgo = (date: Date): string => {
   return Math.floor(seconds) + " seconds ago";
 };
 
-export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, multiFileCode, projectName, onToggleMacPreview }) => {
-  const [deployments, setDeployments] = useState<Deployment[]>([]);
+export const PreviewView: React.FC<PreviewViewProps> = ({ 
+  file, 
+  vercelToken, 
+  multiFileCode, 
+  projectName, 
+  onToggleMacPreview,
+  deployments,
+  onNewDeployment
+}) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // When the underlying code changes, it's a new "version", so clear old deployments.
-    setDeployments([]);
-  }, [multiFileCode]);
 
   const handleDeploy = async (token: string) => {
     if (!token || multiFileCode.length === 0) {
@@ -93,9 +92,9 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
 
       const newDeployment: Deployment = {
         url: `https://${result.url}`,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
       };
-      setDeployments(prev => [newDeployment, ...prev]);
+      onNewDeployment(newDeployment);
 
     } catch (error) {
       console.error("Vercel deployment failed:", error);
@@ -106,11 +105,25 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
     }
   };
 
+  const latestDeployment = deployments.length > 0 ? deployments[0] : null;
+
   return (
-    <div className="w-full h-full bg-gray-900 flex flex-col p-4 gap-4">
-      <div className="flex-1 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden relative">
-        <div className="p-2 bg-gray-950/50 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-sm font-semibold text-gray-200">Live Preview</h3>
+    <div className="w-full h-full bg-gray-900 flex flex-col overflow-y-auto p-4 gap-4">
+      {/* PREVIEW FRAME */}
+      <div className="flex-shrink-0 h-[55vh] min-h-[400px] flex flex-col border border-white/10 rounded-lg overflow-hidden relative">
+        <div className="p-2 bg-gray-950/50 border-b border-white/10 flex items-center justify-between flex-shrink-0 gap-2">
+            <div className="flex-1 min-w-0">
+                 {latestDeployment ? (
+                    <div className="bg-black/30 rounded-full px-3 py-1 flex items-center gap-2">
+                        <span className="text-green-400 text-xs font-bold flex-shrink-0">LIVE AT</span>
+                        <a href={latestDeployment.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline font-mono text-xs truncate">
+                            {latestDeployment.url}
+                        </a>
+                    </div>
+                 ) : (
+                    <h3 className="text-sm font-semibold text-gray-200">Live Preview</h3>
+                 )}
+            </div>
         </div>
         {file ? (
           <iframe
@@ -140,15 +153,15 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
         )}
       </div>
 
-      <div className="h-1/2 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-y-auto">
+      {/* DEPLOYMENT AREA */}
+      <div className="flex-shrink-0 flex flex-col border border-white/10 rounded-lg overflow-hidden">
           <PublishForm onPublish={handleDeploy} initialToken={vercelToken} isDeploying={isDeploying} />
           {deploymentError && <p className="text-red-400 text-center text-sm px-4 pb-4 -mt-4">{deploymentError}</p>}
           
           {deployments.length > 0 && (
             <div className="flex-1 px-8 pb-8 pt-0 overflow-y-auto">
               <div className="border-t border-white/20 pt-6">
-                <h4 className="text-base font-semibold mb-4 text-center text-gray-200">Deployments for this version</h4>
+                <h4 className="text-base font-semibold mb-4 text-center text-gray-200">Deployment History</h4>
                 <ul className="space-y-3 max-w-lg mx-auto">
                   {deployments.map((dep) => (
                     <li key={dep.url} className="bg-white/5 border border-white/10 rounded-md p-3 flex justify-between items-center text-sm">
@@ -174,7 +187,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
               </div>
             </div>
           )}
-        </div>
       </div>
     </div>
   );
