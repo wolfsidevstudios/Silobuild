@@ -99,7 +99,15 @@ export const MacPreview: React.FC<MacPreviewProps> = ({
           <span>Window</span>
           <span>Help</span>
         </div>
-        <div>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        <div className="flex items-center gap-4">
+            <button 
+                onClick={onClose} 
+                className="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded text-xs transition-colors"
+            >
+                Return to App
+            </button>
+            <div>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
       </header>
 
       {/* App Window */}
