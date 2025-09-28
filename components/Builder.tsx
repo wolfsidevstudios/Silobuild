@@ -43,8 +43,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isIdeaMode, setIsIdeaMode] = useState(false);
   const [techStack, setTechStack] = useState<TechStack | null>(null);
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
 
-  const handleSend = useCallback(async (prompt: string) => {
+
+  const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack) => {
     if (!prompt.trim()) return;
 
     const userMessage: ChatMessage = { role: 'user', content: prompt };
@@ -52,6 +54,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setIsLoading(true);
     setError(null);
     
+    const stackToUse = stackOverride || techStack;
+
     if (isIdeaMode) {
       // Handle idea generation chat
       setMessages(prev => [...prev, { role: 'model', content: '' }]);
@@ -76,7 +80,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsLoading(false);
       }
     } else {
-      if (!techStack) {
+      if (!stackToUse) {
           setError("Please select a technology stack before generating an app.");
           setIsLoading(false);
           setMessages(prev => prev.slice(0, prev.length -1)); // remove user message
@@ -110,7 +114,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
           }
-        }, techStack, filesForContext, appName, appIcon);
+        }, stackToUse, filesForContext, appName, appIcon);
 
         const modelMessage: ChatMessage = {
           role: 'model',
@@ -157,15 +161,21 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsGenerated(false);
         setTechStack(null);
 
-        const initialPrompt = sessionStorage.getItem('initialPrompt');
-        if (initialPrompt) {
+        const promptFromStorage = sessionStorage.getItem('initialPrompt');
+        if (promptFromStorage) {
+            setInitialPrompt(promptFromStorage);
             sessionStorage.removeItem('initialPrompt');
-            // Can't call handleSend directly, as techStack is not yet set.
-            // We can perhaps show a default stack or prompt the user.
-            // For now, we just reset, and user has to pick stack then paste prompt.
         }
     }
   }, [projectId, projects]);
+
+  const handleSelectStack = (stack: TechStack) => {
+    setTechStack(stack);
+    if (initialPrompt) {
+        handleSend(initialPrompt, stack);
+        setInitialPrompt(null);
+    }
+  };
 
   const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
 
@@ -239,7 +249,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onFileAdd={handleFileAdd}
             projectName={currentProject?.name}
             showStackSelector={showStackSelector}
-            onSelectStack={setTechStack}
+            onSelectStack={handleSelectStack}
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           />
         );

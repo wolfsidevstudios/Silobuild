@@ -3,6 +3,7 @@ import { Sidebar } from '../components/Sidebar';
 import { ProjectsPage } from './ProjectsPage';
 import { DatabasePage } from './DatabasePage';
 import { SettingsPage } from './SettingsPage';
+import { PromptLibraryPage } from './PromptLibraryPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -10,6 +11,9 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
   const renderPage = () => {
+    if (route.startsWith('#/dashboard/prompt-library')) {
+      return <PromptLibraryPage />;
+    }
     if (route.startsWith('#/dashboard/projects')) {
       return <ProjectsPage />;
     }

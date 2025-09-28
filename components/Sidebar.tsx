@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon } from './icons';
 import { UserProfile } from './UserProfile';
 
 const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: string; }> = ({ href, icon, label }) => {
@@ -37,7 +37,7 @@ export const Sidebar: React.FC = () => {
       </div>
        <div className="mb-6 px-2">
         <a 
-          href="#/" 
+          href="#/builder" 
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
         >
             <PlusIcon />
@@ -46,6 +46,7 @@ export const Sidebar: React.FC = () => {
       </div>
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
+        <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
         <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" />
       </nav>
