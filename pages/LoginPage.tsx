@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, BoltIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon } from '../components/icons';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -9,12 +9,6 @@ declare global {
     google: typeof import('google-one-tap');
   }
 }
-
-const FloatingIcon: React.FC<{ icon: React.ReactNode; className: string }> = ({ icon, className }) => (
-    <div className={`absolute hidden md:flex items-center justify-center -z-10 bg-black/20 p-3 rounded-2xl border border-white/10 backdrop-blur-sm shadow-lg ${className}`}>
-        {icon}
-    </div>
-);
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="relative p-6 rounded-xl border border-white/10 bg-white/5 transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[.07] hover:-translate-y-1">
@@ -115,8 +109,8 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-sans overflow-x-hidden">
-        <header className="fixed top-0 left-0 right-0 bg-black/30 backdrop-blur-lg z-20 border-b border-white/10">
+    <div className="bg-gray-950 text-white min-h-screen font-sans overflow-x-hidden">
+        <header className="fixed top-0 left-0 right-0 bg-gray-950/30 backdrop-blur-lg z-20 border-b border-white/10">
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
                 <a href="#/" className="text-xl font-bold">Silo Build</a>
                 {user ? (
@@ -137,29 +131,15 @@ export const LoginPage: React.FC = () => {
 
         <main>
              <section className="pt-32 pb-20 text-center relative overflow-hidden">
-                <div className="absolute inset-0 -z-20 bg-black"></div>
-                 <div 
-                    className="absolute inset-0 -z-10 opacity-50" 
-                    style={{
-                        backgroundImage: 'linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%)',
-                        backgroundSize: '40px 40px',
-                        backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px',
-                    }}
-                ></div>
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_20%,rgba(96,165,250,0.15),rgba(0,0,0,0))]"></div>
-
-                <FloatingIcon icon={<BoltIcon className="w-6 h-6 text-yellow-300" />} className="top-24 left-1/4 transform -translate-x-32" />
-                <FloatingIcon icon={<PaintBrushIcon className="w-6 h-6 text-pink-400" />} className="top-1/2 left-1/4 transform -translate-x-48" />
-                <FloatingIcon icon={<SparklesIcon className="w-6 h-6 text-yellow-300" />} className="bottom-10 left-1/3" />
-                <FloatingIcon icon={<CodeIcon className="w-6 h-6 text-green-400" />} className="top-28 right-1/4 transform translate-x-32" />
-                <FloatingIcon icon={<DatabaseIcon className="w-6 h-6 text-purple-400" />} className="top-2/3 right-1/4 transform translate-x-40" />
+                <div className="absolute inset-0 -z-20 bg-gray-950"></div>
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
 
                 <div className="container mx-auto px-6 relative">
-                    <h2 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 leading-tight">
-                        What can <span className="text-blue-400">Silo Build</span> build for you?
-                    </h2>
+                    <h1 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 leading-tight">
+                        From Prompt to Product, Instantly.
+                    </h1>
                     <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-10">
-                        Build stunning apps and websites by chatting with AI
+                        Describe your app, and let our AI generate production-ready code in seconds. Go from idea to deployed MVP faster than ever before.
                     </p>
                     <div className="flex justify-center">
                         {user ? (
@@ -198,62 +178,50 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="integrations" className="py-20 bg-black border-t border-white/10">
+             <section id="showcase" className="py-20 bg-gray-950 border-y border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
-                        <p className="text-sm font-bold text-blue-400 mb-2">INTEGRATIONS</p>
-                        <h3 className="text-4xl font-bold">Works With Your Favorite Tools</h3>
-                        <p className="text-gray-400 mt-2">The AI can directly use your API keys to build full-stack applications.</p>
+                        <h2 className="text-4xl font-bold">Built with Silo Build</h2>
+                        <p className="text-gray-400 mt-2 max-w-2xl mx-auto">From simple utilities to complex dashboards, generate functional prototypes in minutes.</p>
                     </div>
-                    <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 text-gray-500">
-                        <GeminiLogo className="h-8" />
-                        <GithubIcon className="h-8 w-8 text-white" />
-                        <SupabaseLogo className="h-8" />
-                        <StripeLogo className="h-8 text-white" />
-                        <VercelIcon className="h-7" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="bg-black/30 p-4 rounded-lg border border-white/10">
+                            <div className="aspect-video bg-gray-800 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">Kanban Board</p></div>
+                        </div>
+                        <div className="bg-black/30 p-4 rounded-lg border border-white/10">
+                           <div className="aspect-video bg-gray-800 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">Music Player</p></div>
+                        </div>
+                         <div className="bg-black/30 p-4 rounded-lg border border-white/10">
+                           <div className="aspect-video bg-gray-800 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">SaaS Dashboard</p></div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section id="how-it-works" className="py-20 bg-black">
+
+            <section id="how-it-works" className="py-20 bg-gray-950">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <h3 className="text-4xl font-bold">How It Works</h3>
                         <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Go from prompt to product with a simple, conversational workflow. Build, publish, and iterate all in one place.</p>
                     </div>
-                    <div className="space-y-16 max-w-5xl mx-auto">
-                        {/* Card 1: Build */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
-                            <div className="space-y-4">
-                                <h3 className="text-4xl font-bold text-white">Build</h3>
-                                <p className="text-gray-300">Build apps and websites by chatting with AI. No code required. It really just works.</p>
+                    <div className="relative max-w-5xl mx-auto">
+                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/10 -translate-y-1/2 -z-10"></div>
+                        <div className="grid md:grid-cols-3 gap-16 text-center">
+                            <div className="relative">
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-xl font-bold border-4 border-gray-950">1</div>
+                                <h4 className="text-xl font-bold mt-12">Prompt</h4>
+                                <p className="text-gray-400 mt-2">Describe your app idea in plain English. The more detail, the better.</p>
                             </div>
-                            <div className="rounded-2xl h-64 flex items-center justify-center bg-gradient-to-br from-orange-500 via-red-500 to-yellow-400 p-8">
-                                <div className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg text-gray-700 font-mono text-left">Build me a ...</div>
+                            <div className="relative">
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-xl font-bold border-4 border-gray-950">2</div>
+                                <h4 className="text-xl font-bold mt-12">Generate</h4>
+                                <p className="text-gray-400 mt-2">AI generates the code, file structure, and a live preview in real-time.</p>
                             </div>
-                        </div>
-                        {/* Card 2: Publish */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
-                            <div className="rounded-2xl h-64 flex items-center justify-center bg-gradient-to-br from-teal-400 to-blue-600 p-8 order-last md:order-first">
-                                <button className="bg-white/90 backdrop-blur-sm rounded-lg px-6 py-4 shadow-lg text-gray-800 font-semibold flex items-center gap-2 text-lg">
-                                    <DownloadIcon className="w-6 h-6" />
-                                    Publish
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <h3 className="text-4xl font-bold text-white">Publish</h3>
-                                <p className="text-gray-300">Deploy your apps in 1 click. Use a provided domain or bring your own.</p>
-                            </div>
-                        </div>
-                        {/* Card 3: Iterate */}
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
-                            <div className="space-y-4">
-                                <h3 className="text-4xl font-bold text-white">Iterate</h3>
-                                <p className="text-gray-300">Refine your creation by chatting. Add features, fix bugs, and change styles conversationally.</p>
-                            </div>
-                            <div className="rounded-2xl h-64 flex flex-col gap-3 justify-center bg-gradient-to-br from-purple-500 to-indigo-600 p-8">
-                                <div className="bg-blue-600 text-white rounded-lg p-3 max-w-xs self-end rounded-br-none text-sm">Now add authentication</div>
-                                <div className="bg-gray-700 text-gray-300 rounded-lg p-3 max-w-xs self-start rounded-bl-none text-sm mt-2">Ok, I've added login with Google.</div>
+                            <div className="relative">
+                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-xl font-bold border-4 border-gray-950">3</div>
+                                <h4 className="text-xl font-bold mt-12">Iterate</h4>
+                                <p className="text-gray-400 mt-2">Refine your app by chatting. Add features, fix bugs, and change styles.</p>
                             </div>
                         </div>
                     </div>
@@ -277,7 +245,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-             <section id="for-who" className="py-20 bg-black">
+             <section id="for-who" className="py-20 bg-gray-950">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Built for Modern Builders</h3>
@@ -287,6 +255,23 @@ export const LoginPage: React.FC = () => {
                         <FeatureCard icon={<SparklesIcon />} title="Indie Hackers & Founders" description="Go from idea to MVP in record time. Validate your concepts without writing weeks of boilerplate code." />
                         <FeatureCard icon={<PaintBrushIcon />} title="Designers Who Code" description="Bring your designs to life effortlessly. Describe your UI and get functional React components in seconds." />
                         <FeatureCard icon={<LayoutIcon />} title="Teams & Enterprises" description="Rapidly prototype new features and internal tools. Free up your engineers to focus on complex problems." />
+                    </div>
+                </div>
+            </section>
+
+            <section id="integrations" className="py-20 bg-black border-t border-white/10">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <p className="text-sm font-bold text-blue-400 mb-2">INTEGRATIONS</p>
+                        <h3 className="text-4xl font-bold">Works With Your Favorite Tools</h3>
+                        <p className="text-gray-400 mt-2">The AI can directly use your API keys to build full-stack applications.</p>
+                    </div>
+                    <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 text-gray-500">
+                        <GeminiLogo className="h-8" />
+                        <GithubIcon className="h-8 w-8 text-white" />
+                        <SupabaseLogo className="h-8" />
+                        <StripeLogo className="h-8 text-white" />
+                        <VercelIcon className="h-7" />
                     </div>
                 </div>
             </section>
@@ -320,7 +305,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-             <section id="faq" className="py-20 bg-black">
+             <section id="faq" className="py-20 bg-gray-950">
                 <div className="container mx-auto px-6 max-w-3xl">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>

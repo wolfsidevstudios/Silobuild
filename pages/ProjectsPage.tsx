@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project, GeneratedFile, Team } from '../types';
-import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon, UsersIcon } from '../components/icons';
+import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon, UsersIcon, DotsHorizontalIcon } from '../components/icons';
 import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
-import { downloadProjectAsZip } from '../utils/projectUtils';
+import { downloadProjectAsZip, timeAgo } from '../utils/projectUtils';
 
 const studioBoilerplatePreview: GeneratedFile = {
     path: 'preview.html',
@@ -57,69 +57,85 @@ Welcome to your new project in Silo Build Studio!
 - **Deployment**: When you are ready, you can use the download or deploy features. These features will use all the files in your file explorer, not just the preview.`
 };
 
+const ProjectCardActions: React.FC<{ project: Project; onEdit: () => void; onDelete: () => void; }> = ({ project, onEdit, onDelete }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={menuRef}>
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10">
+                <DotsHorizontalIcon />
+            </button>
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-md shadow-lg z-10">
+                    <div className="py-1">
+                        <a href={`#/project/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                            <SparklesIcon className="w-4 h-4" /> Builder
+                        </a>
+                        <a href={`#/studio/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                            <CodeIcon className="w-4 h-4" /> Studio
+                        </a>
+                        <button onClick={onEdit} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                            <EditIcon className="w-4 h-4" /> Edit
+                        </button>
+                        {project.githubUrl && (
+                            <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                                <GithubIcon className="w-4 h-4" /> View on GitHub
+                            </a>
+                        )}
+                        <button onClick={() => downloadProjectAsZip(project)} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                            <DownloadIcon className="w-4 h-4" /> Download
+                        </button>
+                        <div className="border-t border-white/10 my-1"></div>
+                        <button onClick={onDelete} className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full text-left">
+                            <TrashIcon className="w-4 h-4" /> Delete
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const ProjectCard: React.FC<{ project: Project; onEdit: (project: Project) => void; onDelete: (id: string) => void }> = ({ project, onEdit, onDelete }) => (
-    <div className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-colors">
-      <div>
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10">
-               {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-6 h-6 text-gray-500" />}
-             </div>
-             <div className="min-w-0">
-                <h2 className="text-lg font-semibold truncate">{project.name}</h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
-                    {project.stack === 'html' ? 'HTML' : 'React'}
-                </span>
-             </div>
-          </div>
-           <button 
-              onClick={() => onEdit(project)} 
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex-shrink-0"
-              aria-label="Edit Details"
-          >
-              <EditIcon className="w-4 h-4" />
-          </button>
+    <div className="bg-black/20 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-all duration-300 group hover:shadow-2xl hover:-translate-y-1">
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+            <a href={`#/project/${project.id}`} className="w-12 h-12 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10 group-hover:border-blue-500/50 transition-colors">
+            {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-7 h-7 text-gray-500" />}
+            </a>
+            <div className="min-w-0">
+                <a href={`#/project/${project.id}`} className="text-lg font-semibold truncate hover:text-blue-400 transition-colors">{project.name}</a>
+                <p className="text-sm text-gray-400">
+                    Updated {timeAgo(project.updatedAt || project.createdAt)}
+                </p>
+            </div>
         </div>
-        <p className="text-sm text-gray-400 mb-4">
-          Created on {new Date(project.createdAt).toLocaleDateString()}
-        </p>
+        <ProjectCardActions project={project} onEdit={() => onEdit(project)} onDelete={() => onDelete(project.id)} />
       </div>
-      <div className="flex items-center justify-between mt-4">
+      
+      <div className="flex items-center justify-between mt-2">
          <div className="flex items-center gap-2 text-sm">
-            <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                Builder
-            </a>
-             <a href={`#/studio/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                Studio
-            </a>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300 capitalize">
+                {project.stack}
+            </span>
+            {project.githubUrl && <GithubIcon className="w-4 h-4 text-gray-500" title="Linked to GitHub"/>}
          </div>
-         <div className="flex items-center gap-2">
-            {project.githubUrl && (
-                <a 
-                    href={project.githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
-                    aria-label="View on GitHub"
-                >
-                    <GithubIcon />
-                </a>
-            )}
-            <button 
-                onClick={() => downloadProjectAsZip(project)} 
-                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
-                aria-label="Download Project"
-            >
-                <DownloadIcon />
-            </button>
-            <button 
-                onClick={() => onDelete(project.id)} 
-                className="p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-full"
-                aria-label="Delete Project"
-            >
-                <TrashIcon />
-            </button>
+         <div className="flex items-center gap-2 text-sm">
+            <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-blue-600 transition-colors text-xs font-semibold">
+                Open Builder
+            </a>
          </div>
       </div>
     </div>
@@ -129,6 +145,7 @@ export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const deleteProject = (projectId: string) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
@@ -138,7 +155,7 @@ export const ProjectsPage: React.FC = () => {
   
   const handleUpdateProject = (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
     if (editingProject) {
-        setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined, teamId: teamId || undefined } : p));
+        setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined, teamId: teamId || undefined, updatedAt: new Date().toISOString() } : p));
         setEditingProject(null);
     }
   };
@@ -146,10 +163,12 @@ export const ProjectsPage: React.FC = () => {
   const handleNewStudioProject = () => {
     const name = prompt("Enter a name for your new studio project:", "My Studio App");
     if (name) {
+        const now = new Date().toISOString();
         const newProject: Project = {
             id: Date.now().toString(),
             name,
-            createdAt: new Date().toISOString(),
+            createdAt: now,
+            updatedAt: now,
             files: [studioBoilerplateReadme],
             previewFile: studioBoilerplatePreview,
             stack: 'react', // Default to react for studio
@@ -159,15 +178,19 @@ export const ProjectsPage: React.FC = () => {
         window.location.hash = `#/studio/${newProject.id}`;
     }
   };
+  
+  const filteredProjects = useMemo(() => {
+    return projects.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [projects, searchTerm]);
 
   const { personalProjects, teamProjects } = useMemo(() => {
-    const personal = projects.filter(p => !p.teamId);
+    const personal = filteredProjects.filter(p => !p.teamId);
     const teamBased = teams.map(team => ({
         ...team,
-        projects: projects.filter(p => p.teamId === team.id)
+        projects: filteredProjects.filter(p => p.teamId === team.id)
     })).filter(team => team.projects.length > 0);
     return { personalProjects: personal, teamProjects: teamBased };
-  }, [projects, teams]);
+  }, [filteredProjects, teams]);
 
 
   return (
@@ -185,9 +208,19 @@ export const ProjectsPage: React.FC = () => {
             </button>
         </div>
       </div>
+      
+       <div className="mb-8">
+            <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full max-w-sm bg-black/30 border border-white/10 rounded-lg p-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+        </div>
 
       {projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/5 rounded-lg p-8">
+        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-black/20 rounded-lg p-8">
             <h2 className="text-xl font-semibold mb-2 text-white">No projects yet</h2>
             <p>Create a new project using the AI builder or the code studio.</p>
         </div>

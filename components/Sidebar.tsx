@@ -18,7 +18,7 @@ const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: str
         <a 
             href={href}
             className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                isActive ? 'bg-blue-600/20 text-blue-300' : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
         >
             <div className="flex items-center gap-3">
@@ -35,7 +35,7 @@ export const Sidebar: React.FC = () => {
   const [isBetaMember] = useLocalStorage('isBetaMember', false);
 
   return (
-    <aside className="w-64 bg-white/5 border-r border-white/10 flex flex-col p-4">
+    <aside className="w-64 bg-black/30 border-r border-white/10 flex flex-col p-4">
       <div className="mb-4">
         <a href="#/dashboard" className="flex items-center gap-2 text-white font-bold text-xl px-2">
             Silo Build

@@ -199,10 +199,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     
     setIsSaveModalOpen(false);
 
+    const now = new Date().toISOString();
     const projectStub: Omit<Project, 'id'> = {
         name: name,
         appIcon: icon || undefined,
-        createdAt: currentProject?.createdAt || new Date().toISOString(),
+        createdAt: currentProject?.createdAt || now,
+        updatedAt: now,
         files: multiFileCode,
         previewFile: previewFile,
         stack: techStack,
