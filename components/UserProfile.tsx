@@ -10,15 +10,22 @@ export const UserProfile: React.FC = () => {
   }
 
   return (
-    <div className="border-t border-white/10 pt-4 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full" />
-        <span className="text-sm font-medium text-gray-200">{user.name}</span>
+    <div className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+      <div className="flex items-center gap-3 overflow-hidden">
+        <img
+          src={user.picture}
+          alt={user.name}
+          className="w-9 h-9 rounded-full flex-shrink-0"
+        />
+        <div className="flex flex-col overflow-hidden">
+          <span className="text-sm font-semibold text-white truncate">{user.name}</span>
+          <span className="text-xs text-gray-400 truncate">{user.email}</span>
+        </div>
       </div>
-      <button 
-        onClick={logout} 
-        className="text-gray-400 hover:text-white transition-colors"
-        title="Sign Out"
+      <button
+        onClick={logout}
+        className="p-2 text-gray-400 rounded-full hover:bg-white/10 hover:text-white transition-colors flex-shrink-0"
+        aria-label="Log out"
       >
         <LogoutIcon />
       </button>

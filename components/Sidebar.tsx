@@ -1,41 +1,47 @@
 import React from 'react';
-import { HomeIcon, SettingsIcon, DatabaseIcon, FileIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon } from './icons';
 import { UserProfile } from './UserProfile';
 
-interface SidebarProps {
-  activeRoute: string;
+const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: string; }> = ({ href, icon, label }) => {
+    // This hook ensures the component re-renders on hash change to update active styles
+    const [hash, setHash] = React.useState(window.location.hash);
+    React.useEffect(() => {
+        const handleHashChange = () => setHash(window.location.hash);
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    const isActive = hash.startsWith(href);
+
+    return (
+        <a 
+            href={href}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+        >
+            {icon}
+            {label}
+        </a>
+    )
 }
 
-const NavLink: React.FC<{ href: string; isActive: boolean; icon: React.ReactNode; label: string }> = ({ href, isActive, icon, label }) => (
-  <a
-    href={href}
-    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-      isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-    }`}
-  >
-    {icon}
-    {label}
-  </a>
-);
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeRoute }) => {
-  const page = activeRoute.split('/')[2] || 'projects';
-
+export const Sidebar: React.FC = () => {
   return (
-    <aside className="w-64 bg-black/20 p-4 flex flex-col">
+    <aside className="w-64 bg-white/5 border-r border-white/10 flex flex-col p-4">
       <div className="mb-8">
-        <a href="#/" className="flex items-center gap-2 text-white font-bold text-xl px-2">
-          AI App Builder
+        <a href="#/dashboard" className="flex items-center gap-2 text-white font-bold text-xl px-2">
+            AI App Builder
         </a>
       </div>
-      <nav className="flex flex-col gap-2">
-        <NavLink href="#/dashboard/projects" isActive={page === 'projects'} icon={<FileIcon />} label="Projects" />
-        <NavLink href="#/dashboard/database" isActive={page === 'database'} icon={<DatabaseIcon />} label="Database Viewer" />
-        <NavLink href="#/dashboard/settings" isActive={page === 'settings'} icon={<SettingsIcon />} label="Settings & Integrations" />
+      <nav className="flex-1 flex flex-col gap-2">
+        <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
+        <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
+        <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" />
       </nav>
-      <div className="mt-auto space-y-4">
-         <UserProfile />
-         <NavLink href="#/" isActive={false} icon={<HomeIcon />} label="Back to Builder" />
+      <div className="mt-auto">
+        <UserProfile />
       </div>
     </aside>
   );
