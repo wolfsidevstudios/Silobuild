@@ -1,12 +1,14 @@
 import React from 'react';
 import { AppMode } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   onSaveProject: () => void;
   isSaveEnabled: boolean;
+  isGithubLinked?: boolean;
+  onCommitAndPush?: () => void;
 }
 
 const NavButton: React.FC<{
@@ -31,7 +33,14 @@ const NavButton: React.FC<{
   );
 };
 
-export const Header: React.FC<HeaderProps> = ({ activeMode, setAppMode, onSaveProject, isSaveEnabled }) => {
+export const Header: React.FC<HeaderProps> = ({
+  activeMode,
+  setAppMode,
+  onSaveProject,
+  isSaveEnabled,
+  isGithubLinked,
+  onCommitAndPush,
+}) => {
   return (
     <header className="flex justify-between items-center p-4">
        <a href="#/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white rounded-full transition-colors duration-300">
@@ -60,12 +69,19 @@ export const Header: React.FC<HeaderProps> = ({ activeMode, setAppMode, onSavePr
         />
       </div>
       
-      <div className="w-40 text-right">
+      <div className="w-48 text-right">
         {isSaveEnabled && (
-           <button onClick={onSaveProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors duration-300">
+          isGithubLinked && onCommitAndPush ? (
+            <button onClick={onCommitAndPush} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-colors duration-300">
+              <GithubIcon className="w-4 h-4" />
+              Commit & Push
+            </button>
+          ) : (
+            <button onClick={onSaveProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors duration-300">
               <SaveIcon />
               Save Project
-           </button>
+            </button>
+          )
         )}
       </div>
     </header>

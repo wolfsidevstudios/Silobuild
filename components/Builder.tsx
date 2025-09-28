@@ -5,6 +5,7 @@ import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
+import { createAndPushToRepo, pushToRepo } from '../services/githubService';
 import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -18,6 +19,7 @@ const initialSettings: Settings = {
   supabaseAnonKey: '',
   stripePublicKey: '',
   stripeSecretKey: '',
+  githubPat: '',
 };
 
 interface BuilderProps {
@@ -31,6 +33,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [multiFileCode, setMultiFileCode] = useState<GeneratedFile[]>([]);
   const [previewFile, setPreviewFile] = useState<GeneratedFile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generationPlan, setGenerationPlan] = useState<string[]>([]);
   const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
@@ -187,31 +190,86 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
 
 
-  const handleSaveProject = (name: string, icon: string | null) => {
-    if (name && multiFileCode.length > 0 && techStack) {
-      const newProject: Project = {
-        id: currentProject?.id || Date.now().toString(),
+  const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean) => {
+    if (!name.trim() || multiFileCode.length === 0 || !techStack) {
+      alert("Cannot save: project name, code, or tech stack is missing.");
+      return;
+    }
+    
+    setIsSaveModalOpen(false);
+
+    const projectStub: Omit<Project, 'id'> = {
         name: name,
         appIcon: icon || undefined,
         createdAt: currentProject?.createdAt || new Date().toISOString(),
         files: multiFileCode,
         previewFile: previewFile,
         stack: techStack,
-        deployments: deployments
-      };
+        deployments: deployments,
+        githubUrl: currentProject?.githubUrl,
+    };
 
-      if (currentProject) {
-        setProjects(prev => prev.map(p => p.id === newProject.id ? newProject : p));
-      } else {
-        setProjects(prev => [...prev, newProject]);
-      }
-      setCurrentProject(newProject);
-      alert(`Project "${name}" saved!`);
-      setIsSaveModalOpen(false);
-      // Redirect to the project's URL to have a clean state and URL
-      window.location.hash = `#/project/${newProject.id}`;
+    let projectToSave: Project;
+    let isNewProject = !currentProject;
+
+    if (isNewProject) {
+        projectToSave = { ...projectStub, id: Date.now().toString() };
+        setProjects(prev => [...prev, projectToSave]);
     } else {
-      alert("Cannot save: project name, code, or tech stack is missing.");
+        projectToSave = { ...projectStub, id: currentProject.id };
+        setProjects(prev => prev.map(p => p.id === projectToSave.id ? projectToSave : p));
+    }
+    setCurrentProject(projectToSave);
+    
+    if (createRepo && !projectToSave.githubUrl) {
+      if (!settings.githubPat) {
+        alert("Please set your GitHub Personal Access Token in the Settings page to create a repository.");
+        return;
+      }
+      setIsPushing(true);
+      try {
+        const repoUrl = await createAndPushToRepo(settings.githubPat, name, multiFileCode);
+        const updatedProjectWithRepo = { ...projectToSave, githubUrl: repoUrl };
+        setProjects(prev => prev.map(p => p.id === updatedProjectWithRepo.id ? updatedProjectWithRepo : p));
+        setCurrentProject(updatedProjectWithRepo);
+        alert(`Successfully created and pushed to ${repoUrl}`);
+      } catch (error) {
+        console.error("GitHub repo creation failed:", error);
+        alert(`Failed to create GitHub repository: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally {
+        setIsPushing(false);
+      }
+    } else {
+       alert(`Project "${name}" saved!`);
+    }
+
+    if(isNewProject) {
+        window.location.hash = `#/project/${projectToSave.id}`;
+    }
+  };
+
+  const handleCommitAndPush = async () => {
+    if (!currentProject?.githubUrl) {
+      alert("This project is not linked to a GitHub repository.");
+      return;
+    }
+     if (!settings.githubPat) {
+        alert("Please set your GitHub Personal Access Token in the Settings page.");
+        return;
+      }
+
+    const commitMessage = prompt("Enter a commit message:", "feat: Update project from Silo Build");
+    if (!commitMessage) return;
+    
+    setIsPushing(true);
+    try {
+        await pushToRepo(settings.githubPat, currentProject.githubUrl, multiFileCode, commitMessage);
+        alert("Successfully pushed changes to GitHub!");
+    } catch (error) {
+        console.error("GitHub push failed:", error);
+        alert(`Failed to push to GitHub: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+        setIsPushing(false);
     }
   };
   
@@ -293,6 +351,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return null;
     }
   };
+  
+  const isBusy = isLoading || isPushing;
 
   return (
     <div className="h-screen w-screen bg-black text-white flex flex-col font-sans overflow-hidden">
@@ -300,19 +360,26 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         activeMode={appMode} 
         setAppMode={setAppMode}
         onSaveProject={() => setIsSaveModalOpen(true)}
-        isSaveEnabled={isGenerated && !isLoading && !!techStack}
+        isSaveEnabled={isGenerated && !isBusy && !!techStack}
+        isGithubLinked={!!currentProject?.githubUrl}
+        onCommitAndPush={handleCommitAndPush}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
-        {isLoading && appMode !== 'CHAT' && (
+        {isBusy && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Spinner className="h-10 w-10" />
+            <div className="flex flex-col items-center gap-2">
+                <Spinner className="h-10 w-10" />
+                <span className="text-sm text-gray-300">
+                    {isPushing ? 'Pushing to GitHub...' : 'Generating...'}
+                </span>
+            </div>
           </div>
         )}
         {renderContent()}
       </main>
       <PromptInput
         onSend={handleSend}
-        isLoading={isLoading}
+        isLoading={isBusy}
         isAppGenerated={isGenerated}
         isIdeaMode={isIdeaMode}
         onToggleIdeaMode={toggleIdeaMode}
@@ -333,6 +400,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         initialName={currentProject?.name}
         initialIcon={currentProject?.appIcon}
         title={currentProject ? "Save Project Details" : "Save New Project"}
+        isGithubLinked={!!currentProject?.githubUrl}
       />
     </div>
   );

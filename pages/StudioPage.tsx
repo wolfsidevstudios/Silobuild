@@ -7,6 +7,7 @@ import { PreviewView } from '../components/PreviewView';
 import { StudioHeader } from '../components/StudioHeader';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 
+// FIX: Add missing 'githubPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -14,6 +15,7 @@ const initialSettings: Settings = {
   supabaseAnonKey: '',
   stripePublicKey: '',
   stripeSecretKey: '',
+  githubPat: '',
 };
 
 

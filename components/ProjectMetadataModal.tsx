@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { GithubIcon } from './icons';
 
 interface ProjectMetadataModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, icon: string | null) => void;
+  onSave: (name: string, icon: string | null, createRepo: boolean) => void;
   initialName?: string;
   initialIcon?: string | null;
   title: string;
+  isGithubLinked?: boolean;
 }
 
 export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
@@ -16,10 +18,12 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
   initialName = '',
   initialIcon = null,
   title,
+  isGithubLinked = false,
 }) => {
   const [name, setName] = useState(initialName);
   const [icon, setIcon] = useState<string | null>(initialIcon);
   const [preview, setPreview] = useState<string | null>(initialIcon);
+  const [createRepo, setCreateRepo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -27,6 +31,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
         setName(initialName || '');
         setIcon(initialIcon || null);
         setPreview(initialIcon || null);
+        setCreateRepo(false);
     }
   }, [initialName, initialIcon, isOpen]);
 
@@ -45,7 +50,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
 
   const handleSave = () => {
     if (name.trim()) {
-      onSave(name.trim(), icon);
+      onSave(name.trim(), icon, createRepo);
     }
   };
 
@@ -98,6 +103,23 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
             </div>
             <p className="text-xs text-gray-500 mt-2">Recommended: 192x192 or 512x512 PNG file.</p>
           </div>
+          {!isGithubLinked && (
+            <div className="border-t border-white/10 pt-4">
+               <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createRepo}
+                    onChange={(e) => setCreateRepo(e.target.checked)}
+                    className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <GithubIcon className="w-4 h-4" />
+                    <span>Create GitHub Repository</span>
+                  </div>
+                </label>
+                 <p className="text-xs text-gray-500 mt-2 pl-7">A new public repository will be created and your project files will be pushed.</p>
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-white/10 transition-colors">

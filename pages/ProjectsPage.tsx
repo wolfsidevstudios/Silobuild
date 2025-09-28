@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project, GeneratedFile } from '../types';
 // FIX: Import DownloadIcon to resolve reference error.
-import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon } from '../components/icons';
+import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon } from '../components/icons';
 import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 
@@ -154,6 +154,17 @@ export const ProjectsPage: React.FC = () => {
                     </a>
                  </div>
                  <div className="flex items-center gap-2">
+                    {project.githubUrl && (
+                        <a 
+                            href={project.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                            aria-label="View on GitHub"
+                        >
+                            <GithubIcon />
+                        </a>
+                    )}
                     <button 
                         onClick={() => downloadProjectAsZip(project)} 
                         className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"

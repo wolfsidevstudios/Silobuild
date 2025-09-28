@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { GeminiLogo, StripeLogo, SupabaseLogo } from '../components/icons';
+import { GeminiLogo, StripeLogo, SupabaseLogo, GithubIcon } from '../components/icons';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -10,6 +10,7 @@ const initialSettings: Settings = {
   supabaseAnonKey: '',
   stripePublicKey: '',
   stripeSecretKey: '',
+  githubPat: '',
 };
 
 export const SettingsPage: React.FC = () => {
@@ -61,6 +62,29 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
         </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+           <div className="flex items-center gap-3 mb-4">
+            <GithubIcon className="h-6 w-6" />
+            <h2 className="text-xl font-semibold">GitHub</h2>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Used for creating repositories and pushing your generated code. Create a <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Personal Access Token</a> with `repo` scope.
+          </p>
+          <div>
+            <label htmlFor="githubPat" className="block text-sm font-medium text-gray-300 mb-1">
+              Personal Access Token (PAT)
+            </label>
+            <input
+              type="password"
+              id="githubPat"
+              name="githubPat"
+              value={localSettings.githubPat}
+              onChange={handleInputChange}
+              className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
         
         <div className="bg-white/5 border border-white/10 rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Vercel</h2>
@@ -100,7 +124,6 @@ export const SettingsPage: React.FC = () => {
                 id="supabaseUrl"
                 name="supabaseUrl"
                 value={localSettings.supabaseUrl}
-                onChange={handleInputChange}
                 placeholder="https://<your-project-ref>.supabase.co"
                 className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

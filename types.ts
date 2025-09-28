@@ -25,6 +25,7 @@ export interface Settings {
   supabaseAnonKey: string;
   stripePublicKey: string;
   stripeSecretKey: string;
+  githubPat: string;
 }
 
 export interface Deployment {
@@ -34,13 +35,14 @@ export interface Deployment {
 
 export interface Project {
   id: string;
-  name: string;
+  name:string;
   createdAt: string;
   files: GeneratedFile[];
   previewFile: GeneratedFile | null;
   appIcon?: string | null;
   stack: TechStack;
   deployments: Deployment[];
+  githubUrl?: string;
 }
 
 export interface DecodedCredential {
