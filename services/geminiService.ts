@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { Settings, GeneratedFile, TechStack } from "../types";
+import { GoogleGenAI, Type } from "@google/genai";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable } from "../types";
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack): string => {
   let instruction;
@@ -248,4 +248,58 @@ User's request: "${prompt}"`;
       reject(new Error(`Failed to get a response from the AI. Details: ${detailedError}`));
     }
   });
+};
+
+export const generateSchemaFromPrompt = async (prompt: string, settings: Settings): Promise<AiGeneratedTable> => {
+  const apiKey = settings.geminiApiKey || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini API key is not configured. Please add it in the Settings page.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  const systemInstruction = `You are an expert database architect. The user will describe a database table. Your task is to generate a valid JSON object representing that table's schema. You must adhere to the provided JSON schema for your response.
+- The 'dataType' field for each column MUST be one of the following exact string values: 'uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'. Do not use any other values.
+- For primary keys, it's conventional to use the 'uuid' type and a 'defaultValue' of 'uuid_generate_v4()'.
+- For creation timestamps (e.g., 'created_at'), use 'timestamptz' and a 'defaultValue' of 'now()'.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `${systemInstruction}\n\nUser request: "${prompt}"`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            name: { type: Type.STRING, description: 'The name of the table, plural and in snake_case.' },
+            columns: {
+              type: Type.ARRAY,
+              description: 'The columns of the table.',
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING, description: "The column name in snake_case." },
+                  dataType: { type: Type.STRING, description: "One of: 'uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'."},
+                  defaultValue: { type: Type.STRING, description: 'Optional default value (e.g., now() or a specific value).' },
+                  isPrimaryKey: { type: Type.BOOLEAN },
+                  isUnique: { type: Type.BOOLEAN },
+                  isNullable: { type: Type.BOOLEAN },
+                },
+                required: ['name', 'dataType', 'isPrimaryKey', 'isUnique', 'isNullable']
+              }
+            }
+          },
+          required: ['name', 'columns']
+        },
+      },
+    });
+
+    const jsonString = response.text;
+    const parsedJson = JSON.parse(jsonString);
+    return parsedJson as AiGeneratedTable;
+  } catch (error) {
+    console.error("Error calling Gemini API for schema generation:", error);
+    const detailedError = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to generate schema from AI. Details: ${detailedError}`);
+  }
 };

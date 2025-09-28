@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { PlusIcon, TrashIcon, SchemaIcon, FileIcon } from '../components/icons';
+import { PlusIcon, TrashIcon, SchemaIcon, FileIcon, SparklesIcon } from '../components/icons';
+import { Table, Column, DataType, Settings, AiGeneratedTable } from '../types';
+import { generateSchemaFromPrompt } from '../services/geminiService';
+import { Spinner } from '../components/Spinner';
 
-type DataType = 'uuid' | 'text' | 'varchar' | 'int4' | 'int8' | 'float8' | 'boolean' | 'timestamp' | 'timestamptz';
-
-interface Column {
-  id: string;
-  name: string;
-  dataType: DataType;
-  defaultValue?: string;
-  isPrimaryKey: boolean;
-  isUnique: boolean;
-  isNullable: boolean;
-}
-
-interface Table {
-  id: string;
-  name: string;
-  columns: Column[];
-}
+const initialSettings: Settings = {
+  geminiApiKey: '',
+  vercelApiKey: '',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  stripePublicKey: '',
+  stripeSecretKey: '',
+  githubPat: '',
+};
 
 const DATA_TYPES: DataType[] = ['uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'];
 
@@ -174,10 +169,67 @@ const SqlModal: React.FC<{ sql: string; onClose: () => void }> = ({ sql, onClose
     );
 };
 
+const AiSchemaModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onGenerate: (prompt: string) => void;
+  isGenerating: boolean;
+  error: string | null;
+}> = ({ isOpen, onClose, onGenerate, isGenerating, error }) => {
+  const [prompt, setPrompt] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    if (prompt.trim() && !isGenerating) {
+      onGenerate(prompt);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-gray-800 border border-white/10 rounded-xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+            <SparklesIcon className="w-6 h-6 text-blue-400" />
+            <h2 className="text-xl font-bold">Generate Table with AI</h2>
+        </div>
+        <p className="text-sm text-gray-400 mb-4">Describe the table you want to create. For example, "a users table with email, password, and profile info".</p>
+        <div>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your table here..."
+            className="w-full h-24 bg-white/5 border border-white/10 rounded-md p-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isGenerating}
+          />
+        </div>
+        {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+        <div className="flex justify-end gap-3 mt-4">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-white/10 transition-colors" disabled={isGenerating}>
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!prompt.trim() || isGenerating}
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isGenerating ? <><Spinner className="w-4 h-4" /> Generating...</> : 'Generate'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 export const SchemaBuilderPage: React.FC = () => {
     const [tables, setTables] = useLocalStorage<Table[]>('silo-build-schema', []);
+    const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     const [generatedSql, setGeneratedSql] = useState<string | null>(null);
+    
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
 
     const addTable = () => {
         setTables(prev => [...prev, createNewTable()]);
@@ -193,6 +245,31 @@ export const SchemaBuilderPage: React.FC = () => {
         }
     };
     
+    const handleAiGenerate = async (prompt: string) => {
+        setIsGenerating(true);
+        setAiError(null);
+        try {
+            const aiTable: AiGeneratedTable = await generateSchemaFromPrompt(prompt, settings);
+            
+            const newTable: Table = {
+                id: crypto.randomUUID(),
+                name: aiTable.name,
+                columns: aiTable.columns.map(col => ({
+                    ...col,
+                    id: crypto.randomUUID()
+                }))
+            };
+
+            setTables(prev => [...prev, newTable]);
+            setIsAiModalOpen(false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "An unknown error occurred.";
+            setAiError(message);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const generateSql = () => {
         const sqlString = tables.map(table => {
             if (!table.name.trim() || table.columns.length === 0) return '';
@@ -237,9 +314,13 @@ export const SchemaBuilderPage: React.FC = () => {
             <button onClick={generateSql} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
                 Generate SQL
             </button>
-            <button onClick={addTable} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+            <button onClick={addTable} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
                 <PlusIcon />
                 New Table
+            </button>
+             <button onClick={() => setIsAiModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <SparklesIcon />
+                Generate with AI
             </button>
         </div>
       </div>
@@ -251,7 +332,7 @@ export const SchemaBuilderPage: React.FC = () => {
           <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/5 rounded-lg p-8 mt-10">
               <FileIcon className="w-16 h-16 mb-4 text-gray-600"/>
               <h2 className="text-xl font-semibold mb-2 text-white">Your schema is empty</h2>
-              <p>Click "New Table" to start building your database structure.</p>
+              <p>Click "New Table" or "Generate with AI" to start building your database structure.</p>
           </div>
       ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -267,6 +348,13 @@ export const SchemaBuilderPage: React.FC = () => {
       )}
       
       {generatedSql && <SqlModal sql={generatedSql} onClose={() => setGeneratedSql(null)} />}
+      <AiSchemaModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onGenerate={handleAiGenerate}
+        isGenerating={isGenerating}
+        error={aiError}
+      />
     </div>
   );
 };

@@ -52,3 +52,27 @@ export interface DecodedCredential {
     email_verified: boolean;
     sub: string;
 }
+
+// Types for Schema Builder
+export type DataType = 'uuid' | 'text' | 'varchar' | 'int4' | 'int8' | 'float8' | 'boolean' | 'timestamp' | 'timestamptz';
+
+export interface Column {
+  id: string;
+  name: string;
+  dataType: DataType;
+  defaultValue?: string;
+  isPrimaryKey: boolean;
+  isUnique: boolean;
+  isNullable: boolean;
+}
+
+export interface Table {
+  id: string;
+  name: string;
+  columns: Column[];
+}
+
+export interface AiGeneratedTable {
+  name: string;
+  columns: Omit<Column, 'id'>[];
+}
