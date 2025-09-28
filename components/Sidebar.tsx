@@ -32,7 +32,7 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-white/5 border-r border-white/10 flex flex-col p-4">
       <div className="mb-4">
         <a href="#/dashboard" className="flex items-center gap-2 text-white font-bold text-xl px-2">
-            AI App Builder
+            Silo Build
         </a>
       </div>
        <div className="mb-6 px-2">

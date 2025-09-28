@@ -96,7 +96,7 @@ export const LoginPage: React.FC = () => {
     <div className="bg-black text-white min-h-screen font-sans overflow-x-hidden">
         <header className="fixed top-0 left-0 right-0 bg-black/30 backdrop-blur-lg z-20 border-b border-white/10">
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
-                <a href="#/" className="text-xl font-bold">AI App Builder</a>
+                <a href="#/" className="text-xl font-bold">Silo Build</a>
                 {user ? (
                     <div className="flex items-center gap-4">
                          <a href="#/dashboard/projects" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Dashboard</a>
@@ -227,7 +227,7 @@ export const LoginPage: React.FC = () => {
 
         <footer className="py-8 text-center text-gray-500 border-t border-white/10">
             <div className="container mx-auto px-6">
-                <p>&copy; {new Date().getFullYear()} AI App Builder. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} Silo Build. All rights reserved.</p>
                 <div className="flex justify-center gap-6 mt-4">
                   <a href="#/terms" className="text-sm text-gray-400 hover:text-white transition-colors">Terms of Service</a>
                   <a href="#/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</a>

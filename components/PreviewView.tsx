@@ -57,7 +57,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         data: content,
       }));
 
-      const sanitizedProjectName = (projectName || 'ai-builder-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+      const sanitizedProjectName = (projectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
 
       filesForApi.push({
         file: 'package.json',

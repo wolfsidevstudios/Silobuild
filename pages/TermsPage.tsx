@@ -5,7 +5,7 @@ export const TermsPage: React.FC = () => {
     <div className="bg-black text-white min-h-screen font-sans">
       <header className="bg-black/30 backdrop-blur-lg z-20 border-b border-white/10 sticky top-0">
         <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
-          <a href="#/" className="text-xl font-bold">AI App Builder</a>
+          <a href="#/" className="text-xl font-bold">Silo Build</a>
           <a href="#/" className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
             Back to Home
           </a>
@@ -15,7 +15,7 @@ export const TermsPage: React.FC = () => {
         <h1 className="text-4xl font-bold mb-6">Terms of Service</h1>
         <div className="prose prose-invert prose-lg text-gray-300 space-y-4">
             <p>Last updated: {new Date().toLocaleDateString()}</p>
-            <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the AI App Builder application (the "Service") operated by us.</p>
+            <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Silo Build application (the "Service") operated by us.</p>
             <p>Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
             
             <h2 className="text-2xl font-semibold text-white pt-4">1. Accounts</h2>
