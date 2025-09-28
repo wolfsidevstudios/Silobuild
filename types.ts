@@ -43,6 +43,7 @@ export interface Project {
   stack: TechStack;
   deployments: Deployment[];
   githubUrl?: string;
+  teamId?: string;
 }
 
 export interface DecodedCredential {
@@ -75,4 +76,16 @@ export interface Table {
 export interface AiGeneratedTable {
   name: string;
   columns: Omit<Column, 'id'>[];
+}
+
+// Types for Collaboration
+export interface TeamMember extends DecodedCredential {
+  role: 'owner' | 'member';
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  members: TeamMember[];
+  createdAt: string;
 }

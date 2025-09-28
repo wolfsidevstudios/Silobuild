@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GithubIcon } from './icons';
+import { Team } from '../types';
 
 interface ProjectMetadataModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, icon: string | null, createRepo: boolean) => void;
+  onSave: (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => void;
   initialName?: string;
   initialIcon?: string | null;
   title: string;
   isGithubLinked?: boolean;
+  teams?: Team[];
+  initialTeamId?: string;
 }
 
 export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
@@ -19,11 +22,14 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
   initialIcon = null,
   title,
   isGithubLinked = false,
+  teams = [],
+  initialTeamId = '',
 }) => {
   const [name, setName] = useState(initialName);
   const [icon, setIcon] = useState<string | null>(initialIcon);
   const [preview, setPreview] = useState<string | null>(initialIcon);
   const [createRepo, setCreateRepo] = useState(false);
+  const [teamId, setTeamId] = useState<string | null>(initialTeamId || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -32,8 +38,9 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
         setIcon(initialIcon || null);
         setPreview(initialIcon || null);
         setCreateRepo(false);
+        setTeamId(initialTeamId || null);
     }
-  }, [initialName, initialIcon, isOpen]);
+  }, [initialName, initialIcon, initialTeamId, isOpen]);
 
   const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +57,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
 
   const handleSave = () => {
     if (name.trim()) {
-      onSave(name.trim(), icon, createRepo);
+      onSave(name.trim(), icon, createRepo, teamId);
     }
   };
 
@@ -102,6 +109,22 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2">Recommended: 192x192 or 512x512 PNG file.</p>
+          </div>
+           <div>
+            <label htmlFor="team" className="block text-sm font-medium text-gray-300 mb-1">
+              Team
+            </label>
+            <select
+              id="team"
+              value={teamId || ''}
+              onChange={(e) => setTeamId(e.target.value || null)}
+              className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Personal</option>
+              {teams.map(team => (
+                <option key={team.id} value={team.id}>{team.name}</option>
+              ))}
+            </select>
           </div>
           {!isGithubLinked && (
             <div className="border-t border-white/10 pt-4">

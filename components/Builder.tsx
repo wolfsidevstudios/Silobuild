@@ -6,7 +6,7 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -41,6 +41,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+  const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
@@ -190,7 +191,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
 
 
-  const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean) => {
+  const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
     if (!name.trim() || multiFileCode.length === 0 || !techStack) {
       alert("Cannot save: project name, code, or tech stack is missing.");
       return;
@@ -207,6 +208,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         stack: techStack,
         deployments: deployments,
         githubUrl: currentProject?.githubUrl,
+        teamId: teamId || undefined,
     };
 
     let projectToSave: Project;
@@ -363,6 +365,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         isSaveEnabled={isGenerated && !isBusy && !!techStack}
         isGithubLinked={!!currentProject?.githubUrl}
         onCommitAndPush={handleCommitAndPush}
+        project={currentProject}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isBusy && (
@@ -401,6 +404,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         initialIcon={currentProject?.appIcon}
         title={currentProject ? "Save Project Details" : "Save New Project"}
         isGithubLinked={!!currentProject?.githubUrl}
+        teams={teams}
+        initialTeamId={currentProject?.teamId}
       />
     </div>
   );

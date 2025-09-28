@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Project, GeneratedFile } from '../types';
-// FIX: Import DownloadIcon to resolve reference error.
-import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon } from '../components/icons';
+import { Project, GeneratedFile, Team } from '../types';
+import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon, UsersIcon } from '../components/icons';
 import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 
@@ -59,8 +58,76 @@ Welcome to your new project in Silo Build Studio!
 };
 
 
+const ProjectCard: React.FC<{ project: Project; onEdit: (project: Project) => void; onDelete: (id: string) => void }> = ({ project, onEdit, onDelete }) => (
+    <div className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-colors">
+      <div>
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10">
+               {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-6 h-6 text-gray-500" />}
+             </div>
+             <div className="min-w-0">
+                <h2 className="text-lg font-semibold truncate">{project.name}</h2>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                    {project.stack === 'html' ? 'HTML' : 'React'}
+                </span>
+             </div>
+          </div>
+           <button 
+              onClick={() => onEdit(project)} 
+              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex-shrink-0"
+              aria-label="Edit Details"
+          >
+              <EditIcon className="w-4 h-4" />
+          </button>
+        </div>
+        <p className="text-sm text-gray-400 mb-4">
+          Created on {new Date(project.createdAt).toLocaleDateString()}
+        </p>
+      </div>
+      <div className="flex items-center justify-between mt-4">
+         <div className="flex items-center gap-2 text-sm">
+            <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                Builder
+            </a>
+             <a href={`#/studio/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                Studio
+            </a>
+         </div>
+         <div className="flex items-center gap-2">
+            {project.githubUrl && (
+                <a 
+                    href={project.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                    aria-label="View on GitHub"
+                >
+                    <GithubIcon />
+                </a>
+            )}
+            <button 
+                onClick={() => downloadProjectAsZip(project)} 
+                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                aria-label="Download Project"
+            >
+                <DownloadIcon />
+            </button>
+            <button 
+                onClick={() => onDelete(project.id)} 
+                className="p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-full"
+                aria-label="Delete Project"
+            >
+                <TrashIcon />
+            </button>
+         </div>
+      </div>
+    </div>
+);
+
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
+  const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const deleteProject = (projectId: string) => {
@@ -69,9 +136,9 @@ export const ProjectsPage: React.FC = () => {
     }
   };
   
-  const handleUpdateProject = (name: string, icon: string | null) => {
+  const handleUpdateProject = (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
     if (editingProject) {
-        setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined } : p));
+        setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined, teamId: teamId || undefined } : p));
         setEditingProject(null);
     }
   };
@@ -92,6 +159,15 @@ export const ProjectsPage: React.FC = () => {
         window.location.hash = `#/studio/${newProject.id}`;
     }
   };
+
+  const { personalProjects, teamProjects } = useMemo(() => {
+    const personal = projects.filter(p => !p.teamId);
+    const teamBased = teams.map(team => ({
+        ...team,
+        projects: projects.filter(p => p.teamId === team.id)
+    })).filter(team => team.projects.length > 0);
+    return { personalProjects: personal, teamProjects: teamBased };
+  }, [projects, teams]);
 
 
   return (
@@ -116,73 +192,31 @@ export const ProjectsPage: React.FC = () => {
             <p>Create a new project using the AI builder or the code studio.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
-            <div key={project.id} className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-colors">
-              <div>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10">
-                       {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-6 h-6 text-gray-500" />}
-                     </div>
-                     <div className="min-w-0">
-                        <h2 className="text-lg font-semibold truncate">{project.name}</h2>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
-                            {project.stack === 'html' ? 'HTML' : 'React'}
-                        </span>
-                     </div>
-                  </div>
-                   <button 
-                      onClick={() => setEditingProject(project)} 
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex-shrink-0"
-                      aria-label="Edit Details"
-                  >
-                      <EditIcon className="w-4 h-4" />
-                  </button>
+        <div className="space-y-10">
+            {personalProjects.length > 0 && (
+                <div>
+                    <h2 className="text-2xl font-bold mb-4">Personal Projects</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {personalProjects.map(project => (
+                            <ProjectCard key={project.id} project={project} onEdit={setEditingProject} onDelete={deleteProject} />
+                        ))}
+                    </div>
                 </div>
-                <p className="text-sm text-gray-400 mb-4">
-                  Created on {new Date(project.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                 <div className="flex items-center gap-2 text-sm">
-                    <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                        Builder
-                    </a>
-                     <a href={`#/studio/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                        Studio
-                    </a>
-                 </div>
-                 <div className="flex items-center gap-2">
-                    {project.githubUrl && (
-                        <a 
-                            href={project.githubUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
-                            aria-label="View on GitHub"
-                        >
-                            <GithubIcon />
-                        </a>
-                    )}
-                    <button 
-                        onClick={() => downloadProjectAsZip(project)} 
-                        className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
-                        aria-label="Download Project"
-                    >
-                        <DownloadIcon />
-                    </button>
-                    <button 
-                        onClick={() => deleteProject(project.id)} 
-                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-white/10 rounded-full"
-                        aria-label="Delete Project"
-                    >
-                        <TrashIcon />
-                    </button>
-                 </div>
-              </div>
-            </div>
-          ))}
+            )}
+
+            {teamProjects.map(team => (
+                 <div key={team.id}>
+                    <div className="flex items-center gap-3 mb-4">
+                        <UsersIcon />
+                        <h2 className="text-2xl font-bold">{team.name} Projects</h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {team.projects.map(project => (
+                            <ProjectCard key={project.id} project={project} onEdit={setEditingProject} onDelete={deleteProject} />
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
       )}
        <ProjectMetadataModal
@@ -192,6 +226,8 @@ export const ProjectsPage: React.FC = () => {
         initialName={editingProject?.name}
         initialIcon={editingProject?.appIcon}
         title="Edit Project Details"
+        teams={teams}
+        initialTeamId={editingProject?.teamId}
       />
     </div>
   );

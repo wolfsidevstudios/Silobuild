@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, BoltIcon } from '../components/icons';
-import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -175,7 +174,7 @@ export const LoginPage: React.FC = () => {
                                             className="w-full h-24 bg-transparent resize-none text-white text-base placeholder-gray-500 focus:outline-none p-2"
                                         />
                                         <button type="submit" disabled={!prompt.trim()} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed">
-                                            <ChevronDownIcon className="w-6 h-6 transform rotate-180" />
+                                            <ChevronDownIcon className="w-6 h-6 transform -rotate-90" />
                                         </button>
                                     </div>
                                 </form>
@@ -196,16 +195,6 @@ export const LoginPage: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </div>
-            </section>
-            
-            <section className="py-20 bg-black">
-                <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h3 className="text-4xl font-bold">See it in Action</h3>
-                        <p className="text-gray-400 mt-2">A visual walkthrough of the AI-powered development process.</p>
-                    </div>
-                    <MotionPreview />
                 </div>
             </section>
 

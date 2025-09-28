@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppMode } from '../types';
+import { AppMode, Project } from '../types';
 import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon } from './icons';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   isSaveEnabled: boolean;
   isGithubLinked?: boolean;
   onCommitAndPush?: () => void;
+  project?: Project | null;
 }
 
 const NavButton: React.FC<{
@@ -40,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSaveEnabled,
   isGithubLinked,
   onCommitAndPush,
+  project
 }) => {
   return (
     <header className="flex justify-between items-center p-4">
@@ -69,7 +71,14 @@ export const Header: React.FC<HeaderProps> = ({
         />
       </div>
       
-      <div className="w-48 text-right">
+      <div className="w-auto flex items-center justify-end gap-4">
+        {project?.teamId && (
+            <div className="flex items-center -space-x-2" title="This is a team project">
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-gray-800 object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-gray-800 object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
+                <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-gray-800 bg-gray-600 text-xs font-bold text-white">+2</div>
+            </div>
+        )}
         {isSaveEnabled && (
           isGithubLinked && onCommitAndPush ? (
             <button onClick={onCommitAndPush} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-colors duration-300">
