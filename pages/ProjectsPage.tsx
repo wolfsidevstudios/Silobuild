@@ -1,9 +1,63 @@
 import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Project } from '../types';
-import { DownloadIcon, TrashIcon, EditIcon, FileIcon } from '../components/icons';
-import JSZip from 'jszip';
+import { Project, GeneratedFile } from '../types';
+// FIX: Import DownloadIcon to resolve reference error.
+import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon } from '../components/icons';
 import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
+import { downloadProjectAsZip } from '../utils/projectUtils';
+
+const studioBoilerplatePreview: GeneratedFile = {
+    path: 'preview.html',
+    content: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Silo Build Studio Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const App = () => {
+            return (
+                <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+                    <div className="text-center">
+                        <h1 className="text-4xl font-bold mb-4">Welcome to Silo Build Studio!</h1>
+                        <p className="text-gray-400">Edit this file ("preview.html") to get started.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>`
+};
+
+const studioBoilerplateReadme: GeneratedFile = {
+    path: 'README.md',
+    content: `# Silo Build Studio Project
+
+Welcome to your new project in Silo Build Studio!
+
+## How it works:
+
+- **Live Preview**: The \`preview.html\` file is rendered live in the preview pane. This file is a self-contained HTML file that uses Babel Standalone to compile React JSX in the browser.
+- **Editing**: To see changes, you must edit \`preview.html\`. You can write all your React components inside the \`<script type="text/babel">\` tag.
+- **Multi-file Projects**: You can create additional files (\`.tsx\`, \`.css\`, etc.) using the file explorer. However, to see them in the preview, you will need to manually copy their contents into the \`preview.html\` file.
+- **Deployment**: When you are ready, you can use the download or deploy features. These features will use all the files in your file explorer, not just the preview.`
+};
+
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
@@ -14,58 +68,52 @@ export const ProjectsPage: React.FC = () => {
       setProjects(prev => prev.filter(p => p.id !== projectId));
     }
   };
-
-  const downloadProject = async (project: Project) => {
-    const zip = new JSZip();
-    
-    project.files.forEach(file => {
-      zip.file(file.path, file.content);
-    });
-
-    if (project.previewFile) {
-        zip.file(project.previewFile.path, project.previewFile.content);
-    }
-
-    if (project.appIcon) {
-        const base64Data = project.appIcon.split(';base64,').pop();
-        if (base64Data) {
-            // These paths must match what the AI is told to use in manifest.json
-            zip.file('icon-192x192.png', base64Data, { base64: true });
-            zip.file('icon-512x512.png', base64Data, { base64: true });
-        }
-    }
-
-    try {
-      const content = await zip.generateAsync({ type: 'blob' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(content);
-      const sanitizedName = project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-      link.download = `${sanitizedName}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    } catch (error) {
-        console.error("Failed to generate zip file", error);
-        alert("Sorry, there was an error downloading the project.");
-    }
-  };
   
   const handleUpdateProject = (name: string, icon: string | null) => {
     if (editingProject) {
         setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined } : p));
         setEditingProject(null);
     }
-  }
+  };
+
+  const handleNewStudioProject = () => {
+    const name = prompt("Enter a name for your new studio project:", "My Studio App");
+    if (name) {
+        const newProject: Project = {
+            id: Date.now().toString(),
+            name,
+            createdAt: new Date().toISOString(),
+            files: [studioBoilerplateReadme],
+            previewFile: studioBoilerplatePreview,
+            stack: 'react', // Default to react for studio
+            deployments: [],
+        };
+        setProjects(prev => [newProject, ...prev]);
+        window.location.hash = `#/studio/${newProject.id}`;
+    }
+  };
 
 
   return (
     <div className="p-8 h-full overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-6">My Projects</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 className="text-3xl font-bold">My Projects</h1>
+        <div className="flex items-center gap-3">
+            <a href="#/builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300">
+                <SparklesIcon />
+                New AI Project
+            </a>
+             <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors duration-300">
+                <CodeIcon />
+                New Studio Project
+            </button>
+        </div>
+      </div>
+
       {projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/5 rounded-lg p-8">
             <h2 className="text-xl font-semibold mb-2 text-white">No projects yet</h2>
-            <p>Go to the builder to create your first application!</p>
+            <p>Create a new project using the AI builder or the code studio.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -97,12 +145,17 @@ export const ProjectsPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center justify-between mt-4">
-                 <a href={`#/project/${project.id}`} className="bg-white text-black px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-200 transition-colors">
-                    Open in Builder
-                 </a>
+                 <div className="flex items-center gap-2 text-sm">
+                    <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                        Builder
+                    </a>
+                     <a href={`#/studio/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                        Studio
+                    </a>
+                 </div>
                  <div className="flex items-center gap-2">
                     <button 
-                        onClick={() => downloadProject(project)} 
+                        onClick={() => downloadProjectAsZip(project)} 
                         className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
                         aria-label="Download Project"
                     >

@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage';
 import { Spinner } from './components/Spinner';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { StudioPage } from './pages/StudioPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -66,6 +67,11 @@ export const App: React.FC = () => {
   
   if (route.startsWith('#/builder')) {
     return <ProtectedRoute><Builder /></ProtectedRoute>;
+  }
+
+  if (route.startsWith('#/studio/')) {
+    const projectId = route.split('/')[2];
+    return <ProtectedRoute><StudioPage projectId={projectId} /></ProtectedRoute>;
   }
 
   // Default to the main landing page

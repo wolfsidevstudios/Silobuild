@@ -37,7 +37,7 @@ export const Sidebar: React.FC = () => {
       </div>
        <div className="mb-6 px-2">
         <a 
-          href="#/builder" 
+          href="#/dashboard/projects" 
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
         >
             <PlusIcon />
