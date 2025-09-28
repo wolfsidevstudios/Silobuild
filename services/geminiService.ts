@@ -44,15 +44,12 @@ export const generateAppStream = (
   onUpdate: (update: any) => void
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
-    // FIX: Per coding guidelines, API key must be sourced from `process.env.API_KEY`.
-    // The check for a user-provided key has been removed.
-    // Assuming `process.env.API_KEY` is available.
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const systemInstruction = createSystemInstruction(settings);
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: prompt, // FIX: Pass the prompt directly without wrapping it.
+        contents: prompt,
         config: {
           systemInstruction,
           temperature: 0.2,
@@ -66,6 +63,12 @@ export const generateAppStream = (
         while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
           const line = buffer.substring(0, newlineIndex).trim();
           buffer = buffer.substring(newlineIndex + 1);
+
+          // Guard against markdown code blocks
+          if (line === '```json' || line === '```') {
+            continue;
+          }
+          
           if (line) {
             try {
               const update = JSON.parse(line);
@@ -78,17 +81,20 @@ export const generateAppStream = (
       }
 
       if (buffer.trim()) {
-        try {
-          const update = JSON.parse(buffer.trim());
-          onUpdate(update);
-        } catch (e) {
-          console.warn('Failed to parse final streaming JSON line:', buffer.trim(), e);
+        const finalLine = buffer.trim();
+        // Guard against markdown code blocks in the final part
+        if (finalLine !== '```json' && finalLine !== '```') {
+           try {
+              const update = JSON.parse(finalLine);
+              onUpdate(update);
+            } catch (e) {
+              console.warn('Failed to parse final streaming JSON line:', finalLine, e);
+            }
         }
       }
       resolve();
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      // FIX: Updated error message to reflect API key is from environment variables.
       if (error instanceof Error && error.message.includes('API key not valid')) {
           reject(new Error("The configured Gemini API key is invalid. Please check your environment configuration."));
       } else {

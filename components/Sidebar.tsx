@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon } from './icons';
 import { UserProfile } from './UserProfile';
 
 const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: string; }> = ({ href, icon, label }) => {
@@ -30,9 +30,18 @@ const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: str
 export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white/5 border-r border-white/10 flex flex-col p-4">
-      <div className="mb-8">
+      <div className="mb-4">
         <a href="#/dashboard" className="flex items-center gap-2 text-white font-bold text-xl px-2">
             AI App Builder
+        </a>
+      </div>
+       <div className="mb-6 px-2">
+        <a 
+          href="#/" 
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
+        >
+            <PlusIcon />
+            New Project
         </a>
       </div>
       <nav className="flex-1 flex flex-col gap-2">
