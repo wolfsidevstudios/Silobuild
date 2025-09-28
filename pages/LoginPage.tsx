@@ -13,7 +13,8 @@ declare global {
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="bg-white/5 p-6 rounded-lg border border-white/10 transition-all duration-300 hover:border-white/20 hover:bg-white/10">
-        <div className="text-blue-400 mb-4">{React.cloneElement(icon as React.ReactElement, { className: 'w-8 h-8' })}</div>
+        {/* FIX: Correctly type the cloned element to allow passing a className prop, resolving a TypeScript error. */}
+        <div className="text-blue-400 mb-4">{React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-8 h-8' })}</div>
         <h4 className="text-lg font-bold mb-2 text-white">{title}</h4>
         <p className="text-gray-400 text-sm">{description}</p>
     </div>
