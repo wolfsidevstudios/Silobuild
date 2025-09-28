@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, SchemaIcon } from './icons';
 import { UserProfile } from './UserProfile';
 
 const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: string; }> = ({ href, icon, label }) => {
@@ -48,6 +48,7 @@ export const Sidebar: React.FC = () => {
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
+        <SidebarNavLink href="#/dashboard/schema-builder" icon={<SchemaIcon />} label="Schema Builder" />
         <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" />
       </nav>
       <div className="mt-auto">
