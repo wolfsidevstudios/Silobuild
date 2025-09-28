@@ -52,7 +52,7 @@ export const generateAppStream = (
       const systemInstruction = createSystemInstruction(settings);
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: `Generate a React application based on this prompt: "${prompt}"`,
+        contents: prompt, // FIX: Pass the prompt directly without wrapping it.
         config: {
           systemInstruction,
           temperature: 0.2,
