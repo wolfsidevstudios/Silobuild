@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon } from '../components/icons';
 import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
@@ -16,15 +16,6 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
         {/* FIX: Correctly type the cloned element to allow passing a className prop, resolving a TypeScript error. */}
         <div className="text-blue-400 mb-4">{React.cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-8 h-8' })}</div>
         <h4 className="text-lg font-bold mb-2 text-white">{title}</h4>
-        <p className="text-gray-400 text-sm">{description}</p>
-    </div>
-);
-
-const HowItWorksCard: React.FC<{ icon: React.ReactNode; step: string; title: string; description: string }> = ({ icon, step, title, description }) => (
-    <div className="bg-white/5 p-6 rounded-lg border border-white/10 text-center">
-        <div className="inline-flex items-center justify-center bg-blue-500/10 text-blue-400 rounded-full w-12 h-12 mb-4 border border-blue-500/20">{icon}</div>
-        <p className="text-sm font-bold text-blue-400 mb-2">{step}</p>
-        <h4 className="text-xl font-bold mb-2 text-white">{title}</h4>
         <p className="text-gray-400 text-sm">{description}</p>
     </div>
 );
@@ -202,21 +193,52 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="how-it-works" className="py-20 bg-white/5 border-y border-white/10">
+            <section id="how-it-works" className="py-20 bg-black">
                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-16">
                         <h3 className="text-4xl font-bold">How It Works</h3>
-                        <p className="text-gray-400 mt-2">Get your app running in three simple steps.</p>
+                        <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Go from prompt to product with a simple, conversational workflow. Build, publish, and iterate all in one place.</p>
                     </div>
-                    <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        <HowItWorksCard icon={<EditIcon />} step="STEP 1" title="Describe Your Idea" description="Start with a simple prompt. Describe the app you want to build, its features, and the look and feel." />
-                        <HowItWorksCard icon={<SparklesIcon />} step="STEP 2" title="Generate The Code" description="Our AI analyzes your prompt and generates a complete, multi-file application with clean, production-ready code." />
-                        <HowItWorksCard icon={<ChatIcon />} step="STEP 3" title="Iterate & Refine" description="Request changes and new features in the chat. The AI will update the code, allowing you to refine your app." />
+                    <div className="space-y-16 max-w-5xl mx-auto">
+                        {/* Card 1: Build */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
+                            <div className="space-y-4">
+                                <h3 className="text-4xl font-bold text-white">Build</h3>
+                                <p className="text-gray-300">Build apps and websites by chatting with AI. No code required. It really just works.</p>
+                            </div>
+                            <div className="rounded-2xl h-64 flex items-center justify-center bg-gradient-to-br from-orange-500 via-red-500 to-yellow-400 p-8">
+                                <div className="w-full bg-white/80 backdrop-blur-sm rounded-lg p-4 shadow-lg text-gray-700 font-mono text-left">Build me a ...</div>
+                            </div>
+                        </div>
+                        {/* Card 2: Publish */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
+                            <div className="rounded-2xl h-64 flex items-center justify-center bg-gradient-to-br from-teal-400 to-blue-600 p-8 order-last md:order-first">
+                                <button className="bg-white/90 backdrop-blur-sm rounded-lg px-6 py-4 shadow-lg text-gray-800 font-semibold flex items-center gap-2 text-lg">
+                                    <DownloadIcon className="w-6 h-6" />
+                                    Publish
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="text-4xl font-bold text-white">Publish</h3>
+                                <p className="text-gray-300">Deploy your apps in 1 click. Use a provided domain or bring your own.</p>
+                            </div>
+                        </div>
+                        {/* Card 3: Iterate */}
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 grid md:grid-cols-2 items-center gap-12">
+                            <div className="space-y-4">
+                                <h3 className="text-4xl font-bold text-white">Iterate</h3>
+                                <p className="text-gray-300">Refine your creation by chatting. Add features, fix bugs, and change styles conversationally.</p>
+                            </div>
+                            <div className="rounded-2xl h-64 flex flex-col gap-3 justify-center bg-gradient-to-br from-purple-500 to-indigo-600 p-8">
+                                <div className="bg-blue-600 text-white rounded-lg p-3 max-w-xs self-end rounded-br-none text-sm">Now add authentication</div>
+                                <div className="bg-gray-700 text-gray-300 rounded-lg p-3 max-w-xs self-start rounded-bl-none text-sm mt-2">Ok, I've added login with Google.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
-
-            <section id="features" className="py-20 bg-black border-b border-white/10">
+            
+            <section id="features" className="py-20 bg-white/5 border-y border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">A New Way to Build Software</h3>
@@ -233,7 +255,21 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="testimonials" className="py-20 bg-white/5 border-b border-white/10">
+             <section id="for-who" className="py-20 bg-black">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">Built for Modern Builders</h3>
+                        <p className="text-gray-400 mt-2">Whether you're a seasoned developer or just starting, Silo Build accelerates your workflow.</p>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                        <FeatureCard icon={<SparklesIcon />} title="Indie Hackers & Founders" description="Go from idea to MVP in record time. Validate your concepts without writing weeks of boilerplate code." />
+                        <FeatureCard icon={<PaintBrushIcon />} title="Designers Who Code" description="Bring your designs to life effortlessly. Describe your UI and get functional React components in seconds." />
+                        <FeatureCard icon={<LayoutIcon />} title="Teams & Enterprises" description="Rapidly prototype new features and internal tools. Free up your engineers to focus on complex problems." />
+                    </div>
+                </div>
+            </section>
+
+            <section id="testimonials" className="py-20 bg-white/5 border-y border-white/10">
                  <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Loved by Developers</h3>
@@ -287,6 +323,34 @@ export const LoginPage: React.FC = () => {
                     </div>
                 </div>
             </section>
+            
+            <section id="cta" className="py-20">
+                <div className="container mx-auto px-6">
+                    <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl rounded-2xl sm:px-16 border border-white/10">
+                        <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                            Ready to build your next idea?
+                        </h2>
+                        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
+                            Stop wiring boilerplate and start creating. Your next project is just a prompt away.
+                        </p>
+                        <div className="mt-10 flex items-center justify-center gap-x-6">
+                            {user ? (
+                                <a href="#/builder" className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                                    Go to Builder
+                                </a>
+                            ) : (
+                                <button onClick={handleSignInClick} className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                                    Sign In & Get Started
+                                </button>
+                            )}
+                        </div>
+                        <div className="absolute -top-24 right-0 -z-10 transform-gpu blur-3xl" aria-hidden="true">
+                            <div className="aspect-[1404/767] w-[87.75rem] bg-gradient-to-r from-[#80caff] to-[#4f46e5] opacity-25" style={{clipPath: 'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 37.9%, 73.6% 51.7%)'}}></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <footer className="py-8 text-center text-gray-500 border-t border-white/10">
