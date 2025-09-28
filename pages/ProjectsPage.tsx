@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project } from '../types';
 import { DownloadIcon, TrashIcon } from '../components/icons';
+import JSZip from 'jszip';
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
@@ -11,6 +12,34 @@ export const ProjectsPage: React.FC = () => {
       setProjects(prev => prev.filter(p => p.id !== projectId));
     }
   };
+
+  const downloadProject = async (project: Project) => {
+    const zip = new JSZip();
+    
+    project.files.forEach(file => {
+      zip.file(file.path, file.content);
+    });
+
+    if (project.previewFile) {
+        zip.file(project.previewFile.path, project.previewFile.content);
+    }
+
+    try {
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      const sanitizedName = project.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      link.download = `${sanitizedName}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+        console.error("Failed to generate zip file", error);
+        alert("Sorry, there was an error downloading the project.");
+    }
+  };
+
 
   return (
     <div className="p-8 h-full overflow-y-auto">
@@ -36,7 +65,7 @@ export const ProjectsPage: React.FC = () => {
                  </a>
                  <div className="flex items-center gap-2">
                     <button 
-                        onClick={() => alert('Download feature not implemented.')} 
+                        onClick={() => downloadProject(project)} 
                         className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
                         aria-label="Download Project"
                     >
