@@ -1,5 +1,6 @@
 export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 export type ViewMode = 'CODE' | 'PREVIEW';
+export type TechStack = 'react' | 'html';
 
 export interface ChatMessage {
   role: 'user' | 'model';
@@ -17,6 +18,7 @@ export interface Project {
   createdAt: string;
   files: GeneratedFile[];
   previewFile: GeneratedFile | null;
+  stack: TechStack;
   appIcon?: string; // Base64 data URI for the app icon
 }
 

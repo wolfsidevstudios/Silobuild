@@ -1,9 +1,31 @@
 import { GoogleGenAI } from "@google/genai";
-import { Settings, GeneratedFile } from "../types";
+import { Settings, GeneratedFile, TechStack } from "../types";
 
-const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean): string => {
+const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack): string => {
   let instruction;
-  const baseInstruction = `You are an expert React engineer specializing in generating and modifying React TypeScript applications.
+  
+  if (techStack === 'html') {
+      instruction = `You are an expert web developer specializing in generating single-file HTML applications.
+You must stream your response as a sequence of JSON objects, each on a new line.
+First, you MUST output a 'plan' object that lists the single file path: "index.html".
+Example: {"type": "plan", "files": ["index.html"]}
+
+Then, you will output one 'file' object for "index.html".
+Example: {"type": "file", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+
+Finally, you MUST output a 'previewFile' object with the exact same content.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+
+The generated HTML file MUST be self-contained. It must use Tailwind CSS via the CDN ('<script src="https://cdn.tailwindcss.com"></script>') in the <head>. Any JavaScript logic should be in a <script> tag at the end of the <body>.
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+          
+      if (isEditing) {
+         instruction += `\nYour task is to update the provided HTML file based on the user's request. You will receive the current file content, followed by the modification request. You MUST output the complete, updated HTML file.`;
+      } else {
+         instruction += `\nYour task is to generate a complete, single-file HTML application based on the user's prompt.`;
+      }
+  } else { // 'react'
+      instruction = `You are an expert React engineer specializing in generating and modifying React TypeScript applications.
 You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
@@ -16,13 +38,13 @@ Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DO
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
-  if (isEditing) {
-    instruction = `${baseInstruction}\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files.`;
-  } else {
-    instruction = `${baseInstruction}\nYour task is to generate a complete, multi-file React TypeScript application based on the user's prompt.`;
-  }
+      if (isEditing) {
+        instruction += `\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files.`;
+      } else {
+        instruction += `\nYour task is to generate a complete, multi-file React TypeScript application based on the user's prompt.`;
+      }
 
-  instruction += `\n
+      instruction += `\n
 --- PWA & CUSTOMIZATION INSTRUCTIONS ---
 All applications you generate MUST be Progressive Web Apps (PWAs).
 This requires the following file structure and content:
@@ -38,6 +60,7 @@ When generating the 'previewFile' (a single self-contained index.html):
 - It must NOT link to an external manifest.json or register a service worker.
 - It SHOULD include PWA-like meta tags directly in the <head> for a better experience (e.g., theme-color, mobile-web-app-capable).
 `;
+  }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
   const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
@@ -67,6 +90,7 @@ export const generateAppStream = (
   prompt: string,
   settings: Settings,
   onUpdate: (update: any) => void,
+  techStack: TechStack,
   existingFiles?: GeneratedFile[],
   appName?: string,
   appIcon?: string, // base64 string
@@ -81,7 +105,7 @@ export const generateAppStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       const isEditing = !!existingFiles && existingFiles.length > 0;
-      const systemInstruction = createSystemInstruction(prompt, settings, isEditing);
+      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack);
       
       let fullPrompt: string;
       if (isEditing) {
@@ -94,10 +118,19 @@ export const generateAppStream = (
       if (appName || appIcon) {
         fullPrompt += `\n\n--- REQUIRED APP CUSTOMIZATION ---`;
         if (appName) {
+          if (techStack === 'react') {
             fullPrompt += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in index.html, and the 'name' and 'short_name' properties in manifest.json.`;
+          } else {
+            fullPrompt += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in the HTML file.`;
+          }
         }
          if (appIcon) {
-            fullPrompt += `\nFor the 'previewFile', you MUST include a favicon link in the <head> using this exact Base64 data URI: <link rel="icon" href="${appIcon}">. Do not modify the data URI.`;
+            const iconTag = `<link rel="icon" href="${appIcon}">`;
+            if (techStack === 'react') {
+                fullPrompt += `\nFor the 'previewFile', you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
+            } else {
+                fullPrompt += `\nFor the HTML file, you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
+            }
         }
         fullPrompt += `\n---------------------------------`;
       }

@@ -77,11 +77,16 @@ export const ProjectsPage: React.FC = () => {
                      <div className="w-10 h-10 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10">
                        {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-6 h-6 text-gray-500" />}
                      </div>
-                     <h2 className="text-lg font-semibold truncate">{project.name}</h2>
+                     <div className="min-w-0">
+                        <h2 className="text-lg font-semibold truncate">{project.name}</h2>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                            {project.stack === 'html' ? 'HTML' : 'React'}
+                        </span>
+                     </div>
                   </div>
                    <button 
                       onClick={() => setEditingProject(project)} 
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full flex-shrink-0"
                       aria-label="Edit Details"
                   >
                       <EditIcon className="w-4 h-4" />

@@ -147,3 +147,27 @@ export const LockIcon = ({ className = 'w-5 h-5' }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
     </svg>
 );
+
+export const GoogleIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <title>Google</title>
+    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.62 2.04-4.82 2.04-5.82 0-9.6-4.82-9.6-9.6s3.78-9.6 9.6-9.6c2.53 0 4.46.93 5.96 2.32l2.6-2.6C19.03 1.73 16.05 0 12.48 0 5.82 0 .06 5.82.06 12.5s5.76 12.5 12.42 12.5c2.8 0 5.22-.93 7.02-2.72 1.93-1.93 2.53-4.49 2.53-7.56 0-.82-.07-1.48-.18-2.2z" fill="#4285F4"/>
+  </svg>
+);
+
+export const ReactIcon = ({ className = "w-8 h-8" }) => (
+    <svg className={className} viewBox="-11.5 -10.23174 23 20.46348" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="0" cy="0" r="2.05" fill="#61DAFB"/>
+        <g stroke="#61DAFB" strokeWidth="1" fill="none">
+            <ellipse rx="11" ry="4.2"/>
+            <ellipse rx="11" ry="4.2" transform="rotate(60)"/>
+            <ellipse rx="11" ry="4.2" transform="rotate(120)"/>
+        </g>
+    </svg>
+);
+
+export const HtmlIcon = ({ className = "w-8 h-8" }) => (
+    <svg className={className} fill="#E34F26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.375 0h21.25L20.438 21.625l-8.438 2.375-8.438-2.375L1.375 0zM12 19.344l6.219-1.688.844-9.531H12v3.219h-3.25l-.219-2.281h3.469V5.438H5.688l.5 5.625h8.906l-.5 5.531-2.594.719-2.594-.719-.188-2.031h-3.25l.375 4.031L12 19.344z"/>
+    </svg>
+);

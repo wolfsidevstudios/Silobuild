@@ -5,7 +5,7 @@ import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -40,6 +40,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
+  const [techStack, setTechStack] = useState<TechStack | null>(null);
 
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -73,6 +74,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsLoading(false);
       }
     } else {
+      if (!techStack) {
+          setError("Please select a technology stack before generating an app.");
+          setIsLoading(false);
+          setMessages(prev => prev.slice(0, prev.length -1)); // remove user message
+          return;
+      }
       // Handle app generation/editing
       setGenerationPlan([]);
       setGeneratedFilesProgress([]);
@@ -101,7 +108,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
           }
-        }, filesForContext, appName, appIcon);
+        }, techStack, filesForContext, appName, appIcon);
 
         const modelMessage: ChatMessage = {
           role: 'model',
@@ -123,7 +130,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsLoading(false);
       }
     }
-  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode]);
+  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack]);
 
 
   useEffect(() => {
@@ -137,24 +144,32 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsGenerated(true);
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
+        setTechStack(project.stack || 'react'); // Default old projects to react
       }
     } else {
-        // This is a new project. Check for an initial prompt from the landing page.
+        // This is a new project. Reset everything.
+        setCurrentProject(null);
+        setMultiFileCode([]);
+        setPreviewFile(null);
+        setMessages([]);
+        setIsGenerated(false);
+        setTechStack(null);
+
         const initialPrompt = sessionStorage.getItem('initialPrompt');
         if (initialPrompt) {
             sessionStorage.removeItem('initialPrompt');
-            handleSend(initialPrompt);
-        } else {
-           setCurrentProject(null);
+            // Can't call handleSend directly, as techStack is not yet set.
+            // We can perhaps show a default stack or prompt the user.
+            // For now, we just reset, and user has to pick stack then paste prompt.
         }
     }
-  }, [projectId, projects, handleSend]);
+  }, [projectId, projects]);
 
   const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
 
 
   const handleSaveProject = (name: string, icon: string | null) => {
-    if (name && multiFileCode.length > 0) {
+    if (name && multiFileCode.length > 0 && techStack) {
       const newProject: Project = {
         id: currentProject?.id || Date.now().toString(),
         name: name,
@@ -162,6 +177,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         createdAt: currentProject?.createdAt || new Date().toISOString(),
         files: multiFileCode,
         previewFile: previewFile,
+        stack: techStack
       };
 
       if (currentProject) {
@@ -172,6 +188,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       setCurrentProject(newProject);
       alert(`Project "${name}" saved!`);
       setIsSaveModalOpen(false);
+      // Redirect to the project's URL to have a clean state and URL
+      window.location.hash = `#/project/${newProject.id}`;
+    } else {
+      alert("Cannot save: project name, code, or tech stack is missing.");
     }
   };
   
@@ -194,6 +214,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     return true;
   };
 
+  const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
 
   const renderContent = () => {
     switch (appMode) {
@@ -215,6 +236,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onFileDelete={handleFileDelete}
             onFileAdd={handleFileAdd}
             projectName={currentProject?.name}
+            showStackSelector={showStackSelector}
+            onSelectStack={setTechStack}
           />
         );
       case 'CODE':
@@ -244,7 +267,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         activeMode={appMode} 
         setAppMode={setAppMode}
         onSaveProject={() => setIsSaveModalOpen(true)}
-        isSaveEnabled={isGenerated && !isLoading}
+        isSaveEnabled={isGenerated && !isLoading && !!techStack}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isLoading && appMode !== 'CHAT' && (
@@ -260,6 +283,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         isAppGenerated={isGenerated}
         isIdeaMode={isIdeaMode}
         onToggleIdeaMode={toggleIdeaMode}
+        isReadyToPrompt={!!techStack || isGenerated}
       />
       <ProjectMetadataModal
         isOpen={isSaveModalOpen}

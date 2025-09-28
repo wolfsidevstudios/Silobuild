@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, LockIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, LockIcon, GoogleIcon } from '../components/icons';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -58,7 +58,7 @@ export const LoginPage: React.FC = () => {
                 <a href="#/" className="text-xl font-bold">AI App Builder</a>
                 {user ? (
                     <div className="flex items-center gap-4">
-                         <a href="#/dashboard" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Dashboard</a>
+                         <a href="#/dashboard/projects" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Dashboard</a>
                          <div className="flex items-center gap-2">
                             <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full" />
                             <span className="text-sm font-semibold hidden sm:block">{user.name}</span>
@@ -81,7 +81,7 @@ export const LoginPage: React.FC = () => {
                         Build & Deploy React Apps with AI
                     </h2>
                     <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-                        Describe your application in plain English, and our AI will generate a complete, production-ready React application in seconds. From idea to PWA in minutes.
+                        Describe your application in plain English, and our AI will generate a complete, production-ready application in seconds. From idea to PWA in minutes.
                     </p>
                     <div className="flex justify-center">
                         {user ? (
@@ -99,11 +99,18 @@ export const LoginPage: React.FC = () => {
                                 </div>
                             </form>
                         ) : (
-                            <div onClick={handleSignInClick} className="w-full max-w-2xl mx-auto bg-white/5 border border-dashed border-white/20 rounded-lg p-4 text-center cursor-pointer hover:border-white/40 transition-all">
-                                <div className="flex items-center justify-center gap-3 text-gray-400">
-                                   <LockIcon />
-                                   <span className="font-medium">Sign in to start building</span>
+                             <div className="flex flex-col items-center gap-4 w-full max-w-2xl">
+                                <div onClick={handleSignInClick} className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg p-4 text-center cursor-pointer hover:border-white/40 transition-all">
+                                    <div className="flex items-center justify-center gap-3 text-gray-400">
+                                       <LockIcon />
+                                       <span className="font-medium">Sign in to start building</span>
+                                    </div>
                                 </div>
+                                <p className="text-gray-500 text-sm">or</p>
+                                <button onClick={handleSignInClick} className="bg-white text-black px-6 py-2.5 rounded-full font-semibold hover:bg-gray-200 transition-colors flex items-center gap-3 text-sm">
+                                    <GoogleIcon />
+                                    Sign In with Google
+                                </button>
                             </div>
                         )}
                     </div>

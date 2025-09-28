@@ -7,17 +7,31 @@ interface PromptInputProps {
   isAppGenerated: boolean;
   isIdeaMode: boolean;
   onToggleIdeaMode: () => void;
+  isReadyToPrompt: boolean;
 }
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode }) => {
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt }) => {
   const [prompt, setPrompt] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (prompt.trim() && !isLoading) {
+    if (prompt.trim() && !isLoading && isReadyToPrompt) {
       onSend(prompt);
       setPrompt('');
     }
+  };
+
+  const placeholderText = () => {
+    if (!isReadyToPrompt && !isAppGenerated) {
+      return "Select a technology stack to begin...";
+    }
+    if (isIdeaMode) {
+      return "Brainstorm app ideas with the AI...";
+    }
+    if (isAppGenerated) {
+      return "Describe a change to your app...";
+    }
+    return "Describe the app you want to build...";
   };
 
   return (
@@ -42,19 +56,13 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder={
-            isIdeaMode
-              ? "Brainstorm app ideas with the AI..."
-              : isAppGenerated
-                ? "Describe a change to your app..."
-                : "Describe the app you want to build..."
-          }
-          disabled={isLoading}
+          placeholder={placeholderText()}
+          disabled={isLoading || (!isReadyToPrompt && !isAppGenerated)}
           className="w-full bg-transparent py-2 text-white placeholder-gray-400 focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={isLoading || !prompt.trim()}
+          disabled={isLoading || !prompt.trim() || (!isReadyToPrompt && !isAppGenerated)}
           className="bg-blue-500 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed flex-shrink-0"
         >
           <SendIcon />

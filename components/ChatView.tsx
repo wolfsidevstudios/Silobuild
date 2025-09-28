@@ -1,9 +1,10 @@
 import React from 'react';
-import { ChatMessage, GeneratedFile, ViewMode } from '../types';
+import { ChatMessage, GeneratedFile, ViewMode, TechStack } from '../types';
 import { CodeIcon, EyeIcon, CheckIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
+import { StackSelection } from './StackSelection';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -21,6 +22,8 @@ interface ChatViewProps {
   onFileDelete: (path: string) => void;
   onFileAdd: (path: string) => boolean;
   projectName?: string;
+  showStackSelector: boolean;
+  onSelectStack: (stack: TechStack) => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -95,46 +98,54 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onFileDelete,
   onFileAdd,
   projectName,
+  showStackSelector,
+  onSelectStack
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
       <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         <h2 className="text-lg font-bold p-4 border-b border-white/10">Chat</h2>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              <div
-                className={`max-w-md p-3 rounded-lg ${
-                  msg.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-none'
-                    : 'bg-gray-700 text-gray-200 rounded-bl-none'
-                }`}
-              >
-                <p className="text-sm">{msg.content}</p>
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex items-start">
-               <div className="max-w-md w-full p-3 rounded-lg bg-gray-700 text-gray-200 rounded-bl-none">
-                <div className="flex items-center gap-2">
-                  <Spinner />
-                  <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
+          {showStackSelector ? (
+            <StackSelection onSelect={onSelectStack} />
+          ) : (
+            <>
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                >
+                  <div
+                    className={`max-w-md p-3 rounded-lg ${
+                      msg.role === 'user'
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-gray-700 text-gray-200 rounded-bl-none'
+                    }`}
+                  >
+                    <p className="text-sm">{msg.content}</p>
+                  </div>
                 </div>
-                { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
-              </div>
-            </div>
-          )}
-           {error && (
-            <div className="flex items-start">
-               <div className="max-w-md p-3 rounded-lg bg-red-800 text-white rounded-bl-none">
-                <p className="text-sm font-semibold">Error</p>
-                <p className="text-sm">{error}</p>
-              </div>
-            </div>
+              ))}
+              {isLoading && (
+                <div className="flex items-start">
+                  <div className="max-w-md w-full p-3 rounded-lg bg-gray-700 text-gray-200 rounded-bl-none">
+                    <div className="flex items-center gap-2">
+                      <Spinner />
+                      <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
+                    </div>
+                    { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className="flex items-start">
+                  <div className="max-w-md p-3 rounded-lg bg-red-800 text-white rounded-bl-none">
+                    <p className="text-sm font-semibold">Error</p>
+                    <p className="text-sm">{error}</p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
