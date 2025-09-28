@@ -19,9 +19,6 @@ export const ProjectsPage: React.FC = () => {
         <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/5 rounded-lg p-8">
             <h2 className="text-xl font-semibold mb-2 text-white">No projects yet</h2>
             <p>Go to the builder to create your first application!</p>
-            <a href="#" className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-600 transition-colors">
-                Go to Builder
-            </a>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -34,7 +31,7 @@ export const ProjectsPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center justify-between mt-4">
-                 <a href={`#/project/${project.id}`} className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition-colors">
+                 <a href={`#/project/${project.id}`} className="bg-white text-black px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-200 transition-colors">
                     Open in Builder
                  </a>
                  <div className="flex items-center gap-2">
