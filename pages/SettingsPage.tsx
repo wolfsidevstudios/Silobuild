@@ -4,6 +4,7 @@ import { Settings } from '../types';
 import { SettingsIcon, StripeLogo, SupabaseLogo } from '../components/icons';
 
 const initialSettings: Settings = {
+  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
@@ -37,6 +38,18 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Gemini API Key */}
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h2 className="text-xl font-bold mb-1">Google Gemini API</h2>
+          <p className="text-sm text-gray-400 mb-4">This is required for the application to function.</p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="geminiApiKey" className="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+              <input type="password" name="geminiApiKey" id="geminiApiKey" value={settings.geminiApiKey} onChange={handleChange} className="w-full bg-black/30 border border-white/20 rounded-md p-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your Google Gemini API Key" />
+            </div>
+          </div>
+        </div>
+
         {/* Vercel */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
           <h2 className="text-xl font-bold mb-4">Vercel</h2>

@@ -1,12 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { Settings } from "../types";
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const createSystemInstruction = (settings: Settings): string => {
   let instruction = `You are an expert React engineer specializing in generating complete, multi-file React TypeScript applications.
 Your task is to generate two things based on the user's prompt:
@@ -50,7 +44,12 @@ export const generateAppStream = (
   onUpdate: (update: any) => void
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
+    if (!settings.geminiApiKey) {
+      return reject(new Error("Gemini API key is not set. Please add it in the settings page."));
+    }
+
     try {
+      const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey });
       const systemInstruction = createSystemInstruction(settings);
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
@@ -90,7 +89,11 @@ export const generateAppStream = (
       resolve();
     } catch (error) {
       console.error("Error calling Gemini API:", error);
-      reject(new Error("Failed to get a valid response from the AI model."));
+      if (error instanceof Error && error.message.includes('API key not valid')) {
+          reject(new Error("Your Gemini API key is invalid. Please check it in the settings."));
+      } else {
+          reject(new Error("Failed to get a valid response from the AI model."));
+      }
     }
   });
 };

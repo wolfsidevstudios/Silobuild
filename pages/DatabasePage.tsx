@@ -4,6 +4,7 @@ import { Settings } from '../types';
 import { DatabaseIcon, SettingsIcon, SupabaseLogo } from '../components/icons';
 
 const initialSettings: Settings = {
+  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',

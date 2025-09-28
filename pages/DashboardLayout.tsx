@@ -10,17 +10,22 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
   const renderPage = () => {
-    // Check for specific sub-pages first
-    if (route.startsWith('#/dashboard/settings')) {
-      return <SettingsPage />;
+    // This is a more explicit router.
+    // It defaults to 'projects' if no sub-page is specified in the hash.
+    const page = route.split('/')[2] || 'projects';
+
+    switch (page) {
+      case 'settings':
+        return <SettingsPage />;
+      case 'database':
+        return <DatabasePage />;
+      case 'projects':
+        return <ProjectsPage />;
+      default:
+        // This case handles '#/dashboard' which correctly defaults to 'projects'.
+        // It also handles any other unknown sub-path by showing the projects list.
+        return <ProjectsPage />;
     }
-    if (route.startsWith('#/dashboard/database')) {
-      return <DatabasePage />;
-    }
-    
-    // Explicitly handle the main dashboard route and any other /dashboard/* paths as the Projects page.
-    // This ensures that visiting `#/dashboard` correctly shows the projects list.
-    return <ProjectsPage />;
   };
 
   return (

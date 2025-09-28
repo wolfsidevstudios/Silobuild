@@ -10,6 +10,7 @@ import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const initialSettings: Settings = {
+  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
@@ -53,6 +54,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
+
+    if (!settings.geminiApiKey) {
+      setError("Missing Gemini API Key. Please go to Dashboard > Settings & Integrations to add your key.");
+      return;
+    }
 
     const userMessage: ChatMessage = { role: 'user', content: prompt };
     setMessages(prev => [...prev, userMessage]);

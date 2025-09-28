@@ -18,6 +18,7 @@ export interface GeminiResponse {
 }
 
 export interface Settings {
+  geminiApiKey: string;
   vercelApiKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
