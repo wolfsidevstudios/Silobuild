@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, BoltIcon } from '../components/icons';
 import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
@@ -10,6 +10,12 @@ declare global {
     google: typeof import('google-one-tap');
   }
 }
+
+const FloatingIcon: React.FC<{ icon: React.ReactNode; className: string }> = ({ icon, className }) => (
+    <div className={`absolute hidden md:flex items-center justify-center -z-10 bg-black/20 p-3 rounded-2xl border border-white/10 backdrop-blur-sm shadow-lg ${className}`}>
+        {icon}
+    </div>
+);
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="bg-white/5 p-6 rounded-lg border border-white/10 transition-all duration-300 hover:border-white/20 hover:bg-white/10">
@@ -126,39 +132,61 @@ export const LoginPage: React.FC = () => {
         </header>
 
         <main>
-            <section className="pt-32 pb-20 text-center relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
-                
+             <section className="pt-32 pb-20 text-center relative overflow-hidden">
+                <div className="absolute inset-0 -z-20 bg-black"></div>
+                 <div 
+                    className="absolute inset-0 -z-10 opacity-50" 
+                    style={{
+                        backgroundImage: 'linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.05) 75%)',
+                        backgroundSize: '40px 40px',
+                        backgroundPosition: '0 0, 0 20px, 20px -20px, -20px 0px',
+                    }}
+                ></div>
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_20%,rgba(96,165,250,0.15),rgba(0,0,0,0))]"></div>
+
+                <FloatingIcon icon={<BoltIcon className="w-6 h-6 text-yellow-300" />} className="top-24 left-1/4 transform -translate-x-32" />
+                <FloatingIcon icon={<PaintBrushIcon className="w-6 h-6 text-pink-400" />} className="top-1/2 left-1/4 transform -translate-x-48" />
+                <FloatingIcon icon={<SparklesIcon className="w-6 h-6 text-yellow-300" />} className="bottom-10 left-1/3" />
+                <FloatingIcon icon={<CodeIcon className="w-6 h-6 text-green-400" />} className="top-28 right-1/4 transform translate-x-32" />
+                <FloatingIcon icon={<DatabaseIcon className="w-6 h-6 text-purple-400" />} className="top-2/3 right-1/4 transform translate-x-40" />
+
                 <div className="container mx-auto px-6 relative">
-                    <h2 className="text-5xl md:text-6xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 leading-tight">
-                        Build & Deploy React Apps with AI
+                    <h2 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 leading-tight">
+                        What can <span className="text-blue-400">Silo Build</span> build for you?
                     </h2>
-                    <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-                        Describe your application in plain English, and our AI will generate a complete, production-ready application in seconds. From idea to PWA in minutes.
+                    <p className="text-lg text-gray-300 max-w-3xl mx-auto mb-10">
+                        Build stunning apps and websites by chatting with AI
                     </p>
                     <div className="flex justify-center">
                         {user ? (
-                            <form onSubmit={handlePromptSubmit} className="w-full max-w-2xl mx-auto">
-                                <div className="relative">
-                                    <textarea
-                                        value={prompt}
-                                        onChange={(e) => setPrompt(e.target.value)}
-                                        placeholder="e.g., a pomodoro timer with a clean, minimalist interface and a task list..."
-                                        className="w-full h-32 resize-none bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl p-4 pr-16 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                                    />
-                                    <button type="submit" disabled={!prompt.trim()} className="absolute top-4 right-4 bg-blue-500 text-white rounded-md p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed">
-                                        <SendIcon />
-                                    </button>
-                                </div>
-                            </form>
-                        ) : (
-                             <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
-                                <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg p-8 text-center">
-                                    <h3 className="text-xl font-bold mb-4">Ready to Build?</h3>
-                                    <p className="text-gray-400 mb-6">Sign in with your Google account to start creating.</p>
-                                    <div className="flex justify-center">
-                                        <div ref={googleButtonContainerRef}></div>
+                            <div className="w-full max-w-3xl">
+                                <form onSubmit={handlePromptSubmit}>
+                                    <div className="relative bg-black/30 border border-white/10 rounded-2xl shadow-2xl p-4 backdrop-blur-lg">
+                                        <label className="text-left block text-sm font-medium text-gray-300 mb-2 px-2">Ask Silo Build to build a prototype of...</label>
+                                        <textarea
+                                            value={prompt}
+                                            onChange={(e) => setPrompt(e.target.value)}
+                                            placeholder="a pomodoro timer with a clean, minimalist interface and a task list"
+                                            className="w-full h-24 bg-transparent resize-none text-white text-base placeholder-gray-500 focus:outline-none p-2"
+                                        />
+                                        <button type="submit" disabled={!prompt.trim()} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                            <ChevronDownIcon className="w-6 h-6 transform rotate-180" />
+                                        </button>
                                     </div>
+                                </form>
+                                <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
+                                    <span className="text-gray-400">Try one →</span>
+                                    <button onClick={() => setPrompt('a landing page for a new SaaS product')} className="bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">Landing page</button>
+                                    <button onClick={() => setPrompt('a personal portfolio website to showcase my projects')} className="bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">Personal website</button>
+                                    <button onClick={() => setPrompt('a SaaS app for tracking habits')} className="bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">SaaS App</button>
+                                </div>
+                            </div>
+                        ) : (
+                             <div className="w-full max-w-3xl bg-black/30 border border-white/10 rounded-2xl shadow-2xl p-8 backdrop-blur-lg text-center">
+                                <h3 className="text-2xl font-bold mb-4">Ready to Build?</h3>
+                                <p className="text-gray-400 mb-6">Sign in with your Google account to start creating.</p>
+                                <div className="flex justify-center">
+                                    <div ref={googleButtonContainerRef}></div>
                                 </div>
                             </div>
                         )}
