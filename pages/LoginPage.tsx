@@ -45,8 +45,7 @@ export const LoginPage: React.FC = () => {
             size: 'large', 
             type: 'standard', 
             text: 'continue_with',
-            shape: 'rectangular',
-            width: 320
+            shape: 'pill',
           }
         );
       }
