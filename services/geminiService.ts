@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { Settings } from "../types";
 
-const createSystemInstruction = (settings: Settings): string => {
+const createSystemInstruction = (prompt: string, settings: Settings): string => {
   let instruction = `You are an expert React engineer specializing in generating complete, multi-file React TypeScript applications.
 Your task is to generate two things based on the user's prompt:
 1.  A set of files for a standard React TypeScript project ('multiFileCode').
@@ -21,15 +21,20 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
   const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
+  
+  const promptLower = prompt.toLowerCase();
+  const wantsSupabase = hasSupabase && /\b(supabase|database|auth|authentication|login|signup|users)\b/i.test(promptLower);
+  const wantsStripe = hasStripe && /\b(stripe|payment|checkout|billing|subscription|price|buy|shop)\b/i.test(promptLower);
 
-  if (hasSupabase || hasStripe) {
+
+  if (wantsSupabase || wantsStripe) {
     instruction += "\n\n--- USER-CONFIGURED INTEGRATIONS ---";
-    instruction += "\nThe user has provided the following service credentials. If their prompt involves databases, authentication, or payments, use these exact values in the generated code. Do not use placeholders.";
-    if (hasSupabase) {
+    instruction += "\nThe user has provided the following service credentials and their prompt indicates they want to use them. Use these exact values in the generated code. Do not use placeholders.";
+    if (wantsSupabase) {
       instruction += `\n- Supabase URL: ${settings.supabaseUrl}`;
       instruction += `\n- Supabase Anon Key: ${settings.supabaseAnonKey}`;
     }
-    if (hasStripe) {
+    if (wantsStripe) {
       instruction += `\n- Stripe Public Key: ${settings.stripePublicKey}`;
     }
     instruction += "\n------------------------------------";
@@ -52,7 +57,7 @@ export const generateAppStream = (
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = createSystemInstruction(settings);
+      const systemInstruction = createSystemInstruction(prompt, settings);
       
       const fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
 
