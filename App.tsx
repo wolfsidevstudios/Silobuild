@@ -4,6 +4,8 @@ import { DashboardLayout } from './pages/DashboardLayout';
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { Spinner } from './components/Spinner';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -45,6 +47,14 @@ export const App: React.FC = () => {
     };
   }, []);
   
+  if (route.startsWith('#/terms')) {
+    return <TermsPage />;
+  }
+
+  if (route.startsWith('#/privacy')) {
+    return <PrivacyPolicyPage />;
+  }
+
   if (route.startsWith('#/dashboard')) {
     return <ProtectedRoute><DashboardLayout route={route} /></ProtectedRoute>;
   }
