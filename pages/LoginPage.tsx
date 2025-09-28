@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, LockIcon, GoogleIcon } from '../components/icons';
 
@@ -22,6 +22,7 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
 export const LoginPage: React.FC = () => {
   const { user, login } = useAuth();
   const [prompt, setPrompt] = useState('');
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user && window.google) {
@@ -33,7 +34,25 @@ export const LoginPage: React.FC = () => {
           }
         },
       });
-      // We don't render the button, but we can still use the prompt
+
+      if (googleButtonContainerRef.current) {
+        // Prevent rendering the button multiple times on fast refresh
+        googleButtonContainerRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(
+          googleButtonContainerRef.current,
+          { 
+            theme: 'filled_black', 
+            size: 'large', 
+            type: 'standard', 
+            text: 'continue_with',
+            shape: 'rectangular',
+            width: 320
+          }
+        );
+      }
+      
+      // Also show the one-tap prompt for a seamless sign-in experience for returning users
+      window.google.accounts.id.prompt();
     }
   }, [user, login]);
   
@@ -99,18 +118,14 @@ export const LoginPage: React.FC = () => {
                                 </div>
                             </form>
                         ) : (
-                             <div className="flex flex-col items-center gap-4 w-full max-w-2xl">
-                                <div onClick={handleSignInClick} className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg p-4 text-center cursor-pointer hover:border-white/40 transition-all">
-                                    <div className="flex items-center justify-center gap-3 text-gray-400">
-                                       <LockIcon />
-                                       <span className="font-medium">Sign in to start building</span>
+                             <div className="flex flex-col items-center gap-6 w-full max-w-2xl">
+                                <div className="w-full bg-white/5 border border-dashed border-white/20 rounded-lg p-8 text-center">
+                                    <h3 className="text-xl font-bold mb-4">Ready to Build?</h3>
+                                    <p className="text-gray-400 mb-6">Sign in with your Google account to start creating.</p>
+                                    <div className="flex justify-center">
+                                        <div ref={googleButtonContainerRef}></div>
                                     </div>
                                 </div>
-                                <p className="text-gray-500 text-sm">or</p>
-                                <button onClick={handleSignInClick} className="bg-white text-black px-6 py-2.5 rounded-full font-semibold hover:bg-gray-200 transition-colors flex items-center gap-3 text-sm">
-                                    <GoogleIcon />
-                                    Sign In with Google
-                                </button>
                             </div>
                         )}
                     </div>
