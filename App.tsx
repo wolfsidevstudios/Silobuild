@@ -3,9 +3,35 @@ import { Builder } from './components/Builder';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
+import { Spinner } from './components/Spinner';
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Give the auth context a moment to load the user from local storage
+    const timer = setTimeout(() => setIsChecking(false), 50);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isChecking) {
+    return (
+      <div className="h-screen w-screen bg-black flex items-center justify-center">
+        <Spinner className="w-10 h-10" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    window.location.hash = '#/';
+    return null;
+  }
+
+  return <>{children}</>;
+};
 
 export const App: React.FC = () => {
-  const { user } = useAuth();
   const [route, setRoute] = useState(window.location.hash);
 
   useEffect(() => {
@@ -18,25 +44,20 @@ export const App: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (user && (window.location.hash === '' || window.location.hash === '#')) {
-      window.location.hash = '#/dashboard';
-    }
-  }, [user]);
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
+  
   if (route.startsWith('#/dashboard')) {
-    return <DashboardLayout route={route} />;
+    return <ProtectedRoute><DashboardLayout route={route} /></ProtectedRoute>;
   }
   
   if (route.startsWith('#/project/')) {
     const projectId = route.split('/')[2];
-    return <Builder projectId={projectId} />;
+    return <ProtectedRoute><Builder projectId={projectId} /></ProtectedRoute>;
+  }
+  
+  if (route.startsWith('#/builder')) {
+    return <ProtectedRoute><Builder /></ProtectedRoute>;
   }
 
-  return <Builder />;
+  // Default to the main landing page
+  return <LoginPage />;
 };

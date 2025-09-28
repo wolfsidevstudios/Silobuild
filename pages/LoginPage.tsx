@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, CodeIcon, DownloadIcon, DatabaseIcon, SparklesIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, LockIcon } from '../components/icons';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -20,10 +20,11 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
 
 
 export const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+  const [prompt, setPrompt] = useState('');
 
   useEffect(() => {
-    if (window.google) {
+    if (!user && window.google) {
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (response) => {
@@ -32,15 +33,9 @@ export const LoginPage: React.FC = () => {
           }
         },
       });
-
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button')!,
-        { theme: 'outline', size: 'large', type: 'standard', shape: 'pill', text: 'signin_with' }
-      );
-      
-      window.google.accounts.id.prompt();
+      // We don't render the button, but we can still use the prompt
     }
-  }, [login]);
+  }, [user, login]);
   
   const handleSignInClick = () => {
     if (window.google) {
@@ -48,14 +43,32 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (prompt.trim()) {
+        sessionStorage.setItem('initialPrompt', prompt);
+        window.location.hash = '#/builder';
+    }
+  }
+
   return (
     <div className="bg-black text-white min-h-screen font-sans overflow-x-hidden">
         <header className="fixed top-0 left-0 right-0 bg-black/30 backdrop-blur-lg z-20 border-b border-white/10">
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
-                <h1 className="text-xl font-bold">AI App Builder</h1>
-                <button onClick={handleSignInClick} className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
-                    Sign In
-                </button>
+                <a href="#/" className="text-xl font-bold">AI App Builder</a>
+                {user ? (
+                    <div className="flex items-center gap-4">
+                         <a href="#/dashboard" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">Dashboard</a>
+                         <div className="flex items-center gap-2">
+                            <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full" />
+                            <span className="text-sm font-semibold hidden sm:block">{user.name}</span>
+                        </div>
+                    </div>
+                ) : (
+                    <button onClick={handleSignInClick} className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                        Sign In
+                    </button>
+                )}
             </nav>
         </header>
 
@@ -71,9 +84,30 @@ export const LoginPage: React.FC = () => {
                         Describe your application in plain English, and our AI will generate a complete, production-ready React application in seconds. From idea to PWA in minutes.
                     </p>
                     <div className="flex justify-center">
-                        <div id="google-signin-button"></div>
+                        {user ? (
+                            <form onSubmit={handlePromptSubmit} className="w-full max-w-2xl mx-auto">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
+                                        placeholder="e.g., a pomodoro timer with a clean, minimalist interface"
+                                        className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl p-4 pr-16 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                                    />
+                                    <button type="submit" disabled={!prompt.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 text-white rounded-md p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                        <SendIcon />
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div onClick={handleSignInClick} className="w-full max-w-2xl mx-auto bg-white/5 border border-dashed border-white/20 rounded-lg p-4 text-center cursor-pointer hover:border-white/40 transition-all">
+                                <div className="flex items-center justify-center gap-3 text-gray-400">
+                                   <LockIcon />
+                                   <span className="font-medium">Sign in to start building</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-4">Get started for free. No credit card required.</p>
                 </div>
             </section>
 

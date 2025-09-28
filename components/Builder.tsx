@@ -41,25 +41,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
 
-  useEffect(() => {
-    if (projectId) {
-      const project = projects.find(p => p.id === projectId);
-      if (project) {
-        setCurrentProject(project);
-        setMultiFileCode(project.files);
-        setPreviewFile(project.previewFile);
-        setMessages([{ role: 'model', content: `Loaded project: ${project.name}` }]);
-        setIsGenerated(true);
-        setAppMode('CHAT');
-        setChatModeView('PREVIEW');
-      }
-    } else {
-        setCurrentProject(null);
-    }
-  }, [projectId, projects]);
-
-  const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
-
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
 
@@ -141,6 +122,34 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       }
     }
   }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode]);
+
+
+  useEffect(() => {
+    if (projectId) {
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setCurrentProject(project);
+        setMultiFileCode(project.files);
+        setPreviewFile(project.previewFile);
+        setMessages([{ role: 'model', content: `Loaded project: ${project.name}` }]);
+        setIsGenerated(true);
+        setAppMode('CHAT');
+        setChatModeView('PREVIEW');
+      }
+    } else {
+        // This is a new project. Check for an initial prompt from the landing page.
+        const initialPrompt = sessionStorage.getItem('initialPrompt');
+        if (initialPrompt) {
+            sessionStorage.removeItem('initialPrompt');
+            handleSend(initialPrompt);
+        } else {
+           setCurrentProject(null);
+        }
+    }
+  }, [projectId, projects, handleSend]);
+
+  const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
+
 
   const handleSaveProject = (name: string, icon: string | null) => {
     if (name && multiFileCode.length > 0) {
