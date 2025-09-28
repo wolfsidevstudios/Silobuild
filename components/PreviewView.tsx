@@ -108,16 +108,9 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
 
   return (
     <div className="w-full h-full bg-gray-900 flex flex-col p-4 gap-4">
-      <div className="flex-1 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden relative">
         <div className="p-2 bg-gray-950/50 border-b border-white/10 flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-gray-200">Live Preview</h3>
-          <button 
-            onClick={onToggleMacPreview} 
-            disabled={!file}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 bg-white/10 text-gray-300 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed">
-            <DesktopIcon className="w-4 h-4" />
-            Mac OS Preview
-          </button>
         </div>
         {file ? (
           <iframe
@@ -131,6 +124,19 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
           <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-900 p-4 text-center">
             <p>No preview available yet. Generate an app first.</p>
           </div>
+        )}
+        {file && (
+          <button
+            onClick={onToggleMacPreview}
+            disabled={!file}
+            className="absolute bottom-4 right-4 group flex items-center justify-center w-12 h-12 bg-gray-800 rounded-full border border-white/20 text-gray-300 hover:bg-blue-600 hover:border-blue-500 hover:text-white transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Live Mac OS Preview"
+          >
+            <DesktopIcon className="w-6 h-6" />
+            <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900/80 text-white text-xs px-2 py-1 rounded">
+                Live Mac OS Preview
+            </span>
+          </button>
         )}
       </div>
 
