@@ -4,7 +4,7 @@ import { PromptInput } from './PromptInput';
 import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
-import { generateAppStream } from '../services/geminiService';
+import { generateAppStream, generateIdeaStream } from '../services/geminiService';
 import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -39,6 +39,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isIdeaMode, setIsIdeaMode] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -57,6 +58,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
   }, [projectId, projects]);
 
+  const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
 
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -65,53 +67,80 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
-    setGenerationPlan([]);
-    setGeneratedFilesProgress([]);
+    
+    if (isIdeaMode) {
+      // Handle idea generation chat
+      setMessages(prev => [...prev, { role: 'model', content: '' }]);
+      try {
+        await generateIdeaStream(prompt, settings, (chunk) => {
+          setMessages(prev => prev.map((msg, index) => 
+            index === prev.length - 1 
+              ? { ...msg, content: msg.content + chunk } 
+              : msg
+          ));
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Failed to get response: ${errorMessage}`);
+        const errorContent = `Sorry, I ran into an error: ${errorMessage}`;
+        setMessages(prev => prev.map((msg, index) => 
+            index === prev.length - 1 
+              ? { ...msg, content: errorContent } 
+              : msg
+        ));
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Handle app generation/editing
+      setGenerationPlan([]);
+      setGeneratedFilesProgress([]);
 
-    const isEdit = isGenerated;
-    const filesForContext = isEdit ? multiFileCode : undefined;
-    const appName = currentProject?.name;
-    const appIcon = currentProject?.appIcon;
+      const isEdit = isGenerated;
+      const filesForContext = isEdit ? multiFileCode : undefined;
+      const appName = currentProject?.name;
+      const appIcon = currentProject?.appIcon;
 
-    try {
-      let planReceived = false;
+      try {
+        let planReceived = false;
 
-      await generateAppStream(prompt, settings, (update) => {
-        if (update.type === 'plan' && Array.isArray(update.files)) {
-            if(!planReceived) {
-                setMultiFileCode([]);
-                setPreviewFile(null);
-                planReceived = true;
-            }
-            setGenerationPlan(update.files);
-        } else if (update.type === 'file' && update.file) {
-          setMultiFileCode(prev => [...prev, update.file]);
-          setGeneratedFilesProgress(prev => [...prev, update.file.path]);
-        } else if (update.type === 'previewFile' && update.file) {
-          setPreviewFile(update.file);
-        }
-      }, filesForContext, appName, appIcon);
+        await generateAppStream(prompt, settings, (update) => {
+          if (update.type === 'plan' && Array.isArray(update.files)) {
+              if(!planReceived) {
+                  setMultiFileCode([]);
+                  setPreviewFile(null);
+                  planReceived = true;
+              }
+              setGenerationPlan(update.files);
+          } else if (update.type === 'file' && update.file) {
+            setMultiFileCode(prev => [...prev, update.file]);
+            setGeneratedFilesProgress(prev => [...prev, update.file.path]);
+          } else if (update.type === 'previewFile' && update.file) {
+            setPreviewFile(update.file);
+          }
+        }, filesForContext, appName, appIcon);
 
-      const modelMessage: ChatMessage = {
-        role: 'model',
-        content: isEdit 
-          ? 'I have applied the changes to the application.' 
-          : 'I have generated the application code. You can save it as a new project.'
-      };
-      setMessages(prev => [...prev, modelMessage]);
-      setAppMode('CHAT');
-      setChatModeView('PREVIEW');
-      setIsGenerated(true);
+        const modelMessage: ChatMessage = {
+          role: 'model',
+          content: isEdit 
+            ? 'I have applied the changes to the application.' 
+            : 'I have generated the application code. You can save it as a new project.'
+        };
+        setMessages(prev => [...prev, modelMessage]);
+        setAppMode('CHAT');
+        setChatModeView('PREVIEW');
+        setIsGenerated(true);
 
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(`Failed to generate app: ${errorMessage}`);
-      const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
-      setMessages(prev => [...prev, modelErrorMessage]);
-    } finally {
-      setIsLoading(false);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Failed to generate app: ${errorMessage}`);
+        const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
+        setMessages(prev => [...prev, modelErrorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [settings, isGenerated, multiFileCode, currentProject]);
+  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode]);
 
   const handleSaveProject = (name: string, icon: string | null) => {
     if (name && multiFileCode.length > 0) {
@@ -150,6 +179,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             error={error}
             generationPlan={generationPlan}
             generatedFilesProgress={generatedFilesProgress}
+            isIdeaMode={isIdeaMode}
             vercelToken={settings.vercelApiKey}
           />
         );
@@ -178,7 +208,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         )}
         {renderContent()}
       </main>
-      <PromptInput onSend={handleSend} isLoading={isLoading} isAppGenerated={isGenerated} />
+      <PromptInput
+        onSend={handleSend}
+        isLoading={isLoading}
+        isAppGenerated={isGenerated}
+        isIdeaMode={isIdeaMode}
+        onToggleIdeaMode={toggleIdeaMode}
+      />
       <ProjectMetadataModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}

@@ -15,6 +15,7 @@ interface ChatViewProps {
   error: string | null;
   generationPlan: string[];
   generatedFilesProgress: string[];
+  isIdeaMode: boolean;
   vercelToken: string;
 }
 
@@ -84,10 +85,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
   error,
   generationPlan,
   generatedFilesProgress,
+  isIdeaMode,
   vercelToken,
 }) => {
   return (
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 overflow-hidden">
+    <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
       <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
         <h2 className="text-lg font-bold p-4 border-b border-white/10">Chat</h2>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
@@ -112,9 +114,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                <div className="max-w-md w-full p-3 rounded-lg bg-gray-700 text-gray-200 rounded-bl-none">
                 <div className="flex items-center gap-2">
                   <Spinner />
-                  <span>Generating application...</span>
+                  <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
                 </div>
-                <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />
+                { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
               </div>
             </div>
           )}
@@ -128,21 +130,23 @@ export const ChatView: React.FC<ChatViewProps> = ({
           )}
         </div>
       </div>
-      <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <div className="flex justify-between items-center p-2 border-b border-white/10">
-          <h2 className="text-lg font-bold px-2">
-            {viewMode === 'CODE' ? 'Code Workspace' : 'App Preview'}
-          </h2>
-          <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+      {!isIdeaMode && (
+        <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+            <div className="flex justify-between items-center p-2 border-b border-white/10">
+            <h2 className="text-lg font-bold px-2">
+                {viewMode === 'CODE' ? 'Code Workspace' : 'App Preview'}
+            </h2>
+            <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+            </div>
+            <div className="flex-1 overflow-hidden">
+            {viewMode === 'CODE' ? (
+                <WorkspaceView files={multiFileCode} />
+            ) : (
+                <PreviewView file={previewFile} vercelToken={vercelToken} />
+            )}
+            </div>
         </div>
-        <div className="flex-1 overflow-hidden">
-          {viewMode === 'CODE' ? (
-            <WorkspaceView files={multiFileCode} />
-          ) : (
-            <PreviewView file={previewFile} vercelToken={vercelToken} />
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

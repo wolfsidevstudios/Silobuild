@@ -157,3 +157,43 @@ export const generateAppStream = (
     }
   });
 };
+
+export const generateIdeaStream = (
+  prompt: string,
+  settings: Settings,
+  onUpdate: (chunk: string) => void,
+): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const apiKey = settings.geminiApiKey || process.env.API_KEY;
+      if (!apiKey) {
+        reject(new Error("Gemini API key is not configured."));
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const fullPrompt = `You are a creative and helpful AI assistant for a software developer. Your task is to brainstorm ideas for applications. Provide suggestions, refine concepts, and offer feedback. Do not generate code, file structures, or JSON. Respond in a conversational, helpful tone.
+
+User's request: "${prompt}"`;
+
+      const responseStream = await ai.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents: fullPrompt,
+        config: {
+          temperature: 0.7, // Higher temperature for more creative responses
+        },
+      });
+
+      for await (const chunk of responseStream) {
+        onUpdate(chunk.text);
+      }
+      
+      resolve();
+    } catch (error) {
+      console.error("Error calling Gemini API for idea generation:", error);
+      const detailedError = error instanceof Error ? error.message : String(error);
+      reject(new Error(`Failed to get a response from the AI. Details: ${detailedError}`));
+    }
+  });
+};
