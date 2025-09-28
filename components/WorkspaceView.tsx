@@ -39,6 +39,26 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
     }
   };
 
+  const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const codeSnippet = e.dataTransfer.getData('text/plain');
+    if (codeSnippet && displayedFile) {
+        const textarea = e.currentTarget;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentContent = displayedFile.content;
+        const newContent = currentContent.substring(0, start) + codeSnippet + currentContent.substring(end);
+        
+        onFileUpdate(displayedFile.path, newContent);
+
+        // Move cursor to end of inserted snippet
+        setTimeout(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + codeSnippet.length;
+            textarea.focus();
+        }, 0);
+    }
+  };
+
 
   if (files.length === 0) {
     return (
@@ -94,6 +114,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
             onChange={(e) => onFileUpdate(displayedFile.path, e.target.value)}
             spellCheck="false"
             className="h-full w-full overflow-auto p-4 text-sm font-mono bg-transparent text-white focus:outline-none resize-none"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
           />
         ) : (
           <div className="h-full flex items-center justify-center text-gray-500">

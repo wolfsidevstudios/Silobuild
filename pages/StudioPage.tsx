@@ -6,6 +6,7 @@ import { WorkspaceView } from '../components/WorkspaceView';
 import { PreviewView } from '../components/PreviewView';
 import { StudioHeader } from '../components/StudioHeader';
 import { downloadProjectAsZip } from '../utils/projectUtils';
+import { ComponentLibrary } from '../components/ComponentLibrary';
 
 // FIX: Add missing 'githubPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
@@ -103,16 +104,22 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
         onDownload={handleDownload}
         isSaveEnabled={hasChanges}
       />
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-2 overflow-hidden">
-        <div className="h-full overflow-hidden border-r border-white/10">
+      <main className="flex-1 grid grid-cols-12 overflow-hidden">
+        {/* Component Library */}
+        <div className="col-span-3 h-full overflow-hidden border-r border-white/10 bg-gray-900/50">
+            <ComponentLibrary />
+        </div>
+        {/* Workspace */}
+        <div className="col-span-5 h-full overflow-hidden border-r border-white/10">
             <WorkspaceView 
-                files={[...(previewFile ? [previewFile] : []), ...files.filter(f => f.path !== previewFile?.path)]} // Show preview file first
+                files={[...(previewFile ? [previewFile] : []), ...files.filter(f => f.path !== previewFile?.path)]}
                 onFileUpdate={handleFileUpdate}
                 onFileDelete={handleFileDelete}
                 onFileAdd={handleFileAdd}
             />
         </div>
-        <div className="h-full overflow-hidden">
+        {/* Preview */}
+        <div className="col-span-4 h-full overflow-hidden">
             <PreviewView 
                 file={livePreviewFile}
                 vercelToken={settings.vercelApiKey}
