@@ -17,6 +17,9 @@ interface ChatViewProps {
   generatedFilesProgress: string[];
   isIdeaMode: boolean;
   vercelToken: string;
+  onFileUpdate: (path: string, content: string) => void;
+  onFileDelete: (path: string) => void;
+  onFileAdd: (path: string) => boolean;
 }
 
 const ViewModeToggle: React.FC<{
@@ -87,6 +90,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   generatedFilesProgress,
   isIdeaMode,
   vercelToken,
+  onFileUpdate,
+  onFileDelete,
+  onFileAdd,
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
@@ -140,7 +146,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
             <div className="flex-1 overflow-hidden">
             {viewMode === 'CODE' ? (
-                <WorkspaceView files={multiFileCode} />
+                <WorkspaceView 
+                  files={multiFileCode}
+                  onFileUpdate={onFileUpdate}
+                  onFileDelete={onFileDelete}
+                  onFileAdd={onFileAdd}
+                />
             ) : (
                 <PreviewView file={previewFile} vercelToken={vercelToken} />
             )}

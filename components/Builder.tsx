@@ -84,17 +84,19 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
       try {
         let planReceived = false;
+        let tempFiles: GeneratedFile[] = [];
 
         await generateAppStream(prompt, settings, (update) => {
           if (update.type === 'plan' && Array.isArray(update.files)) {
               if(!planReceived) {
-                  setMultiFileCode([]);
+                  tempFiles = [];
                   setPreviewFile(null);
                   planReceived = true;
               }
               setGenerationPlan(update.files);
           } else if (update.type === 'file' && update.file) {
-            setMultiFileCode(prev => [...prev, update.file]);
+            tempFiles.push(update.file);
+            setMultiFileCode([...tempFiles]);
             setGeneratedFilesProgress(prev => [...prev, update.file.path]);
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
@@ -172,6 +174,25 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       setIsSaveModalOpen(false);
     }
   };
+  
+  const handleFileUpdate = (path: string, content: string) => {
+    setMultiFileCode(prev => prev.map(f => f.path === path ? { ...f, content } : f));
+    setIsGenerated(true); // Mark as having content to save
+  };
+
+  const handleFileDelete = (path: string) => {
+    setMultiFileCode(prev => prev.filter(f => f.path !== path));
+  };
+
+  const handleFileAdd = (path: string): boolean => {
+    if (multiFileCode.some(f => f.path === path)) {
+        alert(`File "${path}" already exists.`);
+        return false;
+    }
+    setMultiFileCode(prev => [...prev, { path, content: '' }]);
+    setIsGenerated(true);
+    return true;
+  };
 
 
   const renderContent = () => {
@@ -190,10 +211,20 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             generatedFilesProgress={generatedFilesProgress}
             isIdeaMode={isIdeaMode}
             vercelToken={settings.vercelApiKey}
+            onFileUpdate={handleFileUpdate}
+            onFileDelete={handleFileDelete}
+            onFileAdd={handleFileAdd}
           />
         );
       case 'CODE':
-        return <WorkspaceView files={multiFileCode} />;
+        return (
+          <WorkspaceView 
+            files={multiFileCode} 
+            onFileUpdate={handleFileUpdate}
+            onFileDelete={handleFileDelete}
+            onFileAdd={handleFileAdd}
+          />
+        );
       case 'PREVIEW':
         return <PreviewView file={previewFile} vercelToken={settings.vercelApiKey} />;
       default:

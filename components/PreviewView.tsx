@@ -6,6 +6,7 @@ import { EyeIcon } from './icons';
 interface Deployment {
   url: string;
   timestamp: Date;
+  content: string; // Snapshot of the preview file content
 }
 
 const timeAgo = (date: Date): string => {
@@ -26,24 +27,26 @@ const timeAgo = (date: Date): string => {
 
 export const PreviewView: React.FC<{ file: GeneratedFile | null, vercelToken: string }> = ({ file, vercelToken }) => {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
-  const [activePreviewUrl, setActivePreviewUrl] = useState<string | null>(null);
+  const [activeDeployment, setActiveDeployment] = useState<Deployment | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
 
   useEffect(() => {
+    // When the underlying file changes, it's a new "version", so clear old deployments.
     setDeployments([]);
-    setActivePreviewUrl(null);
+    setActiveDeployment(null);
     setIframeKey(prev => prev + 1);
   }, [file]);
 
   const handlePublish = (token: string) => {
-    if (token) {
+    if (token && file) {
       const randomName = Math.random().toString(36).substring(2, 10);
       const newDeployment: Deployment = {
         url: `https://${randomName}.vercel.app`,
         timestamp: new Date(),
+        content: file.content, // Create a snapshot of the content
       };
       setDeployments(prev => [newDeployment, ...prev]);
-      setActivePreviewUrl(newDeployment.url);
+      setActiveDeployment(newDeployment);
     }
   };
 
@@ -58,22 +61,22 @@ export const PreviewView: React.FC<{ file: GeneratedFile | null, vercelToken: st
   return (
     <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4">
       <div className="w-full h-full aspect-[16/9] max-h-full bg-black border border-white/10 rounded-lg shadow-lg overflow-hidden flex flex-col">
-        {activePreviewUrl ? (
+        {activeDeployment ? (
           <>
             <div className="flex items-center justify-between py-2 px-4 bg-gray-900 border-b border-white/10 text-sm flex-shrink-0">
-              <a href={activePreviewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate font-mono">
-                {activePreviewUrl}
+              <a href={activeDeployment.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate font-mono">
+                {activeDeployment.url}
               </a>
               <button
-                onClick={() => setActivePreviewUrl(null)}
+                onClick={() => setActiveDeployment(null)}
                 className="text-gray-300 hover:text-white font-semibold text-xs py-1 px-3 rounded-full hover:bg-white/10 transition-colors"
               >
                 Close Preview
               </button>
             </div>
             <iframe
-              key={iframeKey}
-              srcDoc={file.content}
+              key={`${iframeKey}-${activeDeployment.url}`}
+              srcDoc={activeDeployment.content}
               title="App Preview"
               className="w-full h-full border-0"
               sandbox="allow-scripts allow-same-origin"
@@ -98,7 +101,7 @@ export const PreviewView: React.FC<{ file: GeneratedFile | null, vercelToken: st
                           </p>
                         </div>
                         <button
-                          onClick={() => setActivePreviewUrl(dep.url)}
+                          onClick={() => setActiveDeployment(dep)}
                           className="bg-blue-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-blue-600 flex items-center gap-1.5 transition-colors"
                         >
                           <EyeIcon className="w-4 h-4" />
