@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon } from '../components/icons';
+import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -153,7 +154,17 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
             
-            <section id="how-it-works" className="py-20 bg-black">
+            <section className="py-20 bg-black">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">See it in Action</h3>
+                        <p className="text-gray-400 mt-2">A visual walkthrough of the AI-powered development process.</p>
+                    </div>
+                    <MotionPreview />
+                </div>
+            </section>
+
+            <section id="how-it-works" className="py-20 bg-white/5 border-t border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">How It Works</h3>
@@ -167,7 +178,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="features" className="py-20 bg-white/5 border-y border-white/10">
+            <section id="features" className="py-20 bg-black border-y border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">A New Way to Build Software</h3>
@@ -184,7 +195,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="testimonials" className="py-20 bg-black">
+            <section id="testimonials" className="py-20 bg-white/5 border-t border-white/10">
                  <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Loved by Developers</h3>
