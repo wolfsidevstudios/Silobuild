@@ -19,6 +19,12 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (user && (window.location.hash === '' || window.location.hash === '#')) {
+      window.location.hash = '#/dashboard';
+    }
+  }, [user]);
+
   if (!user) {
     return <LoginPage />;
   }
