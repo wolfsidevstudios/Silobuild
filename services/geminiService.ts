@@ -64,17 +64,15 @@ export const generateAppStream = (
           const line = buffer.substring(0, newlineIndex).trim();
           buffer = buffer.substring(newlineIndex + 1);
 
-          // Guard against markdown code blocks
-          if (line === '```json' || line === '```') {
-            continue;
-          }
-          
           if (line) {
-            try {
-              const update = JSON.parse(line);
-              onUpdate(update);
-            } catch (e) {
-              console.warn('Failed to parse streaming JSON line:', line, e);
+            const cleanedLine = line.replace(/^```json/, '').replace(/```$/, '').trim();
+            if (cleanedLine.startsWith('{') && cleanedLine.endsWith('}')) {
+                try {
+                    const update = JSON.parse(cleanedLine);
+                    onUpdate(update);
+                } catch (e) {
+                    console.warn('Failed to parse streaming JSON line:', cleanedLine, e);
+                }
             }
           }
         }
@@ -82,13 +80,13 @@ export const generateAppStream = (
 
       if (buffer.trim()) {
         const finalLine = buffer.trim();
-        // Guard against markdown code blocks in the final part
-        if (finalLine !== '```json' && finalLine !== '```') {
+        const cleanedLine = finalLine.replace(/^```json/, '').replace(/```$/, '').trim();
+         if (cleanedLine.startsWith('{') && cleanedLine.endsWith('}')) {
            try {
-              const update = JSON.parse(finalLine);
+              const update = JSON.parse(cleanedLine);
               onUpdate(update);
             } catch (e) {
-              console.warn('Failed to parse final streaming JSON line:', finalLine, e);
+              console.warn('Failed to parse final streaming JSON line:', cleanedLine, e);
             }
         }
       }
