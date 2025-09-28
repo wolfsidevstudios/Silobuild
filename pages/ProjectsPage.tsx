@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project } from '../types';
-import { DownloadIcon, TrashIcon } from '../components/icons';
+import { DownloadIcon, TrashIcon, EditIcon, FileIcon } from '../components/icons';
 import JSZip from 'jszip';
+import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
 
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
 
   const deleteProject = (projectId: string) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
@@ -24,6 +26,15 @@ export const ProjectsPage: React.FC = () => {
         zip.file(project.previewFile.path, project.previewFile.content);
     }
 
+    if (project.appIcon) {
+        const base64Data = project.appIcon.split(';base64,').pop();
+        if (base64Data) {
+            // These paths must match what the AI is told to use in manifest.json
+            zip.file('icon-192x192.png', base64Data, { base64: true });
+            zip.file('icon-512x512.png', base64Data, { base64: true });
+        }
+    }
+
     try {
       const content = await zip.generateAsync({ type: 'blob' });
       const link = document.createElement('a');
@@ -39,6 +50,13 @@ export const ProjectsPage: React.FC = () => {
         alert("Sorry, there was an error downloading the project.");
     }
   };
+  
+  const handleUpdateProject = (name: string, icon: string | null) => {
+    if (editingProject) {
+        setProjects(prev => prev.map(p => p.id === editingProject.id ? {...p, name, appIcon: icon || undefined } : p));
+        setEditingProject(null);
+    }
+  }
 
 
   return (
@@ -54,7 +72,21 @@ export const ProjectsPage: React.FC = () => {
           {projects.map(project => (
             <div key={project.id} className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-colors">
               <div>
-                <h2 className="text-lg font-semibold truncate mb-1">{project.name}</h2>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10">
+                       {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-6 h-6 text-gray-500" />}
+                     </div>
+                     <h2 className="text-lg font-semibold truncate">{project.name}</h2>
+                  </div>
+                   <button 
+                      onClick={() => setEditingProject(project)} 
+                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
+                      aria-label="Edit Details"
+                  >
+                      <EditIcon className="w-4 h-4" />
+                  </button>
+                </div>
                 <p className="text-sm text-gray-400 mb-4">
                   Created on {new Date(project.createdAt).toLocaleDateString()}
                 </p>
@@ -84,6 +116,14 @@ export const ProjectsPage: React.FC = () => {
           ))}
         </div>
       )}
+       <ProjectMetadataModal
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        onSave={handleUpdateProject}
+        initialName={editingProject?.name}
+        initialIcon={editingProject?.appIcon}
+        title="Edit Project Details"
+      />
     </div>
   );
 };

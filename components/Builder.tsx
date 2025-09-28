@@ -8,6 +8,7 @@ import { generateAppStream } from '../services/geminiService';
 import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { ProjectMetadataModal } from './ProjectMetadataModal';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -36,11 +37,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   useEffect(() => {
     if (projectId) {
       const project = projects.find(p => p.id === projectId);
       if (project) {
+        setCurrentProject(project);
         setMultiFileCode(project.files);
         setPreviewFile(project.previewFile);
         setMessages([{ role: 'model', content: `Loaded project: ${project.name}` }]);
@@ -48,6 +52,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
       }
+    } else {
+        setCurrentProject(null);
     }
   }, [projectId, projects]);
 
@@ -64,6 +70,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
     const isEdit = isGenerated;
     const filesForContext = isEdit ? multiFileCode : undefined;
+    const appName = currentProject?.name;
+    const appIcon = currentProject?.appIcon;
 
     try {
       let planReceived = false;
@@ -82,7 +90,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         } else if (update.type === 'previewFile' && update.file) {
           setPreviewFile(update.file);
         }
-      }, filesForContext);
+      }, filesForContext, appName, appIcon);
 
       const modelMessage: ChatMessage = {
         role: 'model',
@@ -103,20 +111,27 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [settings, isGenerated, multiFileCode]);
+  }, [settings, isGenerated, multiFileCode, currentProject]);
 
-  const handleSaveProject = () => {
-    const projectName = prompt('Enter a name for your project:') || `Project ${Date.now()}`;
-    if (projectName && multiFileCode.length > 0) {
+  const handleSaveProject = (name: string, icon: string | null) => {
+    if (name && multiFileCode.length > 0) {
       const newProject: Project = {
-        id: Date.now().toString(),
-        name: projectName,
-        createdAt: new Date().toISOString(),
+        id: currentProject?.id || Date.now().toString(),
+        name: name,
+        appIcon: icon || undefined,
+        createdAt: currentProject?.createdAt || new Date().toISOString(),
         files: multiFileCode,
         previewFile: previewFile,
       };
-      setProjects(prev => [...prev, newProject]);
-      alert(`Project "${projectName}" saved!`);
+
+      if (currentProject) {
+        setProjects(prev => prev.map(p => p.id === newProject.id ? newProject : p));
+      } else {
+        setProjects(prev => [...prev, newProject]);
+      }
+      setCurrentProject(newProject);
+      alert(`Project "${name}" saved!`);
+      setIsSaveModalOpen(false);
     }
   };
 
@@ -152,7 +167,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       <Header 
         activeMode={appMode} 
         setAppMode={setAppMode}
-        onSaveProject={handleSaveProject}
+        onSaveProject={() => setIsSaveModalOpen(true)}
         isSaveEnabled={isGenerated && !isLoading}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
@@ -164,6 +179,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         {renderContent()}
       </main>
       <PromptInput onSend={handleSend} isLoading={isLoading} isAppGenerated={isGenerated} />
+      <ProjectMetadataModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        onSave={handleSaveProject}
+        initialName={currentProject?.name}
+        initialIcon={currentProject?.appIcon}
+        title={currentProject ? "Save Project Details" : "Save New Project"}
+      />
     </div>
   );
 };

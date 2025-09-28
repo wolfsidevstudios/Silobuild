@@ -17,6 +17,7 @@ export interface Project {
   createdAt: string;
   files: GeneratedFile[];
   previewFile: GeneratedFile | null;
+  appIcon?: string; // Base64 data URI for the app icon
 }
 
 export interface Settings {

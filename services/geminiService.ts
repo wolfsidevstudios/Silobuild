@@ -3,41 +3,41 @@ import { Settings, GeneratedFile } from "../types";
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean): string => {
   let instruction;
-  if (isEditing) {
-    instruction = `You are an expert React engineer specializing in modifying existing React TypeScript applications.
-Your task is to update the provided application files based on the user's request.
-You will receive the current application files as a JSON array of objects (with path and content keys), followed by the user's modification request.
-You MUST output the complete, updated set of files for the application, not just the changed files.
-
+  const baseInstruction = `You are an expert React engineer specializing in generating and modifying React TypeScript applications.
 You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
-Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.tsx"]}
+Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
 
 Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
 Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
-Finally, you will output a 'previewFile' object for the single-file preview.
+Finally, you will output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
 Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
+  if (isEditing) {
+    instruction = `${baseInstruction}\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files.`;
   } else {
-    instruction = `You are an expert React engineer specializing in generating complete, multi-file React TypeScript applications.
-Your task is to generate two things based on the user's prompt:
-1.  A set of files for a standard React TypeScript project ('multiFileCode').
-2.  A single, self-contained 'index.html' file for live browser preview ('previewFile').
-
-You will stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
-Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.tsx"]}
-
-Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
-Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
-
-Finally, you will output a 'previewFile' object for the single-file preview.
-Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
-
-Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+    instruction = `${baseInstruction}\nYour task is to generate a complete, multi-file React TypeScript application based on the user's prompt.`;
   }
+
+  instruction += `\n
+--- PWA & CUSTOMIZATION INSTRUCTIONS ---
+All applications you generate MUST be Progressive Web Apps (PWAs).
+This requires the following file structure and content:
+1. A 'manifest.json' file in the root directory.
+   - It must include 'name', 'short_name', 'icons', 'start_url', 'display', 'background_color', and 'theme_color'.
+   - For the 'icons' array, you MUST reference an icon at the path "/icon-192x192.png" (size 192x192) and "/icon-512x512.png" (size 512x512). The user will provide the actual image file.
+2. A service worker file, 'public/sw.js'. This should implement a basic cache-first or network-first strategy for assets to enable offline functionality.
+3. In 'index.html':
+   - Add '<link rel="manifest" href="/manifest.json">' in the <head>.
+   - Add a script block to register the 'public/sw.js' service worker.
+
+When generating the 'previewFile' (a single self-contained index.html):
+- It must NOT link to an external manifest.json or register a service worker.
+- It SHOULD include PWA-like meta tags directly in the <head> for a better experience (e.g., theme-color, mobile-web-app-capable).
+`;
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
   const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
@@ -67,7 +67,9 @@ export const generateAppStream = (
   prompt: string,
   settings: Settings,
   onUpdate: (update: any) => void,
-  existingFiles?: GeneratedFile[]
+  existingFiles?: GeneratedFile[],
+  appName?: string,
+  appIcon?: string, // base64 string
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -88,6 +90,18 @@ export const generateAppStream = (
       } else {
           fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
       }
+      
+      if (appName || appIcon) {
+        fullPrompt += `\n\n--- REQUIRED APP CUSTOMIZATION ---`;
+        if (appName) {
+            fullPrompt += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in index.html, and the 'name' and 'short_name' properties in manifest.json.`;
+        }
+         if (appIcon) {
+            fullPrompt += `\nFor the 'previewFile', you MUST include a favicon link in the <head> using this exact Base64 data URI: <link rel="icon" href="${appIcon}">. Do not modify the data URI.`;
+        }
+        fullPrompt += `\n---------------------------------`;
+      }
+
 
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
