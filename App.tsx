@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Builder } from './components/Builder';
 import { DashboardLayout } from './pages/DashboardLayout';
+import { useAuth } from './context/AuthContext';
+import { LoginPage } from './pages/LoginPage';
 
-const App: React.FC = () => {
-  const [route, setRoute] = useState(window.location.hash || '#/');
+export const App: React.FC = () => {
+  const { user } = useAuth();
+  const [route, setRoute] = useState(window.location.hash);
 
   useEffect(() => {
     const handleHashChange = () => {
-      setRoute(window.location.hash || '#/');
+      setRoute(window.location.hash);
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -16,16 +19,18 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const renderContent = () => {
-    if (route.startsWith('#/dashboard')) {
-      return <DashboardLayout route={route} />;
-    }
-    // Default to builder, potentially passing a project ID
-    const projectId = route.startsWith('#/project/') ? route.split('/')[2] : undefined;
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  if (route.startsWith('#/dashboard')) {
+    return <DashboardLayout route={route} />;
+  }
+  
+  if (route.startsWith('#/project/')) {
+    const projectId = route.split('/')[2];
     return <Builder projectId={projectId} />;
-  };
+  }
 
-  return <div className="h-screen w-screen bg-black text-white font-sans">{renderContent()}</div>;
+  return <Builder />;
 };
-
-export default App;

@@ -15,7 +15,6 @@ interface ChatViewProps {
   error: string | null;
   generationPlan: string[];
   generatedFilesProgress: string[];
-  // Fix: Add vercelToken to props
   vercelToken: string;
 }
 
@@ -85,7 +84,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   error,
   generationPlan,
   generatedFilesProgress,
-  // Fix: Destructure vercelToken from props
   vercelToken,
 }) => {
   return (
@@ -141,7 +139,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
           {viewMode === 'CODE' ? (
             <WorkspaceView files={multiFileCode} />
           ) : (
-            // Fix: Pass vercelToken to PreviewView
             <PreviewView file={previewFile} vercelToken={vercelToken} />
           )}
         </div>

@@ -1,65 +1,41 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, ProjectIcon, SettingsIcon } from './icons';
+import { HomeIcon, SettingsIcon, DatabaseIcon, FileIcon } from './icons';
+import { UserProfile } from './UserProfile';
 
 interface SidebarProps {
   activeRoute: string;
 }
 
-const SidebarLink: React.FC<{
-  href: string;
-  isActive: boolean;
-  icon: React.ReactNode;
-  label: string;
-}> = ({ href, isActive, icon, label }) => {
-  return (
-    <a
-      href={href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-        isActive
-          ? 'bg-blue-500/20 text-blue-300'
-          : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
-      }`}
-    >
-      {icon}
-      {label}
-    </a>
-  );
-};
+const NavLink: React.FC<{ href: string; isActive: boolean; icon: React.ReactNode; label: string }> = ({ href, isActive, icon, label }) => (
+  <a
+    href={href}
+    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+      isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+    }`}
+  >
+    {icon}
+    {label}
+  </a>
+);
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeRoute }) => {
+  const page = activeRoute.split('/')[2] || 'projects';
+
   return (
-    <aside className="w-64 bg-black/50 border-r border-white/10 p-4 flex flex-col">
+    <aside className="w-64 bg-black/20 p-4 flex flex-col">
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-white">AI App Builder</h1>
-        <p className="text-xs text-gray-400">Dashboard</p>
+        <a href="#/" className="flex items-center gap-2 text-white font-bold text-xl px-2">
+          AI App Builder
+        </a>
       </div>
-      <nav className="flex-1 flex flex-col gap-2">
-        <SidebarLink
-            href="#/dashboard"
-            isActive={activeRoute === '#/dashboard' || activeRoute.startsWith('#/dashboard/projects')}
-            icon={<ProjectIcon />}
-            label="Projects"
-        />
-        <SidebarLink
-            href="#/dashboard/database"
-            isActive={activeRoute.startsWith('#/dashboard/database')}
-            icon={<DatabaseIcon />}
-            label="Database"
-        />
-        <SidebarLink
-            href="#/dashboard/settings"
-            isActive={activeRoute.startsWith('#/dashboard/settings')}
-            icon={<SettingsIcon />}
-            label="Settings & Integrations"
-        />
+      <nav className="flex flex-col gap-2">
+        <NavLink href="#/dashboard/projects" isActive={page === 'projects'} icon={<FileIcon />} label="Projects" />
+        <NavLink href="#/dashboard/database" isActive={page === 'database'} icon={<DatabaseIcon />} label="Database Viewer" />
+        <NavLink href="#/dashboard/settings" isActive={page === 'settings'} icon={<SettingsIcon />} label="Settings & Integrations" />
       </nav>
-      <div>
-        <SidebarLink
-            href="#/"
-            isActive={false}
-            icon={<HomeIcon />}
-            label="Back to Builder"
-        />
+      <div className="mt-auto space-y-4">
+         <UserProfile />
+         <NavLink href="#/" isActive={false} icon={<HomeIcon />} label="Back to Builder" />
       </div>
     </aside>
   );

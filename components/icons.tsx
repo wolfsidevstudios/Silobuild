@@ -1,48 +1,99 @@
 import React from 'react';
 
-export const SendIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" > <line x1="22" y1="2" x2="11" y2="13" /> <polygon points="22 2 15 22 11 13 2 9 22 2" /> </svg>
+export const IconWrapper: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "w-5 h-5" }) => (
+  <div className={className}>{children}</div>
 );
-export const ChatIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+
+export const ChatIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  </svg>
 );
-export const CodeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+
+export const CodeIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+  </svg>
 );
-export const EyeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+
+export const EyeIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
 );
-export const FileIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+
+export const HomeIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
 );
-export const CheckIcon: React.FC<{ className?: string }> = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}> <polyline points="20 6 9 17 4 12"></polyline> </svg>
+
+export const SaveIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+  </svg>
 );
-export const HomeIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+
+export const SendIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+    </svg>
 );
-export const SaveIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+
+export const CheckIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
 );
-export const SettingsIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+
+export const FileIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
 );
-export const DatabaseIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+
+export const DownloadIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
 );
-export const ProjectIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+
+export const TrashIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  </svg>
 );
-export const DownloadIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+
+export const DatabaseIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7a8 8 0 0116 0" />
+  </svg>
 );
-export const TrashIcon: React.FC<{className?: string}> = ({className}) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+
+export const SettingsIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
 );
-export const SupabaseLogo: React.FC<{ className?: string }> = ({ className }) => (
-    <svg className={className} viewBox="0 0 81 81" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M40.5 81C62.868 81 81 62.868 81 40.5C81 18.132 62.868 0 40.5 0C18.132 0 0 18.132 0 40.5C0 62.868 18.132 81 40.5 81Z" fill="#3ECF8E" /><path d="M40.4531 65.25C54.0429 65.25 65.025 58.0702 65.025 40.5C65.025 22.9298 54.0429 15.75 40.4531 15.75C26.8633 15.75 15.8812 22.9298 15.8812 40.5C15.8812 58.0702 26.8633 65.25 40.4531 65.25Z" fill="#3ECF8E" /><path d="M40.5 63.375C27.75 63.375 25.155 57.0375 25.155 40.5C25.155 23.9625 27.75 17.625 40.5 17.625C53.25 17.625 55.845 23.9625 55.845 40.5C55.845 57.0375 53.25 63.375 40.5 63.375Z" fill="#181818" /><path d="M26.4375 40.5C26.4375 24.8625 33.3225 19.35 40.5 19.35C47.6775 19.35 54.5625 24.8625 54.5625 40.5C54.5625 56.1375 47.6775 61.65 40.5 61.65C33.3225 61.65 26.4375 56.1375 26.4375 40.5Z" fill="url(#paint0_linear_12_3)" /><defs><linearGradient id="paint0_linear_12_3" x1="40.5" y1="19.35" x2="40.5" y2="61.65" gradientUnits="userSpaceOnUse"><stop stopColor="#24B277" /><stop offset="1" stopColor="#3ECF8E" /></linearGradient></defs>
-</svg>
+
+export const SupabaseLogo = ({ className = 'h-6' }) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" color="#3ecf8e">
+        <title>Supabase</title>
+        <path d="M12.24 1.252a.24.24 0 0 0-.48 0L0 19.332v3.416h24v-3.416L12.24 1.252zM3.483 19.332l8.52-15.08 8.52 15.08H3.483z"/>
+    </svg>
 );
-export const StripeLogo: React.FC<{ className?: string }> = ({ className }) => (
-<svg className={className} viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><g id="icomoon-ignore"></g><path d="M968.32 242.304c-17.792-22.144-42.368-38.272-71.168-45.184l-254.848-60.672c-106.368-25.216-218.496-25.216-324.864 0l-254.848 60.672c-28.8 6.912-53.376 23.04-71.168 45.184-14.464 18.176-24.832 39.552-30.080 62.208-8.96 38.656-8.96 79.488 0 118.144 5.248 22.656 15.616 44.032 30.080 62.208 17.792 22.144 42.368 38.272 71.168 45.184l254.848 60.672c53.12 12.608 107.84 18.944 162.432 18.944 54.592 0 109.312-6.336 162.432-18.944l254.848-60.672c28.8-6.912 53.376-23.04 71.168-45.184 14.464-18.176 24.832-39.552 30.080-62.208 8.96-38.656 8.96-79.488 0-118.144-5.248-22.656-15.616-44.032-30.080-62.208zM512 705.408c-106.88 0-193.408-86.528-193.408-193.408s86.528-193.408 193.408-193.408c106.88 0 193.408 86.528 193.408 193.408s-86.528 193.408-193.408 193.408zM512 191.232c7.296 0 14.080 0.512 21.248 1.024-81.92 11.264-152.064 61.952-185.088 132.864-28.032 60.032-23.04 130.432 14.592 185.728 59.904 87.296 170.24 125.184 274.56 94.080 9.088 34.048-2.944 70.144-27.136 96.384-20.096 21.888-46.848 35.584-75.776 39.040-106.88 12.672-210.048-52.096-254.72-146.944-38.656-82.048-20.608-181.376 43.136-245.12 63.744-63.744 163.072-81.792 245.12-43.136 33.792 15.872 63.36 41.216 84.864 73.088 19.352-24.576 30.976-54.272 30.976-86.656 0-106.88-86.528-193.408-193.408-193.408zM512 832.768c-10.368 0-20.224-1.28-30.336-2.048 93.696-15.616 170.752-78.592 201.216-166.4 25.088-72.32 6.784-152.064-47.36-206.208-66.816-66.816-168.064-88.704-261.248-55.808-19.456-42.24 0.64-90.88 39.808-120.96 26.24-20.096 58.752-30.848 92.544-29.056 106.88 5.632 195.456 87.68 201.088 194.56 4.864 91.264-51.456 177.024-135.424 213.76-62.848 27.264-136.192 16.512-187.904-24.704-22.144 26.752-52.096 46.208-86.016 54.272 8.32 83.2 60.8 156.416 133.376 186.24 23.808 9.984 49.024 15.104 74.496 15.104 76.032 0 144.256-43.648 177.536-110.336 29.312-58.496 28.16-128.384-3.584-185.856-25.088 6.144-51.2 9.216-77.824 9.216-106.88 0-193.408-86.528-193.408-193.408s86.528-193.408 193.408-193.408c26.624 0 52.736 3.072 77.824 9.216 3.584-57.472 4.736-127.36-28.16-185.856-33.28-66.688-101.504-110.336-177.536-110.336-25.472 0-50.688 5.12-74.496 15.104-72.576 29.824-125.056 103.04-133.376 186.24 33.92 8.064 63.872 27.52 86.016 54.272-51.712-41.216-125.056-51.968-187.904-24.704-83.968 36.736-140.288 122.496-135.424 213.76 5.632 106.88 94.208 188.928 201.088 194.56 33.792 1.792 66.304-8.96 92.544-29.056 39.168-30.08 61.248-78.72 39.808-120.96 93.184-32.896 194.432-10.992 261.248 55.808 54.144 54.144 72.448 133.888 47.36 206.208-30.464 87.808-107.52 150.784-201.216 166.4-10.112 0.768-19.968 2.048-30.336 2.048z"></path></svg>
+
+export const StripeLogo = ({ className = 'h-6' }) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" color="#635bff">
+        <title>Stripe</title>
+        <path d="M21.12.023c-1.28 0-2.56.32-3.84.96v6.4c1.28-.64 2.56-.96 3.84-.96 1.28 0 2.56.32 3.84.96V.983c-1.28-.64-2.56-.96-3.84-.96zm-8.96 15.36c0-1.28-.32-2.56-.96-3.84H.003V24h12.158c0-2.88-.96-5.44-2.24-7.68-1.28 0-2.56-.32-3.84-.64 1.28 0 2.56.32 3.84.64.96-1.28 1.28-2.56 1.28-3.84zm0-7.68c0-1.28-.32-2.56-.96-3.84H.003v6.4h11.2V7.703a5.2 5.2 0 0 0 .96-3.84z"/>
+    </svg>
+);
+
+export const LogoutIcon = ({ className = 'w-5 h-5' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
 );

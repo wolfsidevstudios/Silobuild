@@ -1,4 +1,3 @@
-
 export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 export type ViewMode = 'CODE' | 'PREVIEW';
 
@@ -12,13 +11,16 @@ export interface GeneratedFile {
   content: string;
 }
 
-export interface GeminiResponse {
-  multiFileCode: GeneratedFile[];
-  previewFile: GeneratedFile;
+export interface Project {
+  id: string;
+  name: string;
+  createdAt: string;
+  files: GeneratedFile[];
+  previewFile: GeneratedFile | null;
 }
 
 export interface Settings {
-  geminiApiKey: string;
+  // Note: geminiApiKey is removed as per guidelines to use process.env.API_KEY
   vercelApiKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
@@ -26,10 +28,9 @@ export interface Settings {
   stripeSecretKey: string;
 }
 
-export interface Project {
-  id: string;
+export interface DecodedCredential {
   name: string;
-  createdAt: string;
-  files: GeneratedFile[];
-  previewFile: GeneratedFile | null;
+  email: string;
+  picture: string;
+  sub: string;
 }

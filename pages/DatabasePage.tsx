@@ -3,8 +3,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { DatabaseIcon, SettingsIcon, SupabaseLogo } from '../components/icons';
 
+// FIX: `geminiApiKey` is removed from settings per guidelines.
 const initialSettings: Settings = {
-  geminiApiKey: '',
   vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',

@@ -44,12 +44,11 @@ export const generateAppStream = (
   onUpdate: (update: any) => void
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
-    if (!settings.geminiApiKey) {
-      return reject(new Error("Gemini API key is not set. Please add it in the settings page."));
-    }
-
+    // FIX: Per coding guidelines, API key must be sourced from `process.env.API_KEY`.
+    // The check for a user-provided key has been removed.
+    // Assuming `process.env.API_KEY` is available.
     try {
-      const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const systemInstruction = createSystemInstruction(settings);
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
@@ -89,8 +88,9 @@ export const generateAppStream = (
       resolve();
     } catch (error) {
       console.error("Error calling Gemini API:", error);
+      // FIX: Updated error message to reflect API key is from environment variables.
       if (error instanceof Error && error.message.includes('API key not valid')) {
-          reject(new Error("Your Gemini API key is invalid. Please check it in the settings."));
+          reject(new Error("The configured Gemini API key is invalid. Please check your environment configuration."));
       } else {
           reject(new Error("Failed to get a valid response from the AI model."));
       }
