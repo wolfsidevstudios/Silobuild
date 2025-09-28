@@ -59,33 +59,36 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
-    setMultiFileCode([]);
-    setPreviewFile(null);
     setGenerationPlan([]);
     setGeneratedFilesProgress([]);
-    setIsGenerated(false);
 
-    const tempMultiFileCode: GeneratedFile[] = [];
-    let tempPreviewFile: GeneratedFile | null = null;
+    const isEdit = isGenerated;
+    const filesForContext = isEdit ? multiFileCode : undefined;
 
     try {
+      let planReceived = false;
+
       await generateAppStream(prompt, settings, (update) => {
         if (update.type === 'plan' && Array.isArray(update.files)) {
-          setGenerationPlan(update.files);
+            if(!planReceived) {
+                setMultiFileCode([]);
+                setPreviewFile(null);
+                planReceived = true;
+            }
+            setGenerationPlan(update.files);
         } else if (update.type === 'file' && update.file) {
-          tempMultiFileCode.push(update.file);
+          setMultiFileCode(prev => [...prev, update.file]);
           setGeneratedFilesProgress(prev => [...prev, update.file.path]);
         } else if (update.type === 'previewFile' && update.file) {
-          tempPreviewFile = update.file;
           setPreviewFile(update.file);
         }
-      });
-
-      setMultiFileCode(tempMultiFileCode);
+      }, filesForContext);
 
       const modelMessage: ChatMessage = {
         role: 'model',
-        content: 'I have generated the application code. You can save it as a new project.'
+        content: isEdit 
+          ? 'I have applied the changes to the application.' 
+          : 'I have generated the application code. You can save it as a new project.'
       };
       setMessages(prev => [...prev, modelMessage]);
       setAppMode('CHAT');
@@ -100,7 +103,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [settings]);
+  }, [settings, isGenerated, multiFileCode]);
 
   const handleSaveProject = () => {
     const projectName = prompt('Enter a name for your project:') || `Project ${Date.now()}`;
@@ -160,7 +163,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         )}
         {renderContent()}
       </main>
-      <PromptInput onSend={handleSend} isLoading={isLoading} />
+      <PromptInput onSend={handleSend} isLoading={isLoading} isAppGenerated={isGenerated} />
     </div>
   );
 };

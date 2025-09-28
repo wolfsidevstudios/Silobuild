@@ -1,13 +1,15 @@
 
+
 import React, { useState } from 'react';
 import { SendIcon } from './icons';
 
 interface PromptInputProps {
   onSend: (prompt: string) => void;
   isLoading: boolean;
+  isAppGenerated: boolean;
 }
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading }) => {
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated }) => {
   const [prompt, setPrompt] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,7 +30,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading }) =
           type="text"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe the app you want to build..."
+          placeholder={isAppGenerated ? "Describe a change to your app..." : "Describe the app you want to build..."}
           disabled={isLoading}
           className="w-full bg-transparent p-4 pl-6 text-white placeholder-gray-400 focus:outline-none disabled:opacity-50"
         />

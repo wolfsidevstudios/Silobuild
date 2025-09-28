@@ -1,8 +1,27 @@
 import { GoogleGenAI } from "@google/genai";
-import { Settings } from "../types";
+import { Settings, GeneratedFile } from "../types";
 
-const createSystemInstruction = (prompt: string, settings: Settings): string => {
-  let instruction = `You are an expert React engineer specializing in generating complete, multi-file React TypeScript applications.
+const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean): string => {
+  let instruction;
+  if (isEditing) {
+    instruction = `You are an expert React engineer specializing in modifying existing React TypeScript applications.
+Your task is to update the provided application files based on the user's request.
+You will receive the current application files as a JSON array of objects (with path and content keys), followed by the user's modification request.
+You MUST output the complete, updated set of files for the application, not just the changed files.
+
+You must stream your response as a sequence of JSON objects, each on a new line.
+First, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.tsx"]}
+
+Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
+Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
+
+Finally, you will output a 'previewFile' object for the single-file preview.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+  } else {
+    instruction = `You are an expert React engineer specializing in generating complete, multi-file React TypeScript applications.
 Your task is to generate two things based on the user's prompt:
 1.  A set of files for a standard React TypeScript project ('multiFileCode').
 2.  A single, self-contained 'index.html' file for live browser preview ('previewFile').
@@ -18,6 +37,7 @@ Finally, you will output a 'previewFile' object for the single-file preview.
 Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+  }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
   const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
@@ -46,7 +66,8 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 export const generateAppStream = (
   prompt: string,
   settings: Settings,
-  onUpdate: (update: any) => void
+  onUpdate: (update: any) => void,
+  existingFiles?: GeneratedFile[]
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -57,9 +78,16 @@ export const generateAppStream = (
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = createSystemInstruction(prompt, settings);
+      const isEditing = !!existingFiles && existingFiles.length > 0;
+      const systemInstruction = createSystemInstruction(prompt, settings, isEditing);
       
-      const fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
+      let fullPrompt: string;
+      if (isEditing) {
+          const filesJsonString = JSON.stringify(existingFiles);
+          fullPrompt = `${systemInstruction}\n\nHere is the current application's code as a JSON array of file objects:\n${filesJsonString}\n\nNow, please apply this change based on the user's request:\n\n${prompt}`;
+      } else {
+          fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
+      }
 
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
