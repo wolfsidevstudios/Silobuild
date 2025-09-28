@@ -9,6 +9,7 @@ import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechS
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
+import { MacPreview } from './MacPreview';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -41,6 +42,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
   const [techStack, setTechStack] = useState<TechStack | null>(null);
+  const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
 
   const handleSend = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
@@ -238,6 +240,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             projectName={currentProject?.name}
             showStackSelector={showStackSelector}
             onSelectStack={setTechStack}
+            onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           />
         );
       case 'CODE':
@@ -255,6 +258,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           vercelToken={settings.vercelApiKey}
           multiFileCode={multiFileCode}
           projectName={currentProject?.name}
+          onToggleMacPreview={() => setIsMacPreviewVisible(true)}
         />;
       default:
         return null;
@@ -285,6 +289,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         onToggleIdeaMode={toggleIdeaMode}
         isReadyToPrompt={!!techStack || isGenerated}
       />
+       {isMacPreviewVisible && previewFile && (
+        <MacPreview
+            previewFile={previewFile}
+            projectName={currentProject?.name || 'My App'}
+            appIcon={currentProject?.appIcon || null}
+            onClose={() => setIsMacPreviewVisible(false)}
+        />
+      )}
       <ProjectMetadataModal
         isOpen={isSaveModalOpen}
         onClose={() => setIsSaveModalOpen(false)}

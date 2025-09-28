@@ -24,6 +24,7 @@ interface ChatViewProps {
   projectName?: string;
   showStackSelector: boolean;
   onSelectStack: (stack: TechStack) => void;
+  onToggleMacPreview: () => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -99,7 +100,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onFileAdd,
   projectName,
   showStackSelector,
-  onSelectStack
+  onSelectStack,
+  onToggleMacPreview
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
@@ -171,6 +173,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   vercelToken={vercelToken}
                   multiFileCode={multiFileCode}
                   projectName={projectName}
+                  onToggleMacPreview={onToggleMacPreview}
                 />
             )}
             </div>

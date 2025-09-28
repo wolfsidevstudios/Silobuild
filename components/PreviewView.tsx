@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GeneratedFile } from '../types';
 import { PublishForm } from './PublishForm';
 import { Spinner } from './Spinner';
+import { DesktopIcon } from './icons';
 
 interface Deployment {
   url: string;
@@ -13,6 +14,7 @@ interface PreviewViewProps {
   vercelToken: string;
   multiFileCode: GeneratedFile[];
   projectName?: string;
+  onToggleMacPreview: () => void;
 }
 
 const timeAgo = (date: Date): string => {
@@ -31,7 +33,7 @@ const timeAgo = (date: Date): string => {
   return Math.floor(seconds) + " seconds ago";
 };
 
-export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, multiFileCode, projectName }) => {
+export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, multiFileCode, projectName, onToggleMacPreview }) => {
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
@@ -107,8 +109,15 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ file, vercelToken, mul
   return (
     <div className="w-full h-full bg-gray-900 flex flex-col p-4 gap-4">
       <div className="flex-1 flex flex-col min-h-0 border border-white/10 rounded-lg overflow-hidden">
-        <div className="p-2 bg-gray-950/50 border-b border-white/10 flex-shrink-0">
+        <div className="p-2 bg-gray-950/50 border-b border-white/10 flex items-center justify-between flex-shrink-0">
           <h3 className="text-sm font-semibold text-gray-200">Live Preview</h3>
+          <button 
+            onClick={onToggleMacPreview} 
+            disabled={!file}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 bg-white/10 text-gray-300 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed">
+            <DesktopIcon className="w-4 h-4" />
+            Mac OS Preview
+          </button>
         </div>
         {file ? (
           <iframe

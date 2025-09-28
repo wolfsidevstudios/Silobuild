@@ -171,3 +171,45 @@ export const HtmlIcon = ({ className = "w-8 h-8" }) => (
         <path d="M1.375 0h21.25L20.438 21.625l-8.438 2.375-8.438-2.375L1.375 0zM12 19.344l6.219-1.688.844-9.531H12v3.219h-3.25l-.219-2.281h3.469V5.438H5.688l.5 5.625h8.906l-.5 5.531-2.594.719-2.594-.719-.188-2.031h-3.25l.375 4.031L12 19.344z"/>
     </svg>
 );
+
+export const DesktopIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+);
+
+export const FinderIcon = ({ className = 'w-10 h-10' }) => (
+    <svg className={className} viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#00A2E3" d="M128 64c0 35.346-28.654 64-64 64S0 99.346 0 64 28.654 0 64 0s64 28.654 64 64"/>
+        <path fill="#fff" d="M78.06 43.088c-6.19-6.28-14.7-9.828-23.59-9.828-9.15 0-17.85 3.73-24.01 10.2-11.45 12.01-13.78 30.63-5.83 45.39 3.99 7.42 10.45 13.06 18.27 16.03 2.1.8 4.3.43 5.92-1a4.24 4.24 0 001.21-3.28V46.338a4.25 4.25 0 00-4.17-4.25c-.2 0-.4 0-.6.01a4.25 4.25 0 00-4.04 4.84v35.43c-6.16-2.5-11.08-7.3-13.8-13.23-6-11.83-4.14-26.68 5.17-35.91 5.3-5.26 12.44-8.19 19.84-8.19 7.15 0 14.05 2.76 19.3 7.95a4.25 4.25 0 106.01-6.04z"/>
+        <path fill="#fff" d="M91.81 74.19a16.34 16.34 0 00-16.3-16.33H42.54a4.25 4.25 0 100 8.5h32.97a7.84 7.84 0 110 15.68H64a4.25 4.25 0 100 8.5h11.51a16.34 16.34 0 0016.3-16.35z"/>
+        <path d="M64 42.06a4.5 4.5 0 100-9 4.5 4.5 0 000 9" fill="#fff"/>
+        <path d="M88 42.06a4.5 4.5 0 100-9 4.5 4.5 0 000 9" fill="#fff"/>
+    </svg>
+);
+
+export const LaunchpadIcon = ({ className = 'w-10 h-10' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 3H4C3.44772 3 3 3.44772 3 4V10C3 10.5523 3.44772 11 4 11H10C10.5523 11 11 10.5523 11 10V4C11 3.44772 10.5523 3 10 3Z" fill="#F43F5E"/>
+        <path d="M20 3H14C13.4477 3 13 3.44772 13 4V10C13 10.5523 13.4477 11 14 11H20C20.5523 11 21 10.5523 21 10V4C21 3.44772 20.5523 3 20 3Z" fill="#3B82F6"/>
+        <path d="M10 13H4C3.44772 13 3 13.4477 3 14V20C3 20.5523 3.44772 21 4 21H10C10.5523 21 11 20.5523 11 20V14C11 13.4477 10.5523 13 10 13Z" fill="#FBBF24"/>
+        <path d="M20 13H14C13.4477 13 13 13.4477 13 14V20C13 20.5523 13.4477 21 14 21H20C20.5523 21 21 20.5523 21 20V14C21 13.4477 20.5523 13 20 13Z" fill="#10B981"/>
+    </svg>
+);
+
+export const NotesIcon = ({ className = 'w-10 h-10' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 2H18.5L20 3.5V22H4V2Z" fill="#FBBF24"/>
+        <path d="M4 2H16V7H4V2Z" fill="#D97706"/>
+        <path d="M7 11H17" stroke="#A16207" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M7 15H17" stroke="#A16207" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M7 19H13" stroke="#A16207" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+);
+
+export const MailIcon = ({ className = 'w-10 h-10' }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 8.5L12 15.5L22 8.5" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 18V6C2 4.89543 2.89543 4 4 4H20C21.1046 4 22 4.89543 22 6V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18Z" stroke="#3B82F6" strokeWidth="2"/>
+    </svg>
+);
