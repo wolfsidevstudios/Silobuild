@@ -288,3 +288,36 @@ export const SchemaIcon = ({ className = 'w-5 h-5' }) => (
         <path d="M10 17.5H14" strokeLinecap="round" />
     </svg>
 );
+
+export const VercelIcon = ({ className = 'h-6' }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <title>Vercel</title>
+        <path d="M12 2L2 22h20L12 2z"/>
+    </svg>
+);
+
+export const ChevronDownIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+);
+
+export const FlaskIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547a2 2 0 00-.547 1.806l.443 2.216a2 2 0 002.21 1.668h6.616a2 2 0 002.21-1.668l.443-2.216a2 2 0 00-.547-1.806z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 00-3-3H9a3 3 0 00-3 3v2m6-2V7a3 3 0 00-3-3H9a3 3 0 00-3 3v5" />
+    </svg>
+);
+
+export const BugIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 8l2.665 2.665a2 2 0 01-2.829 2.829L14 11.828M8 16l-2.665-2.665a2 2 0 012.829-2.829L10 12.172m6-4l-3.414-3.414a2 2 0 00-2.828 0L8 8m8 8l-3.414 3.414a2 2 0 01-2.828 0L8 16" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 20V10" />
+    </svg>
+);
+
+export const PaintBrushIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+    </svg>
+);

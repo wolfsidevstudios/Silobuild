@@ -5,6 +5,7 @@ import { DatabasePage } from './DatabasePage';
 import { SettingsPage } from './SettingsPage';
 import { PromptLibraryPage } from './PromptLibraryPage';
 import { SchemaBuilderPage } from './SchemaBuilderPage';
+import { BetaProgramPage } from './BetaProgramPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -23,6 +24,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     }
     if (route.startsWith('#/dashboard/schema-builder')) {
       return <SchemaBuilderPage />;
+    }
+    if (route.startsWith('#/dashboard/beta')) {
+      return <BetaProgramPage />;
     }
     if (route.startsWith('#/dashboard/settings')) {
       return <SettingsPage />;

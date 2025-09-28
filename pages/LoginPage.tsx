@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, SendIcon, EditIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon } from '../components/icons';
 import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
@@ -41,6 +41,26 @@ const TestimonialCard: React.FC<{ quote: string; name: string; title: string; av
         </div>
     </div>
 );
+
+const FaqItem: React.FC<{ question: string; answer: string }> = ({ question, answer }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="border-b border-white/10">
+            <button
+                className="w-full flex justify-between items-center text-left py-4"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <span className="font-semibold text-white">{question}</span>
+                <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isOpen && (
+                <div className="pb-4 text-gray-300">
+                    <p>{answer}</p>
+                </div>
+            )}
+        </div>
+    );
+};
 
 
 export const LoginPage: React.FC = () => {
@@ -165,7 +185,24 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="how-it-works" className="py-20 bg-white/5 border-t border-white/10">
+            <section id="integrations" className="py-20 bg-black border-t border-white/10">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <p className="text-sm font-bold text-blue-400 mb-2">INTEGRATIONS</p>
+                        <h3 className="text-4xl font-bold">Works With Your Favorite Tools</h3>
+                        <p className="text-gray-400 mt-2">The AI can directly use your API keys to build full-stack applications.</p>
+                    </div>
+                    <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-8 text-gray-500">
+                        <GeminiLogo className="h-8" />
+                        <GithubIcon className="h-8 w-8 text-white" />
+                        <SupabaseLogo className="h-8" />
+                        <StripeLogo className="h-8 text-white" />
+                        <VercelIcon className="h-7" />
+                    </div>
+                </div>
+            </section>
+
+            <section id="how-it-works" className="py-20 bg-white/5 border-y border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">How It Works</h3>
@@ -179,7 +216,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="features" className="py-20 bg-black border-y border-white/10">
+            <section id="features" className="py-20 bg-black border-b border-white/10">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">A New Way to Build Software</h3>
@@ -196,7 +233,7 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="testimonials" className="py-20 bg-white/5 border-t border-white/10">
+            <section id="testimonials" className="py-20 bg-white/5 border-b border-white/10">
                  <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Loved by Developers</h3>
@@ -220,6 +257,32 @@ export const LoginPage: React.FC = () => {
                             name="Jessica P."
                             title="Frontend Engineer"
                             avatar="https://randomuser.me/api/portraits/women/65.jpg"
+                        />
+                    </div>
+                </div>
+            </section>
+
+             <section id="faq" className="py-20 bg-black">
+                <div className="container mx-auto px-6 max-w-3xl">
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
+                    </div>
+                    <div className="space-y-4">
+                        <FaqItem
+                            question="Who owns the code that's generated?"
+                            answer="You do. All generated code is yours to use, modify, and distribute as you see fit, for both personal and commercial projects. We claim no ownership over the output."
+                        />
+                        <FaqItem
+                            question="Are my API keys and project data secure?"
+                            answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It never touches our servers, ensuring your information remains private and under your control."
+                        />
+                        <FaqItem
+                            question="How much does it cost to use?"
+                            answer="Silo Build itself is free to use. However, you are responsible for the costs associated with the API services you use, such as the Google Gemini API, which is accessed via your own API key."
+                        />
+                        <FaqItem
+                            question="What technology stack does it use?"
+                            answer="The AI generates standard, production-ready React applications using TypeScript. For styling, it utilizes Tailwind CSS. The generated code is clean, un-opinionated, and easy to extend."
                         />
                     </div>
                 </div>
