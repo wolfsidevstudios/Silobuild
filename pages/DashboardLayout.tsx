@@ -8,6 +8,8 @@ import { SchemaBuilderPage } from './SchemaBuilderPage';
 import { BetaProgramPage } from './BetaProgramPage';
 import { TeamsPage } from './TeamsPage';
 import { AgentProjectsPage } from './AgentProjectsPage';
+import { DeploymentsPage } from './DeploymentsPage';
+import { HelpPage } from './HelpPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -33,8 +35,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
      if (route.startsWith('#/dashboard/teams')) {
       return <TeamsPage />;
     }
+    if (route.startsWith('#/dashboard/deployments')) {
+        return <DeploymentsPage />;
+    }
     if (route.startsWith('#/dashboard/beta')) {
       return <BetaProgramPage />;
+    }
+    if (route.startsWith('#/dashboard/help')) {
+        return <HelpPage />;
     }
     if (route.startsWith('#/dashboard/settings')) {
       return <SettingsPage />;

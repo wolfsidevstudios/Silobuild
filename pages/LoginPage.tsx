@@ -1,8 +1,25 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon } from '../components/icons';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { Settings } from '../types';
+import { generateHelpBotResponseStream } from '../services/geminiService';
+import { Spinner } from '../components/Spinner';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
+
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
+const initialSettings: Settings = {
+  geminiApiKey: '',
+  vercelApiKey: '',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  stripePublicKey: '',
+  stripeSecretKey: '',
+  githubPat: '',
+  netlifyPat: '',
+};
+
 
 declare global {
   interface Window {
@@ -137,10 +154,112 @@ const FaqItem: React.FC<{ question: string; answer: string }> = ({ question, ans
     );
 };
 
+interface BotMessage {
+    role: 'user' | 'model';
+    content: string;
+}
+
+const HelpBot: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+    const [messages, setMessages] = useState<BotMessage[]>([{ role: 'model', content: "Hi! How can I help you with Silo Build today?" }]);
+    const [input, setInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+     useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, isLoading]);
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || isLoading) return;
+
+        if (!settings.geminiApiKey) {
+            setError("Please configure your Gemini API Key in the dashboard settings to use the help bot.");
+            return;
+        }
+
+        const newUserMessage: BotMessage = { role: 'user', content: input };
+        setMessages(prev => [...prev, newUserMessage]);
+        setInput('');
+        setIsLoading(true);
+        setError(null);
+        
+        setMessages(prev => [...prev, { role: 'model', content: '' }]);
+
+        try {
+            await generateHelpBotResponseStream(input, settings, (chunk) => {
+                setMessages(prev => {
+                    const lastMsgIndex = prev.length - 1;
+                    const updatedMessages = [...prev];
+                    updatedMessages[lastMsgIndex] = {
+                        ...updatedMessages[lastMsgIndex],
+                        content: updatedMessages[lastMsgIndex].content + chunk
+                    };
+                    return updatedMessages;
+                });
+            });
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to get response: ${errorMessage}`);
+            setMessages(prev => prev.slice(0, prev.length - 1)); // remove empty model message
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed bottom-20 right-5 w-full max-w-sm h-[70vh] max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-30">
+            <header className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center gap-2">
+                    <HelpCircleIcon className="w-6 h-6 text-blue-600"/>
+                    <h3 className="font-bold text-lg">Silo Help Bot</h3>
+                </div>
+                <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 text-gray-500">
+                    <CloseIcon />
+                </button>
+            </header>
+            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                {messages.map((msg, index) => (
+                    <div key={index} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        <div className={`max-w-xs p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                    </div>
+                ))}
+                 {isLoading && (
+                    <div className="flex items-start">
+                        <div className="p-3 bg-gray-100 text-gray-800 rounded-lg rounded-bl-none">
+                           <Spinner className="w-4 h-4" />
+                        </div>
+                    </div>
+                )}
+                {error && <div className="p-3 bg-red-100 text-red-800 rounded-lg text-sm">{error}</div>}
+                 <div ref={messagesEndRef} />
+            </div>
+            <form onSubmit={handleSend} className="p-3 border-t border-gray-200 flex items-center gap-2">
+                 <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask a question..."
+                    disabled={isLoading}
+                    className="w-full bg-gray-100 border border-gray-200 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button type="submit" disabled={isLoading || !input.trim()} className="w-8 h-8 flex-shrink-0 bg-blue-600 text-white rounded-full flex items-center justify-center disabled:bg-gray-400">
+                    <ChevronDownIcon className="w-5 h-5 transform -rotate-90" />
+                </button>
+            </form>
+        </div>
+    );
+};
+
 
 export const LoginPage: React.FC = () => {
   const { user, login } = useAuth();
   const [prompt, setPrompt] = useState('');
+  const [isBotOpen, setIsBotOpen] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -683,6 +802,15 @@ export const LoginPage: React.FC = () => {
                 </div>
             </div>
         </footer>
+
+        {isBotOpen && <HelpBot onClose={() => setIsBotOpen(false)} />}
+        <button
+            onClick={() => setIsBotOpen(prev => !prev)}
+            className="fixed bottom-5 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 z-40"
+            aria-label="Toggle Help Bot"
+        >
+            {isBotOpen ? <CloseIcon className="w-7 h-7"/> : <HelpCircleIcon className="w-7 h-7" />}
+        </button>
     </div>
   );
 };

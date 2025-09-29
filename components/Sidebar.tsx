@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, SchemaIcon, FlaskIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, SchemaIcon, FlaskIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -61,6 +61,7 @@ export const Sidebar: React.FC = () => {
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
         <SidebarNavLink href="#/dashboard/agents" icon={<AgentIcon />} label="Agents" />
+        <SidebarNavLink href="#/dashboard/deployments" icon={<CloudUploadIcon />} label="Deployments" />
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
         <SidebarNavLink href="#/dashboard/schema-builder" icon={<SchemaIcon />} label="Schema Builder" />
@@ -75,6 +76,7 @@ export const Sidebar: React.FC = () => {
         
         <div className="mt-auto border-t border-gray-200 pt-2 flex flex-col gap-2">
           <SidebarNavLink href="#/dashboard/beta" icon={<FlaskIcon />} label="Beta Program" />
+          <SidebarNavLink href="#/dashboard/help" icon={<HelpCircleIcon />} label="Help & Support" />
           <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" />
         </div>
       </nav>

@@ -492,3 +492,57 @@ export const generateSchemaFromPrompt = async (prompt: string, settings: Setting
     throw new Error(`Failed to generate schema from AI. Details: ${detailedError}`);
   }
 };
+
+export const generateHelpBotResponseStream = (
+  prompt: string,
+  settings: Settings,
+  onUpdate: (chunk: string) => void,
+): Promise<void> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const apiKey = settings.geminiApiKey || process.env.API_KEY;
+      if (!apiKey) {
+        reject(new Error("Gemini API key is not configured."));
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const systemInstruction = `You are a helpful and friendly AI assistant for "Silo Build", an application that lets users generate web apps from text prompts.
+Your role is to answer user questions about how to use the app, its features, and troubleshoot common issues.
+
+Key Features of Silo Build:
+- Users can generate multi-file applications (React, Vue, Svelte, Node.js) or single-file HTML apps.
+- It has a chat interface for prompting, a code editor, and a live preview.
+- Users can save projects, which are stored in their browser's local storage.
+- Users can connect their own API keys (Gemini, Vercel, GitHub, Supabase, Stripe) in the Settings page. Keys are also stored locally.
+- It can integrate services like Supabase or Stripe if the user's prompt mentions it and keys are provided.
+- Projects can be downloaded as a ZIP, deployed to Vercel (simulation), or pushed to a new GitHub repo.
+- There is a "Studio" mode for manual coding with a component library.
+- There is an "Agent Builder" for creating custom conversational AI agents.
+
+Your tone should be encouraging and clear. Do not generate code unless the user explicitly asks for a small example snippet. Do not make up features that don't exist.
+Keep your answers concise and easy to understand.`;
+
+      const fullPrompt = `${systemInstruction}\n\nHere is the user's question: "${prompt}"`;
+
+      const responseStream = await ai.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents: fullPrompt,
+        config: {
+          temperature: 0.5,
+        },
+      });
+
+      for await (const chunk of responseStream) {
+        onUpdate(chunk.text);
+      }
+      
+      resolve();
+    } catch (error) {
+      console.error("Error calling Gemini API for help bot:", error);
+      const detailedError = error instanceof Error ? error.message : String(error);
+      reject(new Error(`Failed to get a response from the AI. Details: ${detailedError}`));
+    }
+  });
+};
