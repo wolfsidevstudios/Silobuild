@@ -287,12 +287,16 @@ The code you generate MUST be complete and implement all requested features. Do 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- A social media app for sharing photos.\\n- Features a bottom navigation bar and a profile page."}
 
 Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
 
 Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
+Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
 Finally, you will output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
