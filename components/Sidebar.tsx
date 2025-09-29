@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon, InspirationIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -61,6 +61,7 @@ export const Sidebar: React.FC = () => {
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
         <SidebarNavLink href="#/dashboard/agents" icon={<AgentIcon />} label="Agents" />
+        <SidebarNavLink href="#/dashboard/inspiration" icon={<InspirationIcon />} label="Inspiration" />
         <SidebarNavLink href="#/dashboard/deployments" icon={<CloudUploadIcon />} label="Deployments" />
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />

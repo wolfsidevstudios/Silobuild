@@ -1,13 +1,13 @@
 import React from 'react';
-import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, LaunchpadIcon, KeyIcon } from '../components/icons';
+import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, LaunchpadIcon, KeyIcon, SlackIcon, JiraIcon } from '../components/icons';
 
 const IntegrationCard: React.FC<{
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     title: string;
     description: string;
 }> = ({ icon, title, description }) => (
     <div className="bg-white border border-gray-200 rounded-lg p-6 flex flex-col items-start hover:shadow-lg transition-shadow duration-300">
-        <div className="flex items-center gap-4 mb-3">
+        <div className="flex items-center gap-4 mb-3 min-h-[40px]">
             {icon}
             <h3 className="text-xl font-bold">{title}</h3>
         </div>
@@ -61,6 +61,14 @@ export const IntegrationsPage: React.FC = () => {
             icon={<LaunchpadIcon className="w-7 h-7 text-cyan-500"/>}
             title="Netlify"
             description="Connect your Netlify account to enable one-click deployments for your static sites and frontend apps."
+        />
+        <IntegrationCard 
+            title="Slack"
+            description="Get notifications about deployments and project updates directly in your Slack channels. (Coming soon)"
+        />
+         <IntegrationCard 
+            title="Jira"
+            description="Automatically create Jira issues from feedback or link projects to your existing Jira boards. (Coming soon)"
         />
       </div>
     </div>

@@ -10,6 +10,7 @@ import { AgentProjectsPage } from './AgentProjectsPage';
 import { DeploymentsPage } from './DeploymentsPage';
 import { HelpPage } from './HelpPage';
 import { IntegrationsPage } from './IntegrationsPage';
+import { InspirationPage } from './InspirationPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -34,6 +35,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     }
     if (route.startsWith('#/dashboard/integrations')) {
         return <IntegrationsPage />;
+    }
+    if (route.startsWith('#/dashboard/inspiration')) {
+        return <InspirationPage />;
     }
     if (route.startsWith('#/dashboard/deployments')) {
         return <DeploymentsPage />;
