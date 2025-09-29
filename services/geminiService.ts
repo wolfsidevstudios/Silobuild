@@ -472,9 +472,12 @@ export const generateIdeaStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       
-      const fullPrompt = `You are a creative and helpful AI assistant for a software developer. Your task is to brainstorm ideas for applications. Provide suggestions, refine concepts, and offer feedback. Do not generate code, file structures, or JSON. Respond in a conversational, helpful tone.
+      const fullPrompt = `You are an expert prompt engineer for an AI application builder.
+Your task is to take a user's rough idea and transform it into a concise, single-paragraph, effective prompt that can be used to generate a full application.
+The prompt you generate should be detailed enough for an AI to understand the core features, UI/UX, and functionality.
+Do NOT be conversational. Do NOT explain the prompt. ONLY output the prompt itself.
 
-User's request: "${prompt}"`;
+User's idea: "${prompt}"`;
 
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",

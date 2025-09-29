@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon } from '../components/icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
@@ -465,6 +465,55 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
             
+            <section id="coming-soon" className="py-20 bg-gray-900 text-white">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h3 className="text-5xl font-bold">Coming Soon: Silo Build V1.5</h3>
+                        <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+                            A quantum leap forward. We're rebuilding from the ground up for unprecedented speed, smarter AI, and the features you've been asking for.
+                        </p>
+                    </div>
+                    <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+                        <div className="flex items-start gap-4">
+                            <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/30">
+                                <UsersIcon className="w-6 h-6 text-blue-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold">Real-time Collaboration</h4>
+                                <p className="text-sm text-gray-400">Build together in real-time with your team, just like in a Google Doc.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/30">
+                                <BugIcon className="w-6 h-6 text-green-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold">AI-Powered Debugging</h4>
+                                <p className="text-sm text-gray-400">Find and fix bugs conversationally. Just describe the problem and let the AI handle it.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="bg-purple-500/10 p-3 rounded-lg border border-purple-500/30">
+                                <CodeIcon className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold">Expanded Tech Stacks</h4>
+                                <p className="text-sm text-gray-400">Support for more frameworks like Next.js and backend languages like Python and Go.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4">
+                            <div className="bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/30">
+                                <PaintBrushIcon className="w-6 h-6 text-yellow-400" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold">Theme & Component Studio</h4>
+                                <p className="text-sm text-gray-400">Visually design your theme and create reusable components with AI assistance.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="features" className="py-20 bg-transparent border-y border-gray-200">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
