@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Project, AgentConfig, Settings } from '../types';
+import { Project, AgentConfig, Settings, GeneratedFile } from '../types';
 import { generateAgentChatResponse } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
-import { SaveIcon, SparklesIcon, HomeIcon, AgentIcon, TrashIcon } from '../components/icons';
+import { SaveIcon, SparklesIcon, HomeIcon, AgentIcon, TrashIcon, DownloadIcon } from '../components/icons';
 import { Type } from '@google/genai';
+import { downloadProjectAsZip } from '../utils/projectUtils';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -276,6 +277,142 @@ export const AgentBuilderPage: React.FC<{ projectId?: string }> = ({ projectId }
         setHistory(newHistory);
         sendMessage(newHistory);
     };
+    
+    const handleDownloadAgent = () => {
+        if (!project) {
+            alert("Please save the agent before downloading.");
+            return;
+        }
+
+        const sanitizedName = name.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
+        const packageJsonContent = {
+          name: sanitizedName,
+          version: "1.0.0",
+          description: `AI Agent "${name}" created with Silo Build`,
+          main: "index.js",
+          type: "module",
+          scripts: {
+            start: "node index.js"
+          },
+          dependencies: {
+            "@google/genai": "^1.21.0",
+            "dotenv": "^16.4.5",
+            "readline": "^1.3.0"
+          }
+        };
+
+        const readmeContent = `# AI Agent - ${name}
+
+This agent was configured using Silo Build.
+
+## Setup
+
+1.  Install dependencies:
+    \`\`\`bash
+    npm install
+    \`\`\`
+
+2.  Create a \`.env\` file in the root of this project and add your Gemini API key:
+    \`\`\`
+    API_KEY=your_gemini_api_key_here
+    \`\`\`
+    If you configured an agent-specific key, use that one. Otherwise, use your global Gemini key.
+
+## Run
+
+Start the agent chat in your terminal:
+
+\`\`\`bash
+npm start
+\`\`\`
+`;
+
+        const indexJsContent = `import { GoogleGenAI } from '@google/genai';
+import * as fs from 'fs';
+import * as readline from 'readline';
+import 'dotenv/config';
+
+// Load agent configuration
+const agentConfig = JSON.parse(fs.readFileSync('./agent.config.json', 'utf-8'));
+
+// --- IMPORTANT: API Key ---
+// The API key MUST be in a .env file in the root of the project.
+// Create a file named .env and add the following line:
+// API_KEY=your_gemini_api_key_here
+// --------------------------
+if (!process.env.API_KEY && !agentConfig.geminiApiKey) {
+    console.error('Error: API_KEY not found. Please create a .env file and add your Gemini API key.');
+    process.exit(1);
+}
+
+const ai = new GoogleGenAI({ apiKey: agentConfig.geminiApiKey || process.env.API_KEY });
+const chat = ai.chats.create({
+    model: 'gemini-2.5-flash',
+    config: {
+        systemInstruction: agentConfig.systemInstruction,
+        tools: agentConfig.tools && agentConfig.tools.length > 0 ? agentConfig.tools : undefined,
+    },
+});
+
+console.log('Agent is ready. Type your message and press Enter. Type "exit" to quit.');
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: 'You: '
+});
+
+rl.prompt();
+
+rl.on('line', async (line) => {
+    if (line.toLowerCase() === 'exit') {
+        rl.close();
+        return;
+    }
+
+    try {
+        const response = await chat.sendMessage({ message: line });
+        // NOTE: Function calling is not handled in this basic runner.
+        // You will need to implement logic to handle functionCall responses from the model if your agent uses tools.
+        console.log(\`\\nAgent: \${response.text}\\n\`);
+    } catch (error) {
+        console.error(\`\\nError: \${error.message}\\n\`);
+    }
+    rl.prompt();
+}).on('close', () => {
+    console.log('Goodbye!');
+    process.exit(0);
+});
+`;
+
+        const agentConfigFile: GeneratedFile = {
+            path: 'agent.config.json',
+            content: JSON.stringify(config, null, 2)
+        };
+
+        const packageJsonFile: GeneratedFile = {
+            path: 'package.json',
+            content: JSON.stringify(packageJsonContent, null, 2)
+        };
+        
+        const readmeFile: GeneratedFile = {
+            path: 'README.md',
+            content: readmeContent
+        };
+
+        const indexJsFile: GeneratedFile = {
+            path: 'index.js',
+            content: indexJsContent
+        };
+
+        const projectToDownload = {
+            ...project,
+            files: [agentConfigFile, packageJsonFile, readmeFile, indexJsFile]
+        };
+
+        downloadProjectAsZip(projectToDownload);
+    };
 
     return (
         <div className="h-screen w-screen bg-gray-50 flex flex-col font-sans">
@@ -288,6 +425,14 @@ export const AgentBuilderPage: React.FC<{ projectId?: string }> = ({ projectId }
                     <input value={name} onChange={e => setName(e.target.value)} className="text-sm font-semibold p-1 rounded-md hover:bg-gray-100 focus:bg-gray-100 focus:ring-1 focus:ring-gray-300" />
                 </div>
                 <div className="flex items-center gap-2">
+                     <button
+                        onClick={handleDownloadAgent}
+                        disabled={!project}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors border border-gray-300 disabled:opacity-50"
+                     >
+                        <DownloadIcon />
+                        Download
+                    </button>
                      <button
                         onClick={handleSave}
                         className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"

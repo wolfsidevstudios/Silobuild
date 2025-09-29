@@ -152,6 +152,7 @@ export const SettingsPage: React.FC = () => {
                                 id="supabaseUrl"
                                 name="supabaseUrl"
                                 value={localSettings.supabaseUrl}
+                                onChange={handleInputChange}
                                 placeholder="https://<your-project-ref>.supabase.co"
                                 className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />

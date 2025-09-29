@@ -382,13 +382,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         project={currentProject}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
-        {isBusy && (
+        {isPushing && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="flex flex-col items-center gap-2">
                 <Spinner className="h-10 w-10" />
-                <span className="text-sm text-gray-600">
-                    {isPushing ? 'Pushing to GitHub...' : 'Generating...'}
-                </span>
+                <span className="text-sm text-gray-600">Pushing to GitHub...</span>
             </div>
           </div>
         )}
