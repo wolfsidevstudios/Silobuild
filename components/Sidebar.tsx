@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, FlaskIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -74,7 +74,7 @@ export const Sidebar: React.FC = () => {
         )}
         
         <div className="mt-auto border-t border-gray-200 pt-2 flex flex-col gap-2">
-          <SidebarNavLink href="#/dashboard/beta" icon={<FlaskIcon />} label="Beta Program" />
+          <SidebarNavLink href="#/dashboard/beta" icon={<BetaIcon />} label="Beta Program" />
           <SidebarNavLink href="#/dashboard/help" icon={<HelpCircleIcon />} label="Help & Support" />
           <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" />
         </div>

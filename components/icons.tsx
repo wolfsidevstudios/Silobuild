@@ -147,6 +147,17 @@ export const GeminiLogo = ({ className = 'h-6' }) => (
 
 // --- START: Added Icons ---
 
+export const BetaIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.5 -0.5 16 16" className={className} fill="none">
+        <path d="m4.51875 0.9375 5.9625 0" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+        <path d="M9.2875 3.91875V0.9375H5.7125v2.98125L1.6875 11.96875a1.4375 1.4375 0 0 0 -0.15625 0.625 1.45 1.45 0 0 0 1.45 1.46875h9.0375a1.45 1.45 0 0 0 1.45 -1.45 1.4375 1.4375 0 0 0 -0.15625 -0.625Z" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+        <path d="M4.30625 6.725c3.125 -1.35625 3.31875 1.1875 6.5125 0.25625" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+        <path d="m4.51875 11.675 1.19375 0" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+        <path d="m6.30625 9.2875 1.19375 0" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+        <path d="m9.2875 10.48125 1.19375 0" stroke="currentColor" strokeMiterlimit="10" strokeWidth="1"></path>
+    </svg>
+);
+
 export const BoltIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -205,12 +216,6 @@ export const FinderIcon: React.FC<{ className?: string }> = ({ className = 'w-14
       <path fill="#FFFFFF" d="M22 36c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm20 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
       <path fill="#2392D3" d="M37 28c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5z"/>
       <path fill="#FFFFFF" d="M27 28c-2.8 0-5 2.2-5 5s2.2 5 5 5 5-2.2 5-5-2.2-5-5-5z"/>
-    </svg>
-);
-
-export const FlaskIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4H7zm0 0a4 4 0 004-4V5a2 2 0 00-2-2H7a2 2 0 00-2 2v12a4 4 0 004 4zm0 0l-2-2m2 2l2-2m-2-2l2-2" />
     </svg>
 );
 

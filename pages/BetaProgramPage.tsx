@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { FlaskIcon, CheckIcon, BugIcon, PaintBrushIcon } from '../components/icons';
+import { BetaIcon, CheckIcon, BugIcon, PaintBrushIcon } from '../components/icons';
 
 const BetaFeature: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200">
@@ -18,7 +18,7 @@ export const BetaProgramPage: React.FC = () => {
     return (
         <div className="p-8">
             <div className="flex items-center gap-3 mb-4">
-                <FlaskIcon className="w-8 h-8 text-yellow-500" />
+                <BetaIcon className="w-8 h-8 text-yellow-500" />
                 <h1 className="text-3xl font-bold">Beta Program</h1>
             </div>
 

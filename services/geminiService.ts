@@ -252,23 +252,33 @@ This requires the following file structure and content:
    - It MUST use ES modules and import maps to load React from the provided CDN.
 
 --- PREVIEW FILE INSTRUCTIONS (React) ---
-The 'previewFile' is a CRITICAL part of the response. It MUST be a single, self-contained 'index.html' file that can be rendered in an iframe. To achieve this, you MUST follow these steps precisely:
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' compatible with React 19, which is ESM-only.
+To achieve this, you MUST follow these steps precisely:
 1.  Start with a standard HTML5 boilerplate.
 2.  In the <head>, include Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>.
-3.  In the <head>, include React, ReactDOM, and Babel Standalone for in-browser JSX transformation. Use these exact script tags:
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+3.  In the <head>, you MUST add an import map script tag to handle ESM imports for React 19. Use these exact contents:
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0-rc.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client"
+      }
+    }
+    </script>
 4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>.
-5.  At the end of the <body>, add a single <script type="text/babel"> tag.
-6.  Inside this script tag, you MUST place all the necessary JavaScript code to run the application. This means combining the logic from all your generated '.tsx' files into this one script block.
-    - Define all your React components using JSX syntax.
-    - Ensure components are defined before they are used to avoid reference errors.
-    - Remove any 'export' or 'import' statements between your components, as they are all in the same script scope.
-7.  The script MUST conclude with the standard React rendering code:
-    const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<App />);
+5.  At the end of the <body>, add the Babel Standalone script: <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>.
+6.  Immediately after the Babel script, add the main application script tag. It MUST be \`<script type="text/babel" data-type="module">\`. The 'data-type="module"' attribute is ESSENTIAL.
+7.  Inside this script tag:
+    a.  Start with the necessary imports:
+        import React from 'react';
+        import ReactDOM from 'react-dom/client';
+    b.  Combine the logic from all your generated '.tsx' files into this one script block.
+    c.  Define all React components using TSX syntax. Ensure components are defined before they are used.
+    d.  You MUST remove any 'export' statements and any 'import' statements between your components, as they are all in the same script scope.
+    e.  The script MUST conclude with the standard React 19 rendering code:
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
 8.  Do NOT include service worker registration or a link to manifest.json in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
