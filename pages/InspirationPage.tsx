@@ -72,7 +72,7 @@ export const InspirationPage: React.FC = () => {
             className="h-full bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('https://i.ibb.co/Df8NHGR8/IMG-3906.png')" }}
         >
-            <div className="h-full w-full bg-black/60 backdrop-blur-md p-8 overflow-y-auto flex flex-col justify-center items-center text-center">
+            <div className="h-full w-full bg-black/60 p-8 overflow-y-auto flex flex-col justify-center items-center text-center">
                 
                 <div className="flex items-center gap-3 mb-4">
                     <InspirationIcon className="w-8 h-8 text-yellow-300" />
