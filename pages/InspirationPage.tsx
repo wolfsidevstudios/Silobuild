@@ -2,14 +2,9 @@ import React, { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateIdeaStream } from '../services/geminiService';
-import { InspirationIcon, SparklesIcon, TrashIcon, EditIcon } from '../components/icons';
+import { InspirationIcon, SparklesIcon, DownloadIcon } from '../components/icons';
 import { Spinner } from '../components/Spinner';
-
-interface Note {
-  id: string;
-  content: string;
-  createdAt: string;
-}
+import saveAs from 'file-saver';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -23,16 +18,16 @@ const initialSettings: Settings = {
 };
 
 export const InspirationPage: React.FC = () => {
-    const [notes, setNotes] = useLocalStorage<Note[]>('silo-build-inspiration-notes', []);
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     
     const [prompt, setPrompt] = useState('');
     const [idea, setIdea] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [editingNote, setEditingNote] = useState<Note | null>(null);
+    const [isCopied, setIsCopied] = useState(false);
 
-    const generateIdea = async () => {
+    const generateIdea = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         if (!prompt.trim()) return;
         if (!settings.geminiApiKey) {
             setError("Please configure your Gemini API Key in the dashboard settings to use the idea generator.");
@@ -42,7 +37,7 @@ export const InspirationPage: React.FC = () => {
         setError(null);
         setIdea('');
         try {
-            await generateIdeaStream(prompt, settings, (chunk) => {
+            await generateIdeaStream(`Brainstorm a detailed app idea and a good starting prompt for building it. The initial concept is: "${prompt}"`, settings, (chunk) => {
                 setIdea(prev => prev + chunk);
             });
         } catch (e) {
@@ -52,25 +47,19 @@ export const InspirationPage: React.FC = () => {
         }
     };
 
-    const addNote = (content: string) => {
-        if (!content.trim()) return;
-        const newNote: Note = {
-            id: crypto.randomUUID(),
-            content,
-            createdAt: new Date().toISOString()
-        };
-        setNotes(prev => [newNote, ...prev]);
-    };
-    
-    const updateNote = () => {
-        if (editingNote && editingNote.content.trim()) {
-            setNotes(prev => prev.map(n => n.id === editingNote.id ? editingNote : n));
-            setEditingNote(null);
+    const handleCopy = () => {
+        if (idea) {
+            navigator.clipboard.writeText(idea);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
         }
     };
 
-    const deleteNote = (id: string) => {
-        setNotes(prev => prev.filter(n => n.id !== id));
+    const handleDownload = () => {
+        if (idea) {
+            const blob = new Blob([idea], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, `silo-build-idea.txt`);
+        }
     };
     
     const handleUsePrompt = (promptText: string) => {
@@ -78,95 +67,74 @@ export const InspirationPage: React.FC = () => {
         window.location.hash = '#/builder';
     };
 
-
     return (
         <div 
             className="h-full bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('https://i.ibb.co/Df8NHGR8/IMG-3906.png')" }}
         >
-            <div className="h-full w-full bg-black/50 backdrop-blur-sm p-8 overflow-y-auto">
-                <div className="flex items-center gap-3 mb-6">
+            <div className="h-full w-full bg-black/60 backdrop-blur-md p-8 overflow-y-auto flex flex-col justify-center items-center text-center">
+                
+                <div className="flex items-center gap-3 mb-4">
                     <InspirationIcon className="w-8 h-8 text-yellow-300" />
                     <h1 className="text-3xl font-bold text-white">Inspiration</h1>
                 </div>
-                <p className="text-gray-300 mb-8 max-w-3xl">
-                    Brainstorm your next big idea with AI, and save your favorite prompts as notes for later.
+                <p className="text-gray-300 mb-8 max-w-2xl">
+                    Describe a concept, and let AI generate a detailed app idea and a prompt for you to build it.
                 </p>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* AI Idea Generator */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <SparklesIcon className="text-yellow-300"/>
-                            AI Idea Generator
-                        </h2>
-                        <div className="space-y-4">
-                            <textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                rows={4}
-                                placeholder="e.g., 'An app for local gardeners to trade seeds' or 'A productivity tool for remote teams'"
-                                className="w-full bg-white/5 border border-white/20 rounded-md p-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                            />
-                            <button
-                                onClick={generateIdea}
-                                disabled={isLoading}
-                                className="w-full bg-yellow-400 text-black px-4 py-2 font-semibold rounded-lg hover:bg-yellow-500 transition-colors disabled:bg-gray-500 flex items-center justify-center gap-2"
-                            >
-                                {isLoading ? <><Spinner className="w-5 h-5 text-black" /> Brainstorming...</> : 'Generate Ideas'}
-                            </button>
+                <div className="w-full max-w-2xl">
+                    <form onSubmit={generateIdea} className="relative">
+                        <input
+                            type="text"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="Brainstorm an app for..."
+                            className="w-full bg-white rounded-full py-4 pl-6 pr-32 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 shadow-lg text-lg"
+                        />
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="absolute top-1/2 right-2 -translate-y-1/2 bg-yellow-400 text-black px-5 py-2.5 font-semibold rounded-full hover:bg-yellow-500 transition-colors disabled:bg-gray-400 text-base"
+                        >
+                            Generate
+                        </button>
+                    </form>
+
+                    <div className="flex flex-wrap justify-center gap-2 mt-4 text-sm">
+                        <button onClick={() => setPrompt('a productivity tool for remote teams')} className="bg-white/10 text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">Productivity Tool</button>
+                        <button onClick={() => setPrompt('a mobile game for casual players')} className="bg-white/10 text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">Mobile Game</button>
+                        <button onClick={() => setPrompt('a SaaS for small businesses')} className="bg-white/10 text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">SaaS App</button>
+                        <button onClick={() => setPrompt('a social app for local events')} className="bg-white/10 text-white px-3 py-1.5 rounded-full hover:bg-white/20 transition-colors">Social App</button>
+                    </div>
+
+                    {(isLoading || idea || error) && (
+                        <div className="mt-8 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl p-6 text-left transition-all duration-500">
+                            {isLoading && (
+                                <div className="flex items-center justify-center gap-2 text-white">
+                                    <Spinner className="w-5 h-5 text-white" /> Brainstorming...
+                                </div>
+                            )}
                             {error && <p className="text-red-400 text-sm">{error}</p>}
-                            {idea && (
-                                <div className="bg-black/20 p-4 rounded-lg space-y-3 prose prose-invert prose-sm max-w-none text-gray-200">
-                                    <p>{idea}</p>
-                                    <button
-                                        onClick={() => addNote(idea)}
-                                        className="text-xs bg-white/10 px-2 py-1 rounded-md hover:bg-white/20 text-white font-semibold"
-                                    >
-                                        + Save to Notes
-                                    </button>
+                            {idea && !isLoading && (
+                                <div className="space-y-4">
+                                    <p className="text-white whitespace-pre-wrap">{idea}</p>
+                                    <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                                        <button onClick={handleCopy} className="bg-white/10 text-white px-4 py-2 text-sm rounded-lg hover:bg-white/20 transition-colors">
+                                            {isCopied ? 'Copied!' : 'Copy'}
+                                        </button>
+                                        <button onClick={handleDownload} className="flex items-center gap-2 bg-white/10 text-white px-4 py-2 text-sm rounded-lg hover:bg-white/20 transition-colors">
+                                            <DownloadIcon className="w-4 h-4" />
+                                            Download
+                                        </button>
+                                        <button onClick={() => handleUsePrompt(idea)} className="flex items-center gap-2 ml-auto bg-yellow-400 text-black px-4 py-2 text-sm font-semibold rounded-lg hover:bg-yellow-500 transition-colors">
+                                            <SparklesIcon className="w-4 h-4" />
+                                            Build with this prompt
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* My Notes */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">My Notes & Prompts</h2>
-                        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-                           {editingNote && (
-                                <div className="bg-black/30 p-3 rounded-lg">
-                                    <textarea
-                                        value={editingNote.content}
-                                        onChange={(e) => setEditingNote({...editingNote, content: e.target.value})}
-                                        rows={4}
-                                        className="w-full bg-transparent text-white text-sm focus:outline-none"
-                                    />
-                                    <div className="flex justify-end gap-2 mt-2">
-                                        <button onClick={() => setEditingNote(null)} className="text-xs px-3 py-1 bg-gray-600 rounded-md text-white">Cancel</button>
-                                        <button onClick={updateNote} className="text-xs px-3 py-1 bg-yellow-500 text-black rounded-md">Save</button>
-                                    </div>
-                                </div>
-                           )}
-
-                           {notes.length === 0 && !editingNote && <p className="text-gray-400 text-sm italic">No notes yet. Use the generator to save ideas!</p>}
-
-                            {notes.filter(note => note.id !== editingNote?.id).map(note => (
-                                <div key={note.id} className="bg-black/20 p-3 rounded-lg group">
-                                    <p className="text-sm text-gray-200 line-clamp-4">{note.content}</p>
-                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/10">
-                                         <button onClick={() => handleUsePrompt(note.content)} className="text-xs text-yellow-300 hover:underline">
-                                            Use as Prompt
-                                        </button>
-                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => setEditingNote(note)} className="text-gray-400 hover:text-white"><EditIcon className="w-4 h-4" /></button>
-                                            <button onClick={() => deleteNote(note.id)} className="text-gray-400 hover:text-red-400"><TrashIcon className="w-4 h-4" /></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
