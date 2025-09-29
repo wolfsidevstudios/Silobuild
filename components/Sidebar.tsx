@@ -44,14 +44,14 @@ export const Sidebar: React.FC = () => {
        <div className="mb-6 px-2 space-y-2">
         <a 
           href="#/builder" 
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full transition-colors duration-300"
         >
             <PlusIcon />
             New AI App
         </a>
         <a 
           href="#/agent-builder" 
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-300"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 text-gray-900 rounded-full transition-colors duration-300 border border-gray-200"
         >
             <AgentIcon />
             New AI Agent
