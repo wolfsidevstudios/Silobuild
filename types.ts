@@ -6,7 +6,7 @@ export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
-export type TechStack = 'react' | 'html' | 'agent';
+export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte';
 
 export interface GeneratedFile {
   path: string;

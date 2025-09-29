@@ -1,6 +1,6 @@
 import React from 'react';
 import { TechStack } from '../types';
-import { ReactIcon, HtmlIcon } from './icons';
+import { ReactIcon, HtmlIcon, VueIcon, SvelteIcon } from './icons';
 
 interface StackSelectionProps {
   onSelect: (stack: TechStack) => void;
@@ -39,6 +39,18 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
           title="React + TypeScript"
           description="A modern, multi-file PWA with a robust structure."
           onClick={() => onSelect('react')}
+        />
+        <StackCard
+          icon={<VueIcon />}
+          title="Vue + TypeScript"
+          description="Generate a complete Vue 3 application using the Composition API."
+          onClick={() => onSelect('vue')}
+        />
+         <StackCard
+          icon={<SvelteIcon />}
+          title="Svelte + TypeScript"
+          description="Create a Svelte 5 project with a focus on performance."
+          onClick={() => onSelect('svelte')}
         />
         <StackCard
           icon={<HtmlIcon />}

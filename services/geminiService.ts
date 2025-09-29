@@ -24,6 +24,126 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       } else {
          instruction += `\nYour task is to generate a complete, single-file HTML application based on the user's prompt.`;
       }
+  } else if (techStack === 'vue') {
+    instruction = `You are an expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+
+You must stream your response as a sequence of JSON objects, each on a new line.
+First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.vue", "src/components/HelloWorld.vue"]}
+
+Then, for each file, output a 'file' object.
+Example: {"type": "file", "file": {"path": "src/App.vue", "content": "<template>...</template>"}}
+
+Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
+      if (isEditing) {
+        instruction += `\nYour task is to update the provided Vue application files based on the user's request. You will receive the current application files as JSON, followed by the modification request. You MUST output the complete, updated set of files.`;
+      } else {
+        instruction += `\nYour task is to generate a complete, multi-file Vue 3 TypeScript application based on the user's prompt.`;
+      }
+      
+      instruction += `\n
+--- PWA & CUSTOMIZATION INSTRUCTIONS ---
+All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), following a standard Vite project structure.
+This requires: 'manifest.json', 'public/sw.js', and PWA registration in 'index.html'.
+
+--- PREVIEW FILE INSTRUCTIONS (Vue) ---
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' that can render a Vue application in an iframe.
+1. Start with HTML5 boilerplate.
+2. In <head>, include Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>.
+3. In <head>, include these scripts for Vue 3 and the vue3-sfc-loader:
+   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+   <script src="https://unpkg.com/vue3-sfc-loader/dist/vue3-sfc-loader.js"></script>
+4. The <body> MUST contain a single root element, e.g., <div id="app"></div>.
+5. At the end of the <body>, add a <script type="module"> tag.
+6. Inside this script, configure the sfc-loader and mount the app. All .vue components must be defined as string literals inside the script.
+   const options = {
+     moduleCache: { vue: Vue },
+     async getFile(url) {
+       if (url === '/App.vue') return \`
+         <template>
+           <h1>Hello from App.vue!</h1>
+           <HelloWorld />
+         </template>
+         <script setup>
+           import HelloWorld from './components/HelloWorld.vue';
+         </script>
+       \`;
+       if (url === '/components/HelloWorld.vue') return \`
+         <template><h2>Hello, World!</h2></template>
+       \`;
+       return;
+     },
+     addStyle(textContent) {
+       const style = Object.assign(document.createElement('style'), { textContent });
+       document.head.appendChild(style);
+     },
+   };
+   const { loadModule } = window['vue3-sfc-loader'];
+   const app = Vue.createApp(Vue.defineAsyncComponent(() => loadModule('/App.vue', options)));
+   app.mount('#app');
+7. Do NOT include PWA features (service worker, manifest) in the previewFile.
+`;
+
+  } else if (techStack === 'svelte') {
+    instruction = `You are an expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+
+You must stream your response as a sequence of JSON objects, each on a new line.
+First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.svelte", "src/lib/Counter.svelte"]}
+
+Then, for each file, output a 'file' object.
+Example: {"type": "file", "file": {"path": "src/App.svelte", "content": "<script lang='ts'>...</script><main>...</main>"}}
+
+Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
+    if (isEditing) {
+        instruction += `\nYour task is to update the provided Svelte application files based on the user's request. You will receive the current application files as JSON, followed by the modification request. You MUST output the complete, updated set of files.`;
+    } else {
+        instruction += `\nYour task is to generate a complete, multi-file Svelte 5 TypeScript application based on the user's prompt.`;
+    }
+
+    instruction += `\n
+--- PWA & CUSTOMIZATION INSTRUCTIONS ---
+All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), following a standard Vite project structure for Svelte.
+This requires: 'manifest.json', 'public/sw.js', and PWA registration in 'index.html'.
+
+--- PREVIEW FILE INSTRUCTIONS (Svelte) ---
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'. Because Svelte is a compiled language, you CANNOT use Svelte syntax directly in the preview file.
+1. Start with HTML5 boilerplate.
+2. In <head>, include Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>.
+3. The <body> MUST contain a single root element, e.g., <div id="app"></div>.
+4. At the end of the <body>, add a single <script> tag (NOT type="module").
+5. Inside this script, you MUST write plain, vanilla JavaScript that manually creates and manipulates DOM elements to render the application. This script should contain all the logic from your Svelte components, but pre-compiled into standard JavaScript. For example, instead of Svelte's \`{#if condition}\`, use a JavaScript \`if\` statement that appends elements to the DOM.
+   Example of compiled logic:
+   function mountApp(target) {
+     const h1 = document.createElement('h1');
+     h1.textContent = 'Hello World';
+     h1.className = 'text-2xl font-bold';
+     target.appendChild(h1);
+     
+     let count = 0;
+     const button = document.createElement('button');
+     button.textContent = \`Clicked \${count} times\`;
+     button.onclick = () => {
+       count++;
+       button.textContent = \`Clicked \${count} times\`;
+     };
+     target.appendChild(button);
+   }
+   mountApp(document.getElementById('app'));
+6. Do NOT include any Svelte-specific syntax like \`$: \`, \`{#if}\`, or component imports in the previewFile's script.
+7. Do NOT include PWA features (service worker, manifest) in the previewFile.
+`;
+
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
