@@ -16,6 +16,7 @@ interface ChatViewProps {
   error: string | null;
   generationPlan: string[];
   generatedFilesProgress: string[];
+  generationSummary: string | null;
   isIdeaMode: boolean;
   vercelToken: string;
   onFileUpdate: (path: string, content: string) => void;
@@ -53,6 +54,26 @@ const ViewModeToggle: React.FC<{
     </button>
   </div>
 );
+
+const GenerationSummary: React.FC<{ summary: string }> = ({ summary }) => {
+  const summaryItems = summary
+    .split('\n')
+    .map(line => line.trim().replace(/^- \s*/, '').replace(/^\* \s*/, ''))
+    .filter(Boolean);
+
+  if (summaryItems.length === 0) return null;
+
+  return (
+    <div className="border-t border-gray-200 mt-3 pt-3">
+      <h4 className="text-xs font-semibold text-gray-500 mb-2">Summary:</h4>
+      <ul className="space-y-1 text-sm list-disc list-inside text-gray-700">
+        {summaryItems.map((item, index) => (
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const FileGenerationChecklist: React.FC<{ plan: string[]; progress: string[] }> = ({ plan, progress }) => {
   if (plan.length === 0) {
@@ -96,6 +117,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   error,
   generationPlan,
   generatedFilesProgress,
+  generationSummary,
   isIdeaMode,
   vercelToken,
   onFileUpdate,
@@ -141,6 +163,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       <Spinner />
                       <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
                     </div>
+                    { !isIdeaMode && generationSummary && <GenerationSummary summary={generationSummary} />}
                     { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
                   </div>
                 </div>

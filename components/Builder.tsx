@@ -40,6 +40,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [error, setError] = useState<string | null>(null);
   const [generationPlan, setGenerationPlan] = useState<string[]>([]);
   const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
+  const [generationSummary, setGenerationSummary] = useState<string | null>(null);
   const [isGenerated, setIsGenerated] = useState(false);
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
@@ -97,6 +98,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       // Handle app generation/editing
       setGenerationPlan([]);
       setGeneratedFilesProgress([]);
+      setGenerationSummary(null);
       // Clear old deployments for a new generation
       if (!isGenerated) {
         setDeployments([]);
@@ -112,7 +114,9 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         let tempFiles: GeneratedFile[] = [];
 
         await generateAppStream(prompt, settings, (update) => {
-          if (update.type === 'plan' && Array.isArray(update.files)) {
+          if (update.type === 'summary' && typeof update.summary === 'string') {
+            setGenerationSummary(update.summary);
+          } else if (update.type === 'plan' && Array.isArray(update.files)) {
               if(!planReceived) {
                   tempFiles = [];
                   setPreviewFile(null);
@@ -348,6 +352,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             error={error}
             generationPlan={generationPlan}
             generatedFilesProgress={generatedFilesProgress}
+            generationSummary={generationSummary}
             isIdeaMode={isIdeaMode}
             vercelToken={settings.vercelApiKey}
             onFileUpdate={handleFileUpdate}

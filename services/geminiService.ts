@@ -30,7 +30,11 @@ The generated README.md file MUST end with the following line, separated by a ho
   if (techStack === 'html') {
       instruction = `You are an expert web developer specializing in generating single-file HTML applications.
 You must stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object that lists the single file path: "index.html".
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- A simple landing page\\n- Includes a header, feature section, and footer."}
+
+Second, you MUST output a 'plan' object that lists the single file path: "index.html".
 Example: {"type": "plan", "files": ["index.html"]}
 
 Then, you will output one 'file' object for "index.html".
@@ -53,7 +57,11 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- User authentication with login/logout\\n- A dashboard page to display user data."}
+
+Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.vue", "src/components/HelloWorld.vue"]}
 
 Then, for each file, output a 'file' object.
@@ -119,7 +127,11 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- Interactive counter component\\n- State management with Svelte 5 runes."}
+
+Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.svelte", "src/lib/Counter.svelte"]}
 
 Then, for each file, output a 'file' object.
@@ -175,7 +187,11 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
 The code you generate MUST be complete and ready to run. Do not use placeholder comments.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the API you are about to generate (or the changes you are making), outlining the key endpoints in a bulleted list.
+Example: {"type": "summary", "summary": "- GET /api/items to fetch all items\\n- POST /api/items to create a new item."}
+
+Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["package.json", "index.js"]}
 
 Then, for each file, output a 'file' object.
@@ -221,7 +237,11 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
-First, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- Pomodoro Timer with 25-minute work and 5-minute break cycles.\\n- Start, Pause, and Reset controls."}
+
+Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
 
 Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
