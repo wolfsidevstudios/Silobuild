@@ -2,7 +2,7 @@
 // This file should only contain type exports, not React components.
 // This resolves numerous compilation errors across the project caused by missing or incorrect types.
 
-export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
+export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
@@ -60,6 +60,7 @@ export interface Project {
   githubUrl?: string;
   teamId?: string;
   agentConfig?: AgentConfig;
+  workflow?: WorkflowDefinition;
 }
 
 export interface DecodedCredential {
@@ -104,4 +105,26 @@ export interface Team {
   name: string;
   members: TeamMember[];
   createdAt: string;
+}
+
+// Types for Workflow Builder
+export interface WorkflowNode {
+  id: string;
+  type: string; // e.g., 'Webhook', 'HTTPRequest', 'SendEmail', 'Condition'
+  position: { x: number; y: number };
+  data: {
+    label: string;
+    [key: string]: any; // parameters for the node
+  };
+}
+
+export interface WorkflowConnection {
+  id: string;
+  source: string; // source node id
+  target: string; // target node id
+}
+
+export interface WorkflowDefinition {
+  nodes: WorkflowNode[];
+  connections: WorkflowConnection[];
 }

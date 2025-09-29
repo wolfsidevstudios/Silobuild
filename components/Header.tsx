@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
@@ -10,6 +10,7 @@ interface HeaderProps {
   isGithubLinked?: boolean;
   onCommitAndPush?: () => void;
   project?: Project | null;
+  hasWorkflow: boolean;
 }
 
 const NavButton: React.FC<{
@@ -41,7 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
   isSaveEnabled,
   isGithubLinked,
   onCommitAndPush,
-  project
+  project,
+  hasWorkflow
 }) => {
   return (
     <header className="flex justify-between items-center p-4 bg-white/50 backdrop-blur-md border-b border-gray-200">
@@ -69,6 +71,14 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => setAppMode('PREVIEW')}
           icon={<EyeIcon />}
         />
+        {hasWorkflow && (
+          <NavButton
+            label="Workflow"
+            isActive={activeMode === 'WORKFLOW'}
+            onClick={() => setAppMode('WORKFLOW')}
+            icon={<WorkflowIcon />}
+          />
+        )}
       </div>
       
       <div className="w-auto flex items-center justify-end gap-4">

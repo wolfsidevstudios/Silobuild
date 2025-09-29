@@ -6,12 +6,13 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
 import { showLocalNotification } from '../utils/projectUtils';
+import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 
 // FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
@@ -54,6 +55,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
 
 
   const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack) => {
@@ -161,6 +163,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                   schema: update.schema
               };
               setMessages(prev => [...prev, schemaMessage]);
+          } else if (update.type === 'workflow_definition' && update.workflow) {
+            setWorkflow(update.workflow);
+            const workflowMessage: ChatMessage = {
+                role: 'model',
+                content: "I've created or updated the workflow for your application. You can view it in the 'Workflow' tab."
+            };
+            setMessages(prev => [...prev, workflowMessage]);
           }
         }, stackToUse, filesForContext, appName, appIcon);
 
@@ -219,6 +228,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setChatModeView('PREVIEW');
         setTechStack(project.stack || 'react'); // Default old projects to react
         setDeployments(project.deployments || []);
+        setWorkflow(project.workflow || null);
       }
     } else {
         // This is a new project. Reset everything.
@@ -229,6 +239,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsGenerated(false);
         setTechStack(null);
         setDeployments([]);
+        setWorkflow(null);
 
         const promptFromStorage = sessionStorage.getItem('initialPrompt');
         if (promptFromStorage) {
@@ -269,6 +280,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         deployments: deployments,
         githubUrl: currentProject?.githubUrl,
         teamId: teamId || undefined,
+        workflow: workflow || undefined,
     };
 
     let projectToSave: Project;
@@ -412,6 +424,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           onNewDeployment={handleNewDeployment}
           onAddSupabase={handleAddSupabase}
         />;
+      case 'WORKFLOW':
+        return workflow ? <WorkflowBuilderPage workflow={workflow} /> : 
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No workflow defined for this project.
+          </div>;
       default:
         return null;
     }
@@ -429,6 +446,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         isGithubLinked={!!currentProject?.githubUrl}
         onCommitAndPush={handleCommitAndPush}
         project={currentProject}
+        hasWorkflow={!!workflow}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isPushing && (

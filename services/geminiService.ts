@@ -42,6 +42,23 @@ Example of your required response:
 After outputting the 'database_schema' object, you MUST continue with the normal application generation flow (summary, plan, files, etc.) and generate code that USES this new schema. The user's database is managed by Silo Build, do not use external services like Supabase unless explicitly asked to. When generating code that uses the schema, you can use a hardcoded array of objects that matches the schema structure for demonstration purposes.
 `;
 
+    const WORKFLOW_INSTRUCTION = `
+--- WORKFLOW GENERATION ---
+If the user asks to create, add, or modify a workflow or automation, you MUST respond with a specific JSON object of type 'workflow_definition'.
+- This JSON object MUST be on its own line.
+- The 'workflow' key must contain an object with 'nodes' and 'connections'.
+- The 'nodes' array must contain node objects. Each node needs an 'id' (string), 'type' (string, e.g., 'Webhook', 'SendEmail'), 'position' ({x: number, y: number}), and 'data' ({label: string, ...other_params}). Lay out node positions logically (e.g., in a left-to-right flow).
+- The 'connections' array must contain connection objects. Each connection needs an 'id' (string), 'source' (source node id), and 'target' (target node id).
+
+Example of a user asking to create a workflow:
+User: "create a workflow that sends a welcome email when a new user signs up"
+
+Example of your required response:
+{"type": "workflow_definition", "workflow": {"nodes": [{"id": "1", "type": "Webhook", "position": {"x": 100, "y": 100}, "data": {"label": "New User Signup"}}, {"id": "2", "type": "SendEmail", "position": {"x": 400, "y": 100}, "data": {"label": "Send Welcome Email", "subject": "Welcome!", "recipient": "{{node[0].body.email}}"}}], "connections": [{"id": "e1-2", "source": "1", "target": "2"}]}}
+
+After outputting the 'workflow_definition' object, you MUST continue with the normal application generation flow (summary, plan, files, etc.) if other changes are requested.
+`;
+
   let instruction;
   
   if (techStack === 'html') {
@@ -70,6 +87,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       }
       instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
       instruction += DATABASE_INSTRUCTION;
+      instruction += WORKFLOW_INSTRUCTION;
   } else if (techStack === 'vue') {
     instruction = `You are an expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -140,6 +158,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
+    instruction += WORKFLOW_INSTRUCTION;
 
   } else if (techStack === 'svelte') {
     instruction = `You are an expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript.
@@ -201,6 +220,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
+    instruction += WORKFLOW_INSTRUCTION;
 
   } else if (techStack === 'nodejs') {
       instruction = `You are an expert backend developer specializing in generating simple and functional Node.js + Express.js applications.
@@ -252,6 +272,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
     -   Include an example of how to test the API, for example, using \`curl http://localhost:3001/api/hello\`.
 `;
       instruction += NODEJS_WATERMARK_INSTRUCTION;
+      instruction += WORKFLOW_INSTRUCTION;
   } else if (techStack === 'mobile') {
       instruction = `You are an expert mobile app developer specializing in generating fully functional, production-ready mobile applications using React and Tailwind CSS. The apps you create are web-based but MUST perfectly mimic the look and feel of a native mobile app.
 
@@ -317,6 +338,7 @@ Follow these steps precisely:
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
+    instruction += WORKFLOW_INSTRUCTION;
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
@@ -388,6 +410,7 @@ To achieve this, you MUST follow these steps precisely:
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
+    instruction += WORKFLOW_INSTRUCTION;
   }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
