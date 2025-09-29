@@ -146,6 +146,16 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       }
     }
   }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack]);
+  
+  const handleAddSupabase = () => {
+    if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
+        setError("Supabase credentials are not configured. Please add them in the Settings page.");
+        setMessages(prev => [...prev, {role: 'model', content: "Supabase credentials are not configured. Please add them in the Settings page."}]);
+        return;
+    }
+    const supabasePrompt = "Please integrate Supabase into this project. Create a `src/supabaseClient.ts` file that exports a configured Supabase client. Use the Supabase URL and Anon Key provided in the system instructions. Also, make sure to import and use this client in the main App component to demonstrate its usage, for example, by fetching a list of items from a 'todos' table and displaying them.";
+    handleSend(supabasePrompt);
+  };
 
 
   useEffect(() => {
@@ -330,6 +340,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
             deployments={deployments}
             onNewDeployment={handleNewDeployment}
+            onAddSupabase={handleAddSupabase}
           />
         );
       case 'CODE':
@@ -350,6 +361,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           deployments={deployments}
           onNewDeployment={handleNewDeployment}
+          onAddSupabase={handleAddSupabase}
         />;
       default:
         return null;

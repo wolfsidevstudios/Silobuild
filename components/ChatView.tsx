@@ -27,6 +27,7 @@ interface ChatViewProps {
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   onNewDeployment: (deployment: Deployment) => void;
+  onAddSupabase: () => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -106,6 +107,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onToggleMacPreview,
   deployments,
   onNewDeployment,
+  onAddSupabase,
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
@@ -180,6 +182,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   onToggleMacPreview={onToggleMacPreview}
                   deployments={deployments}
                   onNewDeployment={onNewDeployment}
+                  onAddSupabase={onAddSupabase}
                 />
             )}
             </div>

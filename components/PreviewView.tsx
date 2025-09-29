@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GeneratedFile, Deployment } from '../types';
-import { PublishForm } from './PublishForm';
-import { DesktopIcon } from './icons';
+import { DeployModal } from './DeployModal';
+import { DesktopIcon, UploadIcon, DatabaseIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
 
 interface PreviewViewProps {
@@ -12,6 +12,7 @@ interface PreviewViewProps {
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   onNewDeployment: (deployment: Deployment) => void;
+  onAddSupabase: () => void;
 }
 
 export const PreviewView: React.FC<PreviewViewProps> = ({ 
@@ -21,12 +22,14 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   projectName, 
   onToggleMacPreview,
   deployments,
-  onNewDeployment
+  onNewDeployment,
+  onAddSupabase
 }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
-  const handleDeploy = async (token: string) => {
+  const handleDeploy = async (token: string, newProjectName: string) => {
     if (!token || multiFileCode.length === 0) {
       setDeploymentError("Vercel token is missing or there are no files to deploy.");
       return;
@@ -41,7 +44,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         data: content,
       }));
 
-      const sanitizedProjectName = (projectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+      const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
 
       filesForApi.push({
         file: 'package.json',
@@ -79,6 +82,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         timestamp: new Date().toISOString(),
       };
       onNewDeployment(newDeployment);
+      setIsDeployModalOpen(false);
 
     } catch (error) {
       console.error("Vercel deployment failed:", error);
@@ -94,7 +98,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   return (
     <div className="w-full h-full flex flex-col overflow-y-auto p-4 gap-4">
       {/* PREVIEW FRAME */}
-      <div className="flex-shrink-0 h-[55vh] min-h-[400px] flex flex-col border border-gray-200 bg-white shadow-md rounded-lg overflow-hidden relative">
+      <div className="flex-grow flex flex-col border border-gray-200 bg-white shadow-md rounded-lg overflow-hidden relative">
         <div className="p-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-shrink-0 gap-2">
             <div className="flex-1 min-w-0">
                  {latestDeployment ? (
@@ -107,6 +111,22 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                  ) : (
                     <h3 className="text-sm font-semibold text-gray-800">Live Preview</h3>
                  )}
+            </div>
+            <div className="flex items-center gap-2">
+                <button
+                    onClick={onAddSupabase}
+                    className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+                >
+                    <DatabaseIcon className="w-4 h-4 text-green-500" />
+                    Connect Supabase
+                </button>
+                 <button
+                    onClick={() => setIsDeployModalOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1 text-xs font-medium bg-black hover:bg-gray-800 text-white rounded-full transition-colors"
+                >
+                    <UploadIcon className="w-4 h-4" />
+                    Deploy
+                </button>
             </div>
         </div>
         {file ? (
@@ -137,16 +157,10 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         )}
       </div>
 
-      {/* DEPLOYMENT AREA */}
-      <div className="flex-shrink-0 flex flex-col border border-gray-200 bg-white shadow-md rounded-lg overflow-hidden">
-          <PublishForm onPublish={handleDeploy} initialToken={vercelToken} isDeploying={isDeploying} />
-          {deploymentError && <p className="text-red-500 text-center text-sm px-4 pb-4 -mt-4">{deploymentError}</p>}
-          
-          {deployments.length > 0 && (
-            <div className="flex-1 px-8 pb-8 pt-0 overflow-y-auto">
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="text-base font-semibold mb-4 text-center text-gray-700">Deployment History</h4>
-                <ul className="space-y-3 max-w-lg mx-auto">
+      {deployments.length > 0 && (
+            <div className="flex-shrink-0 flex flex-col border border-gray-200 bg-white shadow-md rounded-lg p-4">
+              <h4 className="text-base font-semibold mb-4 text-center text-gray-700">Deployment History</h4>
+              <ul className="space-y-3 max-w-lg mx-auto">
                   {deployments.map((dep) => (
                     <li key={dep.url} className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center text-sm">
                       <div>
@@ -168,10 +182,21 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                     </li>
                   ))}
                 </ul>
-              </div>
             </div>
           )}
-      </div>
+      
+      <DeployModal 
+        isOpen={isDeployModalOpen}
+        onClose={() => {
+            setIsDeployModalOpen(false);
+            setDeploymentError(null);
+        }}
+        onDeploy={handleDeploy}
+        isDeploying={isDeploying}
+        initialProjectName={projectName}
+        initialToken={vercelToken}
+        deploymentError={deploymentError}
+      />
     </div>
   );
 };
