@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -65,6 +65,7 @@ export const Sidebar: React.FC = () => {
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
         <SidebarNavLink href="#/dashboard/teams" icon={<UsersIcon />} label="Teams" />
+        <SidebarNavLink href="#/dashboard/integrations" icon={<IntegrationsIcon />} label="Integrations" />
         
         {isBetaMember && (
             <>
