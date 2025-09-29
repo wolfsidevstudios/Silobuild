@@ -48,6 +48,13 @@ export const App: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  useEffect(() => {
+    // Request notification permission on app load for PWA notifications
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
   
   if (route.startsWith('#/terms')) {
     return <TermsPage />;
