@@ -7,6 +7,7 @@ import { Spinner } from './components/Spinner';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { StudioPage } from './pages/StudioPage';
+import { AgentBuilderPage } from './pages/AgentBuilderPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -68,6 +69,16 @@ export const App: React.FC = () => {
   if (route.startsWith('#/builder')) {
     return <ProtectedRoute><Builder /></ProtectedRoute>;
   }
+
+  if (route.startsWith('#/agent-builder/')) {
+    const projectId = route.split('/')[2];
+    return <ProtectedRoute><AgentBuilderPage projectId={projectId} /></ProtectedRoute>;
+  }
+  
+  if (route.startsWith('#/agent-builder')) {
+    return <ProtectedRoute><AgentBuilderPage /></ProtectedRoute>;
+  }
+
 
   if (route.startsWith('#/studio/')) {
     const projectId = route.split('/')[2];

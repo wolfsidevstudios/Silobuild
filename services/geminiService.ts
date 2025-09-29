@@ -1,5 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { Settings, GeneratedFile, TechStack, AiGeneratedTable } from "../types";
+import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig } from "../types";
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack): string => {
   let instruction;
@@ -209,6 +209,30 @@ export const generateAppStream = (
     }
   });
 };
+
+export const generateAgentChatResponse = async (
+  history: any[],
+  agentConfig: AgentConfig,
+  settings: Settings
+): Promise<GenerateContentResponse> => {
+  const apiKey = agentConfig.geminiApiKey || settings.geminiApiKey || process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini API key is not configured in agent settings or global settings.");
+  }
+  const ai = new GoogleGenAI({ apiKey });
+  
+  const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: history,
+      config: {
+        systemInstruction: agentConfig.systemInstruction,
+        tools: agentConfig.tools.length > 0 ? agentConfig.tools : undefined,
+      },
+  });
+
+  return response;
+};
+
 
 export const generateIdeaStream = (
   prompt: string,

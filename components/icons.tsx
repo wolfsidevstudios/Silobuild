@@ -4,6 +4,15 @@ export const IconWrapper: React.FC<{ children: React.ReactNode; className?: stri
   <div className={className}>{children}</div>
 );
 
+export const AgentIcon = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V5M7.5 7.5l-.707-.707M16.5 7.5l.707-.707M7.5 16.5l-.707.707M16.5 16.5l.707.707M12 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a4 4 0 118 0 4 4 0 01-8 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v-1a3 3 0 013-3h1" />
+    </svg>
+);
+
+
 export const ChatIcon = ({ className = 'w-5 h-5' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

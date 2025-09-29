@@ -7,6 +7,7 @@ import { PromptLibraryPage } from './PromptLibraryPage';
 import { SchemaBuilderPage } from './SchemaBuilderPage';
 import { BetaProgramPage } from './BetaProgramPage';
 import { TeamsPage } from './TeamsPage';
+import { AgentProjectsPage } from './AgentProjectsPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -19,6 +20,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     }
     if (route.startsWith('#/dashboard/projects')) {
       return <ProjectsPage />;
+    }
+    if (route.startsWith('#/dashboard/agents')) {
+      return <AgentProjectsPage />;
     }
     if (route.startsWith('#/dashboard/database')) {
       return <DatabasePage />;

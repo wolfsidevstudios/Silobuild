@@ -6,7 +6,7 @@ export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
-export type TechStack = 'react' | 'html';
+export type TechStack = 'react' | 'html' | 'agent';
 
 export interface GeneratedFile {
   path: string;
@@ -33,6 +33,18 @@ export interface Deployment {
   timestamp: string;
 }
 
+// New types for Agent Builder
+export interface AgentTool {
+  functionDeclarations: any[]; // For user-provided JSON schema
+}
+
+export interface AgentConfig {
+  systemInstruction: string;
+  tools: AgentTool[];
+  geminiApiKey?: string;
+}
+
+
 export interface Project {
   id: string;
   name:string;
@@ -45,6 +57,7 @@ export interface Project {
   deployments: Deployment[];
   githubUrl?: string;
   teamId?: string;
+  agentConfig?: AgentConfig;
 }
 
 export interface DecodedCredential {

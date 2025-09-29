@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, SchemaIcon, FlaskIcon, BugIcon, PaintBrushIcon, UsersIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, SchemaIcon, FlaskIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
@@ -41,17 +41,25 @@ export const Sidebar: React.FC = () => {
             Silo Build
         </a>
       </div>
-       <div className="mb-6 px-2">
+       <div className="mb-6 px-2 space-y-2">
         <a 
           href="#/builder" 
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300"
         >
             <PlusIcon />
-            New AI Project
+            New AI App
+        </a>
+        <a 
+          href="#/agent-builder" 
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-300"
+        >
+            <AgentIcon />
+            New AI Agent
         </a>
       </div>
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" />
+        <SidebarNavLink href="#/dashboard/agents" icon={<AgentIcon />} label="Agents" />
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" />
         <SidebarNavLink href="#/dashboard/schema-builder" icon={<SchemaIcon />} label="Schema Builder" />
