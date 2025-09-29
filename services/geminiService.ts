@@ -2,6 +2,29 @@ import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig } from "../types";
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack): string => {
+  const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo</div>`;
+
+  const VISUAL_APP_WATERMARK_INSTRUCTION = `
+--- WATERMARK REQUIREMENT ---
+ALL generated visual applications (React, Vue, Svelte, HTML) MUST include a "Built with Silo" watermark badge.
+- The badge MUST be a \`div\` tag.
+- It must be positioned in the bottom-right corner of the viewport.
+- You MUST use this exact HTML for the badge. It is self-contained and works with Tailwind CSS.
+- For multi-file apps, add it to the main layout component (e.g., App.tsx, App.vue, App.svelte) so it's visible on all pages.
+- For ALL preview files and single-file HTML apps, add it just before the closing </body> tag.
+
+Badge HTML:
+${WATERMARK_BADGE_HTML}
+`;
+
+  const NODEJS_WATERMARK_INSTRUCTION = `
+--- WATERMARK REQUIREMENT (README.md) ---
+The generated README.md file MUST end with the following line, separated by a horizontal rule:
+
+---
+*Built with Silo Build*
+`;
+
   let instruction;
   
   if (techStack === 'html') {
@@ -24,6 +47,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       } else {
          instruction += `\nYour task is to generate a complete, single-file HTML application based on the user's prompt.`;
       }
+      instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
   } else if (techStack === 'vue') {
     instruction = `You are an expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -88,6 +112,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
    app.mount('#app');
 7. Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
+    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
 
   } else if (techStack === 'svelte') {
     instruction = `You are an expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript.
@@ -143,6 +168,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
 6. Do NOT include any Svelte-specific syntax like \`$: \`, \`{#if}\`, or component imports in the previewFile's script.
 7. Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
+    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
 
   } else if (techStack === 'nodejs') {
       instruction = `You are an expert backend developer specializing in generating simple and functional Node.js + Express.js applications.
@@ -189,6 +215,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
         2.  \`npm start\` to run the server.
     -   Include an example of how to test the API, for example, using \`curl http://localhost:3001/api/hello\`.
 `;
+      instruction += NODEJS_WATERMARK_INSTRUCTION;
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
@@ -244,6 +271,7 @@ The 'previewFile' is a CRITICAL part of the response. It MUST be a single, self-
     root.render(<App />);
 8.  Do NOT include service worker registration or a link to manifest.json in the previewFile.
 `;
+    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
   }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
