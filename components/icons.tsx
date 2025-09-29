@@ -117,7 +117,7 @@ export const KeyIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5
 );
 
 export const GeminiLogo: React.FC<{ className?: string }> = ({ className = 'h-6' }) => (
-     <svg className={className} viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="38.74%" y1="100%" x2="68.21%" y2="100%" id="a"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient><linearGradient x1="31.79%" y1="100%" x2="61.26%" y2="100%" id="b"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient></defs><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fill-rule="evenodd" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><g fill-rule="nonzero" transform="matrix(.48 0 0 .48 66.56 66.56)"><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><path d="M256 128c0 35.34-14.36 67.24-37.5 90.5L90.5 37.5C113.76 14.36 145.66 0 176 0c44.18 0 80 35.82 80 80v48z" fill="url(#a)"></path><path d="M0 128c0-35.34 14.36-67.24 37.5-90.5L165.5 218.5c-23.26 23.14-55.16 37.5-90.5 37.5-44.18 0-80-35.82-80-80V80z" fill="url(#b)"></path></g></svg>
+     <svg className={className} viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="38.74%" y1="100%" x2="68.21%" y2="100%" id="a"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient><linearGradient x1="31.79%" y1="100%" x2="61.26%" y2="100%" id="b"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient></defs><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fillRule="evenodd" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><g fillRule="nonzero" transform="matrix(.48 0 0 .48 66.56 66.56)"><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><path d="M256 128c0 35.34-14.36 67.24-37.5 90.5L90.5 37.5C113.76 14.36 145.66 0 176 0c44.18 0 80 35.82 80 80v48z" fill="url(#a)"></path><path d="M0 128c0-35.34 14.36-67.24 37.5-90.5L165.5 218.5c-23.26 23.14-55.16 37.5-90.5 37.5-44.18 0-80-35.82-80-80V80z" fill="url(#b)"></path></g></svg>
 );
 
 export const VercelIcon: React.FC<{ className?: string }> = ({ className = 'h-6' }) => (
@@ -253,6 +253,23 @@ export const FinderIcon: React.FC = () => (
         </svg>
     </div>
 );
+
+export const LaunchpadIcon: React.FC = () => (
+    <div className="w-full h-full bg-gray-700 rounded-lg flex items-center justify-center p-2">
+        <div className="grid grid-cols-3 gap-1.5">
+            <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-yellow-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-indigo-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-purple-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-pink-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-gray-500 rounded-sm"></div>
+        </div>
+    </div>
+);
+
 export const NotesIcon: React.FC = () => (
     <div className="w-full h-full bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-lg border-b-8 border-yellow-500">
         <div className="h-4 bg-red-800"></div>
@@ -334,90 +351,5 @@ export const NetlifyIcon: React.FC<{ className?: string }> = ({ className = 'w-6
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className={className}>
       <path fill="#05bdba" d="M5.640075 16.726175v-2.406525l0.050175 -0.0502h0.50135l0.050175 0.0502v2.406525l-0.050175 0.050225H5.69025l-0.050175 -0.050225Zm0 -7.04595v-2.4064l0.050175 -0.0502h0.50135l0.050175 0.0502v2.4064l-0.050175 0.050175H5.69025l-0.050175 -0.050175ZM3.46075 14.991325h-0.0709l-0.35445 -0.3546v-0.070925l0.8277 -0.827475 0.375325 0.000175 0.050375 0.049975v0.37535l-0.82805 0.8275Zm-0.00035 -5.98265h-0.0709l-0.35445 0.35465v0.070875l0.8277 0.827525 0.375325 -0.000175 0.050375 -0.050025v-0.375325l-0.82805 -0.827525ZM0.300185 11.699175H3.7094l0.050175 0.050175v0.501325l-0.050175 0.0502H0.300185L0.25 12.250675v-0.501325l0.050185 -0.050175Zm20.190815 0h3.208775l0.050225 0.050175v0.501325l-0.050225 0.0502H20.290625l-0.050225 -0.0502 0.2004 -0.501325 0.0502 -0.050175Z" strokeWidth="0.25"></path>
       <path fill="#014847" d="m9.983 12.214025 -0.050175 0.0502h-1.5552l-0.050175 0.050175c0 0.100375 0.100375 0.401275 0.501675 0.401275 0.15055 0 0.3009 -0.05015 0.351125 -0.15055l0.05015 -0.05015h0.60205l0.050175 0.05015 -0.00325 0.01825c-0.05715 0.3006 -0.312725 0.73435 -1.05025 0.73435 -0.8528 0 -1.25425 -0.60205 -1.25425 -1.304275 0 -0.702225 0.401275 -1.30425 1.204025 -1.30425 0.8028 0 1.2041 0.602025 1.2041 1.30425v0.200575Zm-0.80275 -0.4515 0.05015 -0.050175 -0.0003 -0.00805c-0.00465 -0.071575 -0.06705 -0.39325 -0.4512 -0.39325 -0.401275 0 -0.45145 0.351125 -0.45145 0.4013l0.050175 0.050175h0.802625Zm2.2074 0.75245c0 0.100325 0.050175 0.15055 0.15055 0.15055h0.45145l0.050225 0.05015v0.501675l-0.050225 0.0502h-0.45145c-0.4515 0 -0.852775 -0.20075 -0.852775 -0.752575V11.41125l-0.050225 -0.0502h-0.351075l-0.0502 -0.050175v-0.501675l0.0502 -0.050175h0.351075l0.050225 -0.050175v-0.4515l0.050175 -0.050175h0.602025l0.050175 0.050175v0.4515l0.0502 0.050175h0.55185l0.0502 0.050175v0.501675l-0.0502 0.050175H11.438l-0.0502 0.0502v1.103725h-0.00015Zm1.856125 0.752575h-0.60205l-0.0502 -0.0502V9.80605l0.0502 -0.0502h0.60205l0.050175 0.0502v3.4113l-0.050175 0.0502Zm1.35445 -2.90965h-0.60205l-0.0502 -0.050175v-0.501675l0.0502 -0.0502h0.60205l0.050175 0.0502v0.501675l-0.050175 0.050175Zm0 2.90965h-0.60205l-0.0502 -0.0502v-2.407975l0.0502 -0.050175h0.60205l0.050175 0.050175v2.407975l-0.050175 0.0502Zm2.3578 -3.4615v0.501675l-0.050225 0.050175h-0.45145c-0.100375 0 -0.1506 0.050175 -0.1506 0.15055v0.20075l0.050225 0.050175h0.501675l0.05015 0.050175v0.501675l-0.05015 0.050175h-0.501675l-0.050225 0.0502v1.805925l-0.05015 0.050175h-0.60205l-0.050175 -0.050175v-1.805925l-0.0502 -0.0502h-0.351075l-0.050225 -0.050175v-0.501675l0.050225 -0.050175h0.351075l0.0502 -0.050175v-0.20075c0 -0.545925 0.3927 -0.748225 0.83825 -0.752525l0.466 -0.000075 0.0502 0.0502h0.0002Zm1.8563 3.5115 -0.019225 0.0471c-0.1949 0.47345 -0.404425 0.7557 -1.084675 0.7557H17.4575l-0.050175 -0.050225v-0.50165l0.050175 -0.050175h0.250925l0.029125 -0.00025c0.225625 -0.003925 0.2738 -0.055975 0.322 -0.2005v-0.050175l-0.802625 -1.9565v-0.501675l0.0502 -0.050175h0.451475l0.0502 0.050175 0.60205 1.705775h0.050175l0.602025 -1.705775 0.050175 -0.050175h0.4515l0.050175 0.050175v0.501675l-0.802575 2.006675Zm-12.345225 -0.05 -0.05015 -0.0502 0.000325 -1.453575c0 -0.25075 -0.0986 -0.445175 -0.4013 -0.4515 -0.155625 -0.004025 -0.333725 -0.00035 -0.523975 0.007725l-0.0284 0.029125 0.000375 1.868225 -0.050225 0.0502h-0.60185l-0.050175 -0.0502v-2.434825l0.050175 -0.050175 1.35445 -0.012275c0.67855 0 0.95315 0.466225 0.95315 0.99245v1.504825l-0.05015 0.0502h-0.60225Z" strokeWidth="0.25"></path>
-    </svg>
-);
-
-export const FinderIcon: React.FC = () => (
-    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-sky-600 rounded-lg flex items-center justify-center text-white text-3xl font-bold">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9 9.563V9.75a.75.75 0 01-1.5 0V9.563a.75.75 0 011.5 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 9.563V9.75a.75.75 0 01-1.5 0V9.563a.75.75 0 011.5 0z" />
-        </svg>
-    </div>
-);
-export const NotesIcon: React.FC = () => (
-    <div className="w-full h-full bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-lg border-b-8 border-yellow-500">
-        <div className="h-4 bg-red-800"></div>
-    </div>
-);
-export const MailIcon: React.FC = () => (
-    <div className="w-full h-full bg-sky-500 rounded-lg flex items-center justify-center">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="white" className="w-10 h-10">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-        </svg>
-    </div>
-);
-
-export const ReactIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-11.5 -10.23174 23 20.46348" className="w-10 h-10 text-sky-500">
-        <circle cx="0" cy="0" r="2.05" fill="currentColor"></circle>
-        <g stroke="currentColor" strokeWidth="1" fill="none">
-            <ellipse rx="11" ry="4.2"></ellipse>
-            <ellipse rx="11" ry="4.2" transform="rotate(60)"></ellipse>
-            <ellipse rx="11" ry="4.2" transform="rotate(120)"></ellipse>
-        </g>
-    </svg>
-);
-export const HtmlIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-orange-600">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-    </svg>
-);
-export const VueIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 221" className="w-9 h-9">
-        <path fill="#41B883" d="M204.8,0,128,134.4,51.2,0H0L128,220.8,256,0Z" />
-        <path fill="#34495E" d="M204.8,0,128,134.4,51.2,0H102.4L128,44.8,153.6,0Z" />
-    </svg>
-);
-export const SvelteIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="w-10 h-10">
-        <path fill="#FF3E00" d="M20.315 13.064c.27.02.486-.06.649-.241.162-.18.216-.421.216-.722v-.325a.862.862 0 0 0-.216-.621c-.163-.162-.378-.243-.649-.243H18.23l-1.028-3.085c-.09-.313-.263-.538-.519-.676a.823.823 0 0 0-.676-.04c-.237.081-.433.253-.588.519l-3.328 10.038-5.05-9.977a1.107 1.107 0 0 0-.58-.696 1.01 1.01 0 0 0-.71-.05c-.256.09-.462.27-.616.54l-3.77 8.528H2.16c-.27 0-.487.08-.648.242a.862.862 0 0 0-.216.622v.324c0 .3.054.54.162.721.108.18.306.27.595.27h2.243l.972 2.916c.108.312.297.537.568.675.27.135.54.135.81 0 .27-.138.459-.363.568-.675l3.295-9.886L14.04 20.3c.126.312.333.537.621.675.288.135.59.135.906 0a1.27 1.27 0 0 0 .638-.675l5.13-10.154 1.134 3.376c.09.312.263.537.519.675.256.135.513.135.77 0s.42-.362.486-.675l.946-2.836h1.08c.27 0 .487-.08.649-.242.162-.163.216-.39.216-.685v-.324a.862.862 0 0 0-.216-.622c-.163-.18-.378-.27-.649-.27h-1.944l-.459 1.35z" />
-    </svg>
-);
-export const NodejsIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-10 h-10">
-        <path fill="#8CC84B" d="M11.33 16.32a.55.55 0 0 0-.55-.54h-2a.55.55 0 0 0-.55.54v4.38a.55.55 0 0 0 .55.54h2a.55.55 0 0 0 .55-.54z"/>
-        <path fill="#8CC84B" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.34 19.34c-.26.26-1.02.43-1.6.43-1.22 0-2.31-.6-2.31-2.88v-4.9H9.28v4.38a.55.55 0 0 0 .55.54h2a.55.55 0 0 0 .55-.54v.02c0 1.28.93 1.28 1.23 1.28.32 0 1.2-.03 1.2-.03s.2-.18.02-.37zm3.11-2.58c0 1.25-.43 2.15-1.51 2.15-1.01 0-1.55-.67-1.55-1.55s.54-1.58 1.55-1.58c1.08 0 1.51.89 1.51 1.98zm-8.8-2.61a.55.55 0 0 0-.55-.54H6.01a.55.55 0 0 0-.55.54v6.8a.55.55 0 0 0 .55.54h1.16a.55.55 0 0 0 .55-.54v-3.41h.52l1.62 3.41h1.34l-1.94-4.01c.4-.29.66-.74.66-1.28v-1.1z"/>
-        <path fill="#8CC84B" d="M16.82 14.12c-.73 0-1.28.53-1.28 1.24s.55 1.21 1.28 1.21c.72 0 1.25-.5 1.25-1.21s-.53-1.24-1.25-1.24z"/>
-    </svg>
-);
-export const TemplateIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" />
-    </svg>
-);
-export const SchemaIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1.5-1.5m1.5 1.5l1.5 1.5m3.75-3.75l1.5-1.5m1.5 1.5l-1.5 1.5m-3.75-3.75l-1.5 1.5m1.5-1.5l1.5-1.5m-7.5 0h7.5" />
-  </svg>
-);
-
-export const SlackIcon: React.FC<{ className?: string }> = ({ className = 'w-7 h-7' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 122.8 122.8" className={className}>
-        <path fill="#E01E5A" d="M25.8,75.1c0,5.3,4.3,9.6,9.6,9.6s9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6H25.8V75.1z"/>
-        <path fill="#E01E5A" d="M35.4,47.7c-5.3,0-9.6,4.3-9.6,9.6s4.3,9.6,9.6,9.6s9.6-4.3,9.6-9.6V25.8h-9.6V47.7z"/>
-        <path fill="#36C5F0" d="M47.7,25.8c-5.3,0-9.6,4.3-9.6,9.6s4.3,9.6,9.6,9.6s9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6V25.8z"/>
-        <path fill="#36C5F0" d="M75.1,35.4c0-5.3-4.3-9.6-9.6-9.6s-9.6,4.3-9.6,9.6s4.3,9.6,9.6,9.6h21.9v-9.6H75.1z"/>
-        <path fill="#2EB67D" d="M97,47.7c5.3,0,9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6s-9.6,4.3-9.6,9.6s4.3,9.6,9.6,9.6H97z"/>
-        <path fill="#2EB67D" d="M87.4,75.1c0,5.3,4.3,9.6,9.6,9.6s9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6v21.9h9.6V75.1z"/>
-        <path fill="#ECB22E" d="M75.1,97c5.3,0,9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6s-9.6,4.3-9.6,9.6s4.3,9.6,9.6,9.6H75.1z"/>
-        <path fill="#ECB22E" d="M47.7,87.4c0,5.3,4.3,9.6,9.6,9.6s9.6-4.3,9.6-9.6s-4.3-9.6-9.6-9.6H25.8v9.6H47.7z"/>
-    </svg>
-);
-
-export const JiraIcon: React.FC<{ className?: string }> = ({ className = 'w-7 h-7' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className}>
-        <path fill="#2684FF" d="M21.6.012a2.4 2.4 0 0 1 2.392 2.399V21.6a2.4 2.4 0 0 1-2.392 2.399H2.4A2.4 2.4 0 0 1 .008 21.6V2.41A2.4 2.4 0 0 1 2.4.013h19.2zM12.01 5.995l-5.993 5.993a.6.6 0 0 0 .848.848l5.145-5.145l5.145 5.145a.6.6 0 0 0 .848-.848L12.01 5.995z"/>
-        <path fill="#0052CC" d="M12.01 18.005l5.993-5.993a.6.6 0 0 0-.848-.848l-5.145 5.145l-5.145-5.145a.6.6 0 0 0-.848.848l5.993 5.993z"/>
     </svg>
 );
