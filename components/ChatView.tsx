@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment } from '../types';
+import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable } from '../types';
 import { CodeIcon, EyeIcon, CheckIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
@@ -73,6 +73,25 @@ const GenerationSummary: React.FC<{ summary: string }> = ({ summary }) => {
       </ul>
     </div>
   );
+};
+
+const DatabaseSchemaView: React.FC<{ schema: AiGeneratedTable }> = ({ schema }) => {
+    return (
+        <div className="mt-3 border-t border-gray-200 pt-3">
+            <h4 className="text-xs font-semibold text-gray-500 mb-2">Database Schema Update: <span className="font-mono bg-gray-200 px-1 rounded">{schema.name}</span></h4>
+            <div className="text-sm space-y-1">
+                {schema.columns.map((col, i) => (
+                    <div key={i} className="flex items-center gap-2 font-mono text-xs">
+                        <span className="font-semibold text-gray-800">{col.name}</span>
+                        <span className="text-gray-500">{col.dataType}</span>
+                        {col.isPrimaryKey && <span className="text-yellow-600 font-bold text-[10px] bg-yellow-100 px-1 rounded">PK</span>}
+                        {!col.isNullable && <span className="text-red-600 font-bold text-[10px] bg-red-100 px-1 rounded">NN</span>}
+                        {col.isUnique && <span className="text-blue-600 font-bold text-[10px] bg-blue-100 px-1 rounded">UQ</span>}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 };
 
 const FileGenerationChecklist: React.FC<{ plan: string[]; progress: string[] }> = ({ plan, progress }) => {
@@ -153,6 +172,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
+                    {msg.schema && <DatabaseSchemaView schema={msg.schema} />}
                   </div>
                 </div>
               ))}

@@ -25,6 +25,23 @@ The generated README.md file MUST end with the following line, separated by a ho
 *Built with Silo Build*
 `;
 
+  const DATABASE_INSTRUCTION = `
+--- DATABASE SCHEMA MODIFICATION ---
+If the user asks to create, add, or modify a database table or schema, you MUST respond with a specific JSON object of type 'database_schema'.
+- This JSON object MUST be on its own line.
+- The 'schema' key must contain an object with 'name' (string, snake_case) and 'columns' (array of column objects).
+- Each column object must have 'name', 'dataType', 'isPrimaryKey', 'isUnique', and 'isNullable'.
+- Permitted 'dataType' values are: 'uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'.
+
+Example of a user asking to create a table:
+User: "create a table for users with an id, name, and email"
+
+Example of your required response:
+{"type": "database_schema", "schema": {"name": "users", "columns": [{"name": "id", "dataType": "uuid", "isPrimaryKey": true, "isUnique": true, "isNullable": false}, {"name": "name", "dataType": "text", "isPrimaryKey": false, "isUnique": false, "isNullable": false}, {"name": "email", "dataType": "text", "isPrimaryKey": false, "isUnique": true, "isNullable": false}]}}
+
+After outputting the 'database_schema' object, you MUST continue with the normal application generation flow (summary, plan, files, etc.) and generate code that USES this new schema. The user's database is managed by Silo Build, do not use external services like Supabase unless explicitly asked to. When generating code that uses the schema, you can use a hardcoded array of objects that matches the schema structure for demonstration purposes.
+`;
+
   let instruction;
   
   if (techStack === 'html') {
@@ -52,6 +69,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
          instruction += `\nYour task is to generate a complete, single-file HTML application based on the user's prompt.`;
       }
       instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+      instruction += DATABASE_INSTRUCTION;
   } else if (techStack === 'vue') {
     instruction = `You are an expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -121,6 +139,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
 7. Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+    instruction += DATABASE_INSTRUCTION;
 
   } else if (techStack === 'svelte') {
     instruction = `You are an expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript.
@@ -181,6 +200,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
 7. Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+    instruction += DATABASE_INSTRUCTION;
 
   } else if (techStack === 'nodejs') {
       instruction = `You are an expert backend developer specializing in generating simple and functional Node.js + Express.js applications.
@@ -232,6 +252,71 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
     -   Include an example of how to test the API, for example, using \`curl http://localhost:3001/api/hello\`.
 `;
       instruction += NODEJS_WATERMARK_INSTRUCTION;
+  } else if (techStack === 'mobile') {
+      instruction = `You are an expert mobile app developer specializing in generating fully functional, production-ready mobile applications using React and Tailwind CSS. The apps you create are web-based but MUST perfectly mimic the look and feel of a native mobile app.
+
+--- MANDATORY DESIGN REQUIREMENTS ---
+1.  **Layout:** The main container MUST simulate a phone screen. It should have a fixed width (e.g., max-w-sm), a white background, and be centered on the page.
+2.  **Background:** The body of the app MUST be white (\`bg-white\`).
+3.  **Navigation:** There MUST be a fixed bottom navigation bar with at least 3 icon-based links. This should be the primary navigation method.
+4.  **Buttons:** ALL buttons in the application MUST be pill-shaped (using \`rounded-full\` in Tailwind CSS).
+
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
+
+You must stream your response as a sequence of JSON objects, each on a new line.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+
+Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
+
+Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
+
+Finally, you will output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
+      if (isEditing) {
+        instruction += `\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files, adhering to all mandatory design requirements.`;
+      } else {
+        instruction += `\nYour task is to generate a complete, multi-file mobile-style React TypeScript application based on the user's prompt.`;
+      }
+
+      instruction += `\n
+--- PWA & CUSTOMIZATION INSTRUCTIONS ---
+All applications you generate for the 'multiFileCode' part MUST be Progressive Web Apps (PWAs).
+This requires the following file structure and content:
+1. A 'manifest.json' file in the root directory.
+2. A service worker file, 'public/sw.js'.
+3. In 'index.html' (for multiFileCode), add the manifest link and service worker registration script.
+   - It MUST use ES modules and import maps to load React from the provided CDN.
+
+--- PREVIEW FILE INSTRUCTIONS (React) ---
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' compatible with React 19.
+Follow these steps precisely:
+1.  Start with a standard HTML5 boilerplate.
+2.  In the <head>, include Tailwind CSS via CDN.
+3.  In the <head>, you MUST add an import map script tag for React 19.
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0-rc.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client"
+      }
+    }
+    </script>
+4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>. The body should have a gray background (\`bg-gray-200\`) to contrast with the white app container.
+5.  At the end of the <body>, add the Babel Standalone script.
+6.  Immediately after, add the main application script tag: \`<script type="text/babel" data-type="module">\`.
+7.  Inside this script:
+    a.  Import React and ReactDOM.
+    b.  Combine all '.tsx' file logic into this one script.
+    c.  Define all React components. Remove 'export' statements.
+    d.  The root component should render the app inside a centered container that looks like a phone. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
+    e.  Conclude with the React 19 rendering code: \`ReactDOM.createRoot(document.getElementById('root')).render(<AppFrame />);\`.
+8.  Do NOT include service worker registration or manifest link in the previewFile.
+`;
+    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+    instruction += DATABASE_INSTRUCTION;
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
@@ -302,6 +387,7 @@ To achieve this, you MUST follow these steps precisely:
 8.  Do NOT include service worker registration or a link to manifest.json in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+    instruction += DATABASE_INSTRUCTION;
   }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;

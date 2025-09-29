@@ -6,7 +6,7 @@ export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
-export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs';
+export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs' | 'mobile';
 
 export interface GeneratedFile {
   path: string;
@@ -16,6 +16,7 @@ export interface GeneratedFile {
 export interface ChatMessage {
   role: 'user' | 'model';
   content: string;
+  schema?: AiGeneratedTable;
 }
 
 export interface Settings {

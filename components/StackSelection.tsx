@@ -1,6 +1,6 @@
 import React from 'react';
 import { TechStack } from '../types';
-import { ReactIcon, HtmlIcon, VueIcon, SvelteIcon, NodejsIcon } from './icons';
+import { ReactIcon, HtmlIcon, VueIcon, SvelteIcon, NodejsIcon, MobileIcon } from './icons';
 
 interface StackSelectionProps {
   onSelect: (stack: TechStack) => void;
@@ -39,6 +39,12 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
           title="React + TypeScript"
           description="A modern, multi-file PWA with a robust structure."
           onClick={() => onSelect('react')}
+        />
+        <StackCard
+          icon={<MobileIcon />}
+          title="Mobile App (React)"
+          description="A web-based app styled to look and feel like a native mobile app."
+          onClick={() => onSelect('mobile')}
         />
         <StackCard
           icon={<VueIcon />}

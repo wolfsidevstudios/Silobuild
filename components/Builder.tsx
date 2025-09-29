@@ -6,7 +6,7 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream, generateIdeaStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -46,6 +46,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
+  const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
@@ -136,6 +137,30 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                     appName = titleMatch[1];
                 }
             }
+          } else if (update.type === 'database_schema' && update.schema) {
+              const newTable: Table = {
+                id: crypto.randomUUID(),
+                name: update.schema.name,
+                columns: update.schema.columns.map((col: any) => ({ ...col, id: crypto.randomUUID() }))
+              };
+
+              setSchema(prevSchema => {
+                  const existingTableIndex = prevSchema.findIndex(t => t.name === newTable.name);
+                  if (existingTableIndex > -1) {
+                      const updatedSchema = [...prevSchema];
+                      updatedSchema[existingTableIndex] = newTable;
+                      return updatedSchema;
+                  } else {
+                      return [...prevSchema, newTable];
+                  }
+              });
+
+              const schemaMessage: ChatMessage = {
+                  role: 'model',
+                  content: `I've created/updated the database schema for the '${update.schema.name}' table. I will now generate code that uses this structure.`,
+                  schema: update.schema
+              };
+              setMessages(prev => [...prev, schemaMessage]);
           }
         }, stackToUse, filesForContext, appName, appIcon);
 
@@ -168,7 +193,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsLoading(false);
       }
     }
-  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack]);
+  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack, setSchema]);
   
   const handleAddSupabase = () => {
     if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
