@@ -277,8 +277,8 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction = `You are an expert mobile app developer specializing in generating fully functional, production-ready mobile applications using React and Tailwind CSS. The apps you create are web-based but MUST perfectly mimic the look and feel of a native mobile app.
 
 --- MANDATORY DESIGN REQUIREMENTS ---
-1.  **Layout:** The main container MUST simulate a phone screen. It should have a fixed width (e.g., max-w-sm), a white background, and be centered on the page.
-2.  **Background:** The body of the app MUST be white (\`bg-white\`).
+1.  **Layout:** The application's main root component (e.g., in \`App.tsx\`) MUST render its content within a main container that has a fixed maximum width (e.g., \`max-w-sm\`) and is centered horizontally. This creates the mobile screen layout. Do NOT add a decorative phone-like frame, border, or shadow around this container in the \`multiFileCode\`. The phone frame is ONLY for the \`previewFile\`.
+2.  **Background:** The body of the app inside the container MUST be white (\`bg-white\`). The page background outside the app container should be gray (\`bg-gray-200\`) in the main \`index.html\`.
 3.  **Navigation:** There MUST be a fixed bottom navigation bar with at least 3 icon-based links. This should be the primary navigation method.
 4.  **Buttons:** ALL buttons in the application MUST be pill-shaped (using \`rounded-full\` in Tailwind CSS).
 
@@ -336,7 +336,7 @@ Follow these steps precisely:
     a.  Import React and ReactDOM.
     b.  Combine all '.tsx' file logic into this one script.
     c.  Define all React components. Remove 'export' statements.
-    d.  The root component should render the app inside a centered container that looks like a phone. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
+    d.  **IMPORTANT**: The root component should render the app inside a centered container that looks like a phone. This decorative phone frame is for the preview ONLY and MUST NOT be included in the \`multiFileCode\`. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
     e.  Conclude with the React 19 rendering code: \`ReactDOM.createRoot(document.getElementById('root')).render(<AppFrame />);\`.
 8.  Do NOT include service worker registration or manifest link in the previewFile.
 `;
