@@ -4,7 +4,6 @@ import { ProjectsPage } from './ProjectsPage';
 import { DatabasePage } from './DatabasePage';
 import { SettingsPage } from './SettingsPage';
 import { PromptLibraryPage } from './PromptLibraryPage';
-import { SchemaBuilderPage } from './SchemaBuilderPage';
 import { BetaProgramPage } from './BetaProgramPage';
 import { TeamsPage } from './TeamsPage';
 import { AgentProjectsPage } from './AgentProjectsPage';
@@ -28,9 +27,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     }
     if (route.startsWith('#/dashboard/database')) {
       return <DatabasePage />;
-    }
-    if (route.startsWith('#/dashboard/schema-builder')) {
-      return <SchemaBuilderPage />;
     }
      if (route.startsWith('#/dashboard/teams')) {
       return <TeamsPage />;
