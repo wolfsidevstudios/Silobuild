@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon } from '../components/icons';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -360,6 +360,52 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
+            <section id="workflow" className="py-20 bg-transparent border-t border-gray-200">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h3 className="text-4xl font-bold">From Idea to Live URL</h3>
+                        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+                            Silo Build streamlines your entire development workflow, not just the initial code generation.
+                        </p>
+                    </div>
+                    <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8 text-center relative">
+                        {/* Dashed line connecting steps */}
+                        <div className="hidden md:block absolute top-1/2 left-0 w-full h-px -translate-y-1/2">
+                            <svg className="w-full" height="2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeDasharray="8 8" d="M0 1H1000" stroke="#CBD5E1" strokeWidth="2"/>
+                            </svg>
+                        </div>
+                        <div className="relative bg-[#F8F7F4] p-6 rounded-lg z-10">
+                            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 border-4 border-[#F8F7F4]">
+                                <DownloadIcon className="w-8 h-8 text-blue-600" />
+                            </div>
+                            <h4 className="font-bold text-lg">1. Generate & Download</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Get a complete, well-structured project as a ZIP file, ready for local development.
+                            </p>
+                        </div>
+                        <div className="relative bg-[#F8F7F4] p-6 rounded-lg z-10">
+                            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 border-4 border-[#F8F7F4]">
+                                <GithubIcon className="w-8 h-8 text-black" />
+                            </div>
+                            <h4 className="font-bold text-lg">2. Push to GitHub</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Create a new repository and push your project to GitHub with a single click.
+                            </p>
+                        </div>
+                        <div className="relative bg-[#F8F7F4] p-6 rounded-lg z-10">
+                            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 border-4 border-[#F8F7F4]">
+                                <VercelIcon className="h-7 text-black" />
+                            </div>
+                            <h4 className="font-bold text-lg">3. Deploy with Vercel</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Go live instantly with our seamless Vercel deployment integration (simulation).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
              <section id="for-who" className="py-20 bg-transparent">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
@@ -370,6 +416,70 @@ export const LoginPage: React.FC = () => {
                         <FeatureCard icon={<SparklesIcon />} title="Indie Hackers & Founders" description="Go from idea to MVP in record time. Validate your concepts without writing weeks of boilerplate code." />
                         <FeatureCard icon={<PaintBrushIcon />} title="Designers Who Code" description="Bring your designs to life effortlessly. Describe your UI and get functional React components in seconds." />
                         <FeatureCard icon={<LayoutIcon />} title="Teams & Enterprises" description="Rapidly prototype new features and internal tools. Free up your engineers to focus on complex problems." />
+                    </div>
+                </div>
+            </section>
+
+            <section id="collaboration" className="py-20 bg-transparent border-t border-gray-200">
+                <div className="container mx-auto px-6">
+                    <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h3 className="text-4xl font-bold">Built for Collaboration</h3>
+                            <p className="text-gray-600 mt-4 leading-relaxed">
+                                Invite your team, share projects, and build together. Silo Build makes it easy to collaborate on prototypes and internal tools, keeping everyone in sync.
+                            </p>
+                            <ul className="mt-6 space-y-3">
+                                <li className="flex items-start gap-3">
+                                    <UsersIcon className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
+                                    <div>
+                                        <h4 className="font-semibold">Team Management</h4>
+                                        <p className="text-sm text-gray-500">Create teams, invite members, and manage roles from a simple dashboard.</p>
+                                    </div>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <LayoutIcon className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
+                                    <div>
+                                        <h4 className="font-semibold">Shared Projects</h4>
+                                        <p className="text-sm text-gray-500">All team members can access and contribute to shared projects, ensuring consistent development.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-lg">
+                            <h4 className="font-semibold mb-3">Project Members</h4>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-10 h-10 rounded-full" />
+                                        <div>
+                                            <p className="font-medium text-sm">Sarah L.</p>
+                                            <p className="text-xs text-gray-500">sara.l@example.com</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">Owner</span>
+                                </div>
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" className="w-10 h-10 rounded-full" />
+                                        <div>
+                                            <p className="font-medium text-sm">Mike R.</p>
+                                            <p className="text-xs text-gray-500">mike.r@example.com</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-semibold">Member</span>
+                                </div>
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="User" className="w-10 h-10 rounded-full" />
+                                        <div>
+                                            <p className="font-medium text-sm">Jessica P.</p>
+                                            <p className="text-xs text-gray-500">jess.p@example.com</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-semibold">Member</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -420,7 +530,93 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-             <section id="faq" className="py-20 bg-transparent">
+            <section id="pricing" className="py-20 bg-transparent border-t border-gray-200">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h3 className="text-4xl font-bold">Simple, Transparent Pricing</h3>
+                        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+                            Start for free and upgrade when you're ready. No hidden fees.
+                        </p>
+                    </div>
+                    <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 items-start">
+                        <div className="border border-gray-200 rounded-2xl p-8">
+                            <h4 className="text-lg font-semibold">Hobby</h4>
+                            <p className="text-gray-500 mt-2">Perfect for personal projects and getting started.</p>
+                            <p className="mt-6 text-4xl font-bold">
+                                Free
+                            </p>
+                            <p className="text-gray-500 mt-1">Bring your own API key</p>
+                            <ul className="mt-8 space-y-3 text-sm text-gray-700">
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Unlimited Projects</li>
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Full Code Download</li>
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Community Support</li>
+                            </ul>
+                            <a href="#/builder" className="w-full mt-8 bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition-colors block text-center">
+                                Get Started
+                            </a>
+                        </div>
+                        <div className="border-2 border-blue-600 rounded-2xl p-8 relative shadow-2xl shadow-blue-500/10">
+                            <p className="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">MOST POPULAR</p>
+                            <h4 className="text-lg font-semibold text-blue-600">Pro</h4>
+                            <p className="text-gray-500 mt-2">For professionals and teams who need more.</p>
+                            <p className="mt-6">
+                                <span className="text-4xl font-bold">$10</span>
+                                <span className="text-gray-500"> / one-time</span>
+                            </p>
+                            <p className="text-gray-500 mt-1">Get a supporter badge!</p>
+                            <ul className="mt-8 space-y-3 text-sm text-gray-700">
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Everything in Hobby</li>
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> "PRO" Supporter Badge</li>
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Early access to beta features</li>
+                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Priority Support</li>
+                            </ul>
+                            <a href="https://pay.digitalfemsa.io/link/3dfd409c47a041e9bdc310578db6a91e" target="_blank" rel="noopener noreferrer" className="w-full mt-8 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors block text-center">
+                                Upgrade to Pro
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="get-started" className="py-20 bg-transparent border-t border-gray-200">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">Get Started in Seconds</h3>
+                        <p className="text-gray-600 mt-2">Just three simple steps to your first AI-generated app.</p>
+                    </div>
+                    <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+                                <p className="text-2xl font-bold text-gray-600">1</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Sign In</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Create an account or sign in with Google. It's free and takes just a moment.
+                            </p>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+                                <p className="text-2xl font-bold text-gray-600">2</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Add API Key</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Add your Google Gemini API key in the settings. Your key is stored securely in your browser.
+                            </p>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+                                <p className="text-2xl font-bold text-gray-600">3</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Start Building</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Describe your app in the prompt bar and let the AI handle the rest.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="faq" className="py-20 bg-transparent border-t border-gray-200">
                 <div className="container mx-auto px-6 max-w-3xl">
                     <div className="text-center mb-12">
                         <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
