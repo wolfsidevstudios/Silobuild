@@ -16,7 +16,7 @@ export const BetaProgramPage: React.FC = () => {
     const [isBetaMember, setIsBetaMember] = useLocalStorage('isBetaMember', false);
 
     return (
-        <div className="p-8 h-full overflow-y-auto">
+        <div className="p-8">
             <div className="flex items-center gap-3 mb-4">
                 <FlaskIcon className="w-8 h-8 text-yellow-500" />
                 <h1 className="text-3xl font-bold">Beta Program</h1>

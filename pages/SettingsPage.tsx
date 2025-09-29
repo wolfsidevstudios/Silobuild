@@ -266,7 +266,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <h1 className="text-3xl font-bold mb-8">Settings</h1>
       
       <div className="flex gap-8 items-start">

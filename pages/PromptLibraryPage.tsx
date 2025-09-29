@@ -46,7 +46,7 @@ export const PromptLibraryPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-6">
         <SparklesIcon className="w-8 h-8 text-blue-500" />
         <h1 className="text-3xl font-bold">Prompt Library</h1>

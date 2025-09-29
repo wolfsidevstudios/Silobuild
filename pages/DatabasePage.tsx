@@ -18,7 +18,7 @@ export const DatabasePage: React.FC = () => {
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Database Integration</h1>
       
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-2xl shadow-sm">

@@ -195,7 +195,7 @@ export const ProjectsPage: React.FC = () => {
 
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">My Projects</h1>
         <div className="flex items-center gap-3">

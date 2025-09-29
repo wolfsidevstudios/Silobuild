@@ -51,7 +51,7 @@ export const AgentProjectsPage: React.FC = () => {
   }, [projects, searchTerm]);
 
   return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
             <AgentIcon className="w-8 h-8 text-indigo-500" />

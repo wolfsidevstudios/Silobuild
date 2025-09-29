@@ -304,7 +304,7 @@ export const SchemaBuilderPage: React.FC = () => {
     };
 
     return (
-    <div className="p-8 h-full overflow-y-auto">
+    <div className="p-8">
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
             <SchemaIcon className="w-8 h-8 text-blue-500" />
