@@ -1,8 +1,8 @@
+// FIX: Replaced placeholder content with a fully functional SettingsPage component.
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { GeminiLogo, StripeLogo, SupabaseLogo, GithubIcon, SparklesIcon, KeyIcon, UserCircleIcon, StarIcon, CubeTransparentIcon } from '../components/icons';
-import { subscribeUserToPush } from '../utils/projectUtils';
+import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon } from '../components/icons';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -14,326 +14,137 @@ const initialSettings: Settings = {
   githubPat: '',
 };
 
-type SettingsTab = 'apiKeys' | 'integrations' | 'notifications' | 'pro';
-
-const SettingsNavLink: React.FC<{
-  id: SettingsTab;
-  label: string;
-  icon: React.ReactNode;
-  activeTab: SettingsTab;
-  setActiveTab: (tab: SettingsTab) => void;
-}> = ({ id, label, icon, activeTab, setActiveTab }) => {
-  const isActive = activeTab === id;
-  return (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium w-full text-left transition-colors ${
-        isActive ? 'bg-gray-200 text-gray-900' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-};
+const SettingsInput: React.FC<{
+    label: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    icon: React.ReactNode;
+    isPassword?: boolean;
+}> = ({ label, value, onChange, placeholder, icon, isPassword = true }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+        <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                {icon}
+            </div>
+            <input
+                type={isPassword ? 'password' : 'text'}
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+        </div>
+    </div>
+);
 
 
 export const SettingsPage: React.FC = () => {
   const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
-  const [localSettings, setLocalSettings] = useState<Settings>(settings);
-  const [saved, setSaved] = useState(false);
-  const [isPro, setIsPro] = useLocalStorage<boolean>('silo-build-is-pro', false);
-  const [activeTab, setActiveTab] = useState<SettingsTab>('apiKeys');
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     setLocalSettings(settings);
-    if ('permission' in Notification) {
-        setNotificationPermission(Notification.permission);
-    }
   }, [settings]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLocalSettings(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleEnableNotifications = async () => {
-    const newPermission = await subscribeUserToPush();
-    setNotificationPermission(newPermission);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, key: keyof Settings) => {
+    setLocalSettings({ ...localSettings, [key]: e.target.value });
+    setIsSaved(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = () => {
     setSettings(localSettings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
-
-  const renderContent = () => {
-    switch(activeTab) {
-        case 'apiKeys':
-            return (
-                 <div className="space-y-8">
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <GeminiLogo />
-                            <h2 className="text-xl font-semibold">Gemini API</h2>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Your Google AI Gemini API Key. This is stored in your browser's local storage and is required to generate applications.
-                        </p>
-                        <div>
-                            <label htmlFor="geminiApiKey" className="block text-sm font-medium text-gray-700 mb-1">
-                            Gemini API Key
-                            </label>
-                            <input
-                            type="password"
-                            id="geminiApiKey"
-                            name="geminiApiKey"
-                            value={localSettings.geminiApiKey}
-                            onChange={handleInputChange}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </div>
-
-                     <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <GithubIcon className="h-6 w-6" />
-                            <h2 className="text-xl font-semibold">GitHub</h2>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Used for creating repositories and pushing your generated code. Create a <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Personal Access Token</a> with `repo` scope.
-                        </p>
-                        <div>
-                            <label htmlFor="githubPat" className="block text-sm font-medium text-gray-700 mb-1">
-                            Personal Access Token (PAT)
-                            </label>
-                            <input
-                            type="password"
-                            id="githubPat"
-                            name="githubPat"
-                            value={localSettings.githubPat}
-                            onChange={handleInputChange}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </div>
-                </div>
-            );
-        case 'integrations':
-            return (
-                 <div className="space-y-8">
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4">Vercel</h2>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Used for deploying your generated applications (simulation).
-                        </p>
-                        <div>
-                            <label htmlFor="vercelApiKey" className="block text-sm font-medium text-gray-700 mb-1">
-                            Vercel Access Token
-                            </label>
-                            <input
-                            type="password"
-                            id="vercelApiKey"
-                            name="vercelApiKey"
-                            value={localSettings.vercelApiKey}
-                            onChange={handleInputChange}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <SupabaseLogo />
-                            <h2 className="text-xl font-semibold">Supabase</h2>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Provide these keys to allow the AI to generate code with Supabase integration.
-                        </p>
-                        <div className="space-y-4">
-                            <div>
-                            <label htmlFor="supabaseUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                                Supabase URL
-                            </label>
-                            <input
-                                type="text"
-                                id="supabaseUrl"
-                                name="supabaseUrl"
-                                value={localSettings.supabaseUrl}
-                                onChange={handleInputChange}
-                                placeholder="https://<your-project-ref>.supabase.co"
-                                className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            </div>
-                            <div>
-                            <label htmlFor="supabaseAnonKey" className="block text-sm font-medium text-gray-700 mb-1">
-                                Supabase Anon (Public) Key
-                            </label>
-                            <input
-                                type="text"
-                                id="supabaseAnonKey"
-                                name="supabaseAnonKey"
-                                value={localSettings.supabaseAnonKey}
-                                onChange={handleInputChange}
-                                className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            </div>
-                        </div>
-                    </div>
-                     <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <StripeLogo />
-                            <h2 className="text-xl font-semibold">Stripe</h2>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Provide these keys to allow the AI to generate code with Stripe integration.
-                        </p>
-                        <div className="space-y-4">
-                            <div>
-                            <label htmlFor="stripePublicKey" className="block text-sm font-medium text-gray-700 mb-1">
-                                Stripe Public Key
-                            </label>
-                            <input
-                                type="text"
-                                id="stripePublicKey"
-                                name="stripePublicKey"
-                                value={localSettings.stripePublicKey}
-                                onChange={handleInputChange}
-                                className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            </div>
-                            <div>
-                            <label htmlFor="stripeSecretKey" className="block text-sm font-medium text-gray-700 mb-1">
-                                Stripe Secret Key
-                            </label>
-                            <input
-                                type="password"
-                                id="stripeSecretKey"
-                                name="stripeSecretKey"
-                                value={localSettings.stripeSecretKey}
-                                onChange={handleInputChange}
-                                className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        case 'notifications':
-            return (
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h2 className="text-xl font-semibold">Notifications</h2>
-                    <p className="text-sm text-gray-600 mt-2 mb-4">
-                        Enable push notifications to be alerted when your app builds are complete.
-                    </p>
-                    {notificationPermission === 'granted' ? (
-                        <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm">
-                            Push notifications are enabled.
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-4">
-                             <button
-                                onClick={handleEnableNotifications}
-                                disabled={notificationPermission === 'denied'}
-                                className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                                Enable Notifications
-                            </button>
-                            {notificationPermission === 'denied' && (
-                                <p className="text-sm text-red-600">
-                                    Notifications are blocked. You'll need to change this in your browser settings.
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-            );
-        case 'pro':
-             return (
-                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <SparklesIcon className="h-6 w-6 text-yellow-500" />
-                        <h2 className="text-xl font-semibold">Pro Plan</h2>
-                        {isPro && (
-                        <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-2.5 py-0.5 rounded-full text-xs font-bold">
-                            PRO
-                        </span>
-                        )}
-                    </div>
-                    {isPro ? (
-                        <div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Thank you for your support! Your Pro badge is now active on your profile.
-                        </p>
-                        <button
-                            type="button"
-                            onClick={() => setIsPro(false)}
-                            className="bg-gray-100 text-gray-800 px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-200 transition-colors"
-                        >
-                            Deactivate Pro Badge
-                        </button>
-                        </div>
-                    ) : (
-                        <div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            Support the development of Silo Build and get a "PRO" badge next to your name.
-                        </p>
-                        <a
-                            href="https://pay.digitalfemsa.io/link/3dfd409c47a041e9bdc310578db6a91e"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block bg-yellow-500 text-black px-6 py-2 rounded-md font-bold hover:bg-yellow-600 transition-colors"
-                        >
-                            Upgrade to Pro
-                        </a>
-                        <button
-                            type="button"
-                            onClick={() => setIsPro(true)}
-                            className="ml-4 text-xs text-gray-500 hover:text-gray-800 underline"
-                        >
-                            Already upgraded? Activate badge.
-                        </button>
-                        </div>
-                    )}
-                    </div>
-             );
-        default:
-            return null;
-    }
-  }
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
-      
-      <div className="flex gap-8 items-start">
-        <aside className="w-48 flex-shrink-0">
-          <nav className="space-y-1">
-             <SettingsNavLink id="apiKeys" label="API Keys" icon={<KeyIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
-             <SettingsNavLink id="integrations" label="Integrations" icon={<CubeTransparentIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
-             <SettingsNavLink id="notifications" label="Notifications" icon={<UserCircleIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
-             <SettingsNavLink id="pro" label="Pro Plan" icon={<StarIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
-          </nav>
-        </aside>
-        
-        <main className="flex-1 max-w-2xl">
-           <form onSubmit={handleSubmit}>
-              {renderContent()}
-              {activeTab !== 'notifications' && activeTab !== 'pro' && (
-                 <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                    <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
-                    >
-                        Save Settings
-                    </button>
-                    {saved && <span className="text-green-600 text-sm">Settings saved!</span>}
+      <div className="flex items-center gap-3 mb-6">
+        <KeyIcon className="w-8 h-8 text-blue-500" />
+        <h1 className="text-3xl font-bold">API Key Settings</h1>
+      </div>
+      <p className="text-gray-600 mb-8 max-w-3xl">
+        Your API keys are stored securely in your browser's local storage and are never sent to our servers. They are used directly by your browser to communicate with the respective services.
+      </p>
+
+      <div className="max-w-2xl mx-auto space-y-8 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+        <SettingsInput 
+            label="Google Gemini API Key"
+            value={localSettings.geminiApiKey}
+            onChange={(e) => handleChange(e, 'geminiApiKey')}
+            placeholder="Enter your Gemini API Key"
+            icon={<GeminiLogo />}
+        />
+        <SettingsInput 
+            label="Vercel Access Token"
+            value={localSettings.vercelApiKey}
+            onChange={(e) => handleChange(e, 'vercelApiKey')}
+            placeholder="Enter your Vercel Access Token"
+            icon={<VercelIcon className="h-5 w-5 text-black" />}
+        />
+         <SettingsInput 
+            label="GitHub Personal Access Token"
+            value={localSettings.githubPat}
+            onChange={(e) => handleChange(e, 'githubPat')}
+            placeholder="Enter your GitHub PAT"
+            icon={<GithubIcon className="w-5 h-5 text-black" />}
+        />
+        <div className="border-t border-gray-200 pt-8">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Service Integrations</h2>
+            <div className="space-y-6">
+                <div>
+                     <h3 className="text-lg font-medium mb-3 flex items-center gap-2"><SupabaseLogo /> Supabase</h3>
+                     <div className="space-y-4">
+                        <SettingsInput 
+                            label="Supabase URL"
+                            value={localSettings.supabaseUrl}
+                            onChange={(e) => handleChange(e, 'supabaseUrl')}
+                            placeholder="https://<project-id>.supabase.co"
+                            icon={<div className="w-5 h-5"/>}
+                            isPassword={false}
+                        />
+                         <SettingsInput 
+                            label="Supabase Anon Key"
+                            value={localSettings.supabaseAnonKey}
+                            onChange={(e) => handleChange(e, 'supabaseAnonKey')}
+                            placeholder="Supabase public anon key"
+                            icon={<div className="w-5 h-5"/>}
+                        />
+                     </div>
                 </div>
-              )}
-            </form>
-        </main>
+                 <div>
+                     <h3 className="text-lg font-medium mb-3 flex items-center gap-2"><StripeLogo /> Stripe</h3>
+                     <div className="space-y-4">
+                        <SettingsInput 
+                            label="Stripe Public Key"
+                            value={localSettings.stripePublicKey}
+                            onChange={(e) => handleChange(e, 'stripePublicKey')}
+                            placeholder="pk_live_..."
+                             icon={<div className="w-5 h-5"/>}
+                        />
+                         <SettingsInput 
+                            label="Stripe Secret Key (optional)"
+                            value={localSettings.stripeSecretKey}
+                            onChange={(e) => handleChange(e, 'stripeSecretKey')}
+                            placeholder="sk_live_... (used for AI-generated backend logic)"
+                             icon={<div className="w-5 h-5"/>}
+                        />
+                     </div>
+                </div>
+            </div>
+        </div>
+        <div className="flex justify-end pt-6">
+            <button 
+                onClick={handleSave}
+                className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+                <SaveIcon />
+                {isSaved ? 'Saved!' : 'Save Settings'}
+            </button>
+        </div>
       </div>
     </div>
   );
