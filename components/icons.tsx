@@ -4,11 +4,14 @@ export const IconWrapper: React.FC<{ children: React.ReactNode; className?: stri
   <div className={className}>{children}</div>
 );
 
-export const AgentIcon = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V5M7.5 7.5l-.707-.707M16.5 7.5l.707-.707M7.5 16.5l-.707.707M16.5 16.5l.707.707M12 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12a4 4 0 118 0 4 4 0 01-8 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12v-1a3 3 0 013-3h1" />
+export const AgentIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M6.02228 4.34741c-0.64173 0.48343 -1.29436 1.04948 -1.93066 1.68578C1.24823 8.87659 -0.192409 12.046 0.873863 13.1123c1.066267 1.0662 4.235677 -0.3744 7.079067 -3.21779 0.6363 -0.6363 1.20235 -1.28893 1.68578 -1.93066" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M9.63871 7.96387c1.67689 2.22593 2.35969 4.32073 1.53199 5.14843 -1.0663 1.0663 -4.23569 -0.3744 -7.07908 -3.21778C1.24823 7.05113 -0.192409 3.88172 0.873863 2.81545c0.827657 -0.82766 2.922487 -0.14487 5.148417 1.53198" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M5.52228 7.96387c0 0.27614 0.22386 0.5 0.5 0.5s0.5 -0.22386 0.5 -0.5c0 -0.27615 -0.22386 -0.5 -0.5 -0.5s-0.5 0.22385 -0.5 0.5Z" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8.03162 3.61001c-0.31413 -0.05465 -0.31413 -0.5056 0 -0.56025C9.16967 2.85177 10.0748 1.98495 10.3218 0.856524l0.019 -0.086497c0.0679 -0.310466 0.51 -0.312398 0.5807 -0.002538l0.023 0.100802c0.2561 1.123099 1.1615 1.982599 2.2964 2.180039 0.3158 0.05493 0.3158 0.50818 0 0.56311 -1.1349 0.19744 -2.0403 1.05695 -2.2964 2.18005l-0.023 0.1008c-0.0707 0.30986 -0.5128 0.30793 -0.5807 -0.00254l-0.019 -0.0865c-0.247 -1.12842 -1.15213 -1.99525 -2.29018 -2.19324Z" strokeWidth="1"></path>
+        </g>
     </svg>
 );
 
@@ -98,17 +101,23 @@ export const TrashIcon = ({ className = 'w-5 h-5' }) => (
   </svg>
 );
 
-export const DatabaseIcon = ({ className = 'w-5 h-5' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7a8 8 0 0116 0" />
-  </svg>
+export const DatabaseIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M7 5.5c3.5899 0 6.5 -1.11929 6.5 -2.5S10.5899 0.5 7 0.5C3.41015 0.5 0.5 1.61929 0.5 3S3.41015 5.5 7 5.5Z" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M0.5 3v8c0 1.38 2.91 2.5 6.5 2.5s6.5 -1.12 6.5 -2.5V3" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M13.5 7c0 1.38 -2.91 2.5 -6.5 2.5S0.5 8.38 0.5 7" strokeWidth="1"></path>
+        </g>
+    </svg>
 );
 
-export const SettingsIcon = ({ className = 'w-5 h-5' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
+export const SettingsIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M5.91986 2.57056h-0.68701c-0.16877 0.0005 -0.33345 0.05195 -0.47248 0.14763 -0.13903 0.09568 -0.24592 0.23111 -0.30668 0.38857l-0.36026 0.92996 -1.23996 0.70377 -0.98862 -0.15081c-0.16461 -0.02234 -0.33215 0.00475 -0.48133 0.07785 -0.14918 0.0731 -0.27326 0.1889 -0.35648 0.33268l-0.33512 0.58646c-0.085874 0.14608 -0.125439 0.31475 -0.113473 0.48377 0.011966 0.16902 0.074901 0.33044 0.180498 0.46296l0.628355 0.77916v1.40753l-0.611599 0.77916c-0.105597 0.13251 -0.168532 0.29393 -0.180498 0.46296 -0.011966 0.16899 0.027599 0.33769 0.113474 0.48379l0.335123 0.5864c0.08322 0.1438 0.2073 0.2596 0.35647 0.3327 0.14918 0.0731 0.31673 0.1002 0.48134 0.0779l0.98862 -0.1508 1.2232 0.7037 0.36026 0.93c0.06076 0.1574 0.16765 0.2929 0.30668 0.3886 0.13903 0.0956 0.30371 0.1471 0.47248 0.1476h0.70376c0.16877 -0.0005 0.33346 -0.052 0.47249 -0.1476 0.13903 -0.0957 0.24592 -0.2312 0.30668 -0.3886l0.36026 -0.93 1.2232 -0.7037 0.98862 0.1508c0.16461 0.0223 0.33215 -0.0048 0.48133 -0.0779 0.14918 -0.0731 0.27331 -0.1889 0.35651 -0.3327l0.3351 -0.5864c0.0859 -0.1461 0.1254 -0.3148 0.1135 -0.48379 -0.012 -0.16903 -0.0749 -0.33045 -0.1805 -0.46296l-0.62839 -0.77916v-0.90753m-5.86468 0.20376c0 0.33141 0.09828 0.65537 0.2824 0.93093 0.18412 0.27555 0.44581 0.49032 0.75199 0.61715 0.30618 0.12682 0.64309 0.16 0.96813 0.09535 0.32504 -0.06466 0.62361 -0.22424 0.85795 -0.45858s0.39393 -0.53291 0.45858 -0.85795c0.06465 -0.32504 0.03147 -0.66195 -0.09535 -0.96813 -0.12683 -0.30618 -0.3416 -0.56787 -0.61715 -0.75199 -0.27555 -0.18412 -0.59952 -0.2824 -0.93093 -0.2824 -0.4444 0 -0.8706 0.17654 -1.18484 0.49078 -0.31424 0.31424 -0.49078 0.74044 -0.49078 1.18484Z" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8.10058 3.54225c-0.30704 -0.05341 -0.30704 -0.49417 0 -0.54759C9.2129 2.80115 10.0976 1.95391 10.339 0.850992l0.0185 -0.084542c0.0665 -0.303449 0.4985 -0.305338 0.5676 -0.002481l0.0225 0.098524c0.2504 1.097717 1.1353 1.937797 2.2446 2.130777 0.3086 0.05369 0.3086 0.49669 0 0.55038 -1.1093 0.19298 -1.9942 1.03306 -2.2446 2.13078l-0.0225 0.09852c-0.0691 0.30286 -0.5011 0.30097 -0.5676 -0.00248l-0.0185 -0.08454c-0.2414 -1.10292 -1.1261 -1.95016 -2.23842 -2.14368Z" strokeWidth="1"></path>
+        </g>
+    </svg>
 );
 
 export const GeminiLogo = ({ className = 'h-6' }) => (
@@ -163,8 +172,11 @@ export const CloseIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h
 );
 
 export const CloudUploadIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 11v9m0 0l-3-3m3 3l3-3" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M3 9.53386c-0.52267 -0.11158 -0.98411 -0.33259 -1.39542 -0.69214C0.967092 8.28445 0.577086 7.49676 0.520362 6.65193s0.224481 -1.67758 0.781758 -2.31508c0.27593 -0.31565 0.61133 -0.57386 0.98706 -0.7599 0.37572 -0.18603 0.78441 -0.29623 1.20272 -0.32432 0.04342 0.00095 0.08619 -0.01054 0.12329 -0.03312 0.03709 -0.02258 0.06695 -0.0553 0.08604 -0.0943 0.28857 -0.83636 0.85515 -1.54852 1.60524 -2.01771 0.7501 -0.46919 1.63837 -0.667052 2.51669 -0.560589 0.87832 0.106463 1.69359 0.510819 2.30984 1.145629 0.6163 0.63481 0.9963 1.46171 1.0767 2.34279 0.0067 0.0464 0.0266 0.0899 0.0572 0.12538 0.0307 0.03547 0.0708 0.06145 0.1157 0.07485 0.6504 0.15322 1.222 0.53959 1.6066 1.08595 0.3846 0.54636 0.5555 1.21479 0.4804 1.8787 -0.0752 0.66392 -0.3912 1.27723 -0.8881 1.72382 -0.3875 0.34816 -0.864 0.57615 -1.3718 0.66162" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M4.52772 11.0958c-0.29811 -0.0519 -0.29811 -0.4798 0 -0.5317 1.07999 -0.1879 1.93897 -1.01049 2.17339 -2.08134l0.01796 -0.08209c0.0645 -0.29462 0.48401 -0.29646 0.55108 -0.00241l0.02182 0.09566c0.24309 1.0658 1.1023 1.88148 2.1793 2.06878 0.29962 0.0522 0.29962 0.4823 0 0.5344 -1.077 0.1874 -1.93621 1.0031 -2.1793 2.0689l-0.02182 0.0956c-0.06707 0.2941 -0.48658 0.2922 -0.55108 -0.0024l-0.01796 -0.0821c-0.23442 -1.0708 -1.0934 -1.8934 -2.17339 -2.0813Z" strokeWidth="1"></path>
+        </g>
     </svg>
 );
 
@@ -286,8 +298,14 @@ export const SchemaIcon: React.FC<{ className?: string }> = ({ className = 'w-5 
 );
 
 export const SparklesIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M5.02002 3.48535h-3.5c-0.26522 0 -0.51957 0.10536 -0.707107 0.29289 -0.187537 0.18754 -0.292893 0.4419 -0.292893 0.70711v8.00005c0 0.2652 0.105356 0.5195 0.292893 0.7071 0.187537 0.1875 0.441887 0.2929 0.707107 0.2929H10.52c0.5523 0 1 -0.4478 1 -1V8.48535" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M0.52002 5.98535h6.5" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="m3.02002 10.9854 1.5 -1.50005 -1.5 -1.5" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M6.02002 10.9854h1.5" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M7.39601 3.9486c-0.35093 -0.06105 -0.35093 -0.56483 0 -0.62588 1.27136 -0.22118 2.28254 -1.18955 2.5585 -2.45015l0.02115 -0.09663c0.07594 -0.346833 0.56974 -0.348991 0.64874 -0.002835l0.0257 0.11261c0.2861 1.254655 1.2976 2.214845 2.5654 2.435405 0.3527 0.06137 0.3527 0.56771 0 0.62907 -1.2678 0.22057 -2.2793 1.18076 -2.5654 2.43541l-0.0257 0.11261c-0.079 0.34616 -0.5728 0.344 -0.64874 -0.00283l-0.02115 -0.09663c-0.27596 -1.26061 -1.28714 -2.22897 -2.5585 -2.45015Z" strokeWidth="1"></path>
+        </g>
     </svg>
 );
 
@@ -334,8 +352,15 @@ export const TemplateIcon: React.FC<{ className?: string }> = ({ className = 'w-
 );
 
 export const UsersIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm6-11a3 3 0 100-6 3 3 0 000 6zM21 21v-1a6 6 0 00-3-5.224" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14" className={className}>
+        <g>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8.8 2.501a1.8 1.8 0 1 0 3.6 0 1.8 1.8 0 1 0 -3.6 0" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M13.3 8.80125v-0.90002c0 -1.4912 -1.2088 -2.70006 -2.7 -2.70006 -1.01687 0 -1.90244 0.56211 -2.36294 1.39254" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M1.6 2.501a1.8 1.8 0 1 0 3.6 0 1.8 1.8 0 1 0 -3.6 0" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M0.699951 8.80125v-0.90002c0 -1.4912 1.208859 -2.70006 2.700059 -2.70006 1.01685 0 1.90241 0.56211 2.36291 1.39254" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M5.201 7.899a1.8 1.8 0 1 0 3.6 0 1.8 1.8 0 1 0 -3.6 0" strokeWidth="1"></path>
+            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M9.70126 13.2989c0 -1.4912 -1.20886 -2.7 -2.70006 -2.7s-2.70005 1.2088 -2.70005 2.7" strokeWidth="1"></path>
+        </g>
     </svg>
 );
 
