@@ -10,6 +10,86 @@ declare global {
   }
 }
 
+const kanbanPreview = `
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 p-2 sm:p-4 font-sans text-white overflow-hidden select-none">
+  <div class="grid grid-cols-3 gap-2 h-full">
+    <div class="bg-gray-800 rounded-lg p-2">
+      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">To Do</h3>
+      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs mb-2">Design new landing page</div>
+      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs">Write documentation</div>
+    </div>
+    <div class="bg-gray-800 rounded-lg p-2">
+      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">In Progress</h3>
+      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs">Develop API endpoints</div>
+    </div>
+    <div class="bg-gray-800 rounded-lg p-2">
+      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">Done</h3>
+      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs line-through opacity-60">Initial project setup</div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+const musicPlayerPreview = `
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-900 to-indigo-900 p-4 font-sans text-white overflow-hidden flex items-center justify-center select-none">
+  <div class="bg-black/20 backdrop-blur-lg rounded-xl p-4 w-full max-w-xs text-center border border-white/10">
+    <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=300&q=80" class="w-full aspect-square rounded-md shadow-lg mb-4" />
+    <h3 class="font-bold">Starlight Echoes</h3>
+    <p class="text-xs text-gray-400">Synthwave Rider</p>
+    <div class="w-full h-1 bg-white/20 rounded-full mt-4"><div class="w-1/3 h-1 bg-white rounded-full"></div></div>
+    <div class="flex justify-center items-center gap-6 mt-4 text-2xl">
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.17V5.83a1 1 0 00-1.555-.832L4.12 8.168a1 1 0 000 1.664l4.325 3.001zM11 5.83a1 1 0 011.555-.832l4.325 3.001a1 1 0 010 1.664l-4.325 3.001A1 1 0 0111 14.17V5.83z"></path></svg>
+      <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"></path></svg>
+      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 5.168A1 1 0 0010 5.83v8.34a1 1 0 001.555.832l4.325-3.001a1 1 0 000-1.664l-4.325-3.001zM9 5.83a1 1 0 00-1.555-.832L3.12 8.168a1 1 0 000 1.664l4.325 3.001A1 1 0 009 14.17V5.83z"></path></svg>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+const dashboardPreview = `
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-2 sm:p-4 font-sans text-gray-800 overflow-hidden select-none">
+  <div class="grid grid-cols-2 gap-2 sm:gap-4">
+    <div class="bg-white p-3 rounded-lg shadow-sm">
+      <p class="text-[10px] sm:text-xs text-gray-500">Revenue</p>
+      <p class="text-lg sm:text-xl font-bold">$12,450</p>
+    </div>
+    <div class="bg-white p-3 rounded-lg shadow-sm">
+      <p class="text-[10px] sm:text-xs text-gray-500">New Users</p>
+      <p class="text-lg sm:text-xl font-bold">142</p>
+    </div>
+  </div>
+  <div class="bg-white p-3 rounded-lg shadow-sm mt-2 sm:mt-4">
+    <p class="text-xs sm:text-sm font-semibold mb-2">Sales Over Time</p>
+    <div class="flex items-end gap-2 h-24">
+      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 40%"></div>
+      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 60%"></div>
+      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 50%"></div>
+      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 80%"></div>
+      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 75%"></div>
+      <div class="w-1/6 bg-blue-400 rounded-t-sm" style="height: 90%"></div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="relative p-6 rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-300 hover:bg-white hover:-translate-y-1">
         <div className="flex items-start gap-4">
@@ -182,14 +262,38 @@ export const LoginPage: React.FC = () => {
                         <p className="text-gray-600 mt-2 max-w-2xl mx-auto">From simple utilities to complex dashboards, generate functional prototypes in minutes.</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md">
-                            <div className="aspect-video bg-gray-100 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">Kanban Board</p></div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
+                            <div className="aspect-video bg-gray-900 rounded-md overflow-hidden flex-1">
+                                <iframe
+                                    srcDoc={kanbanPreview}
+                                    title="Kanban Board Preview"
+                                    className="w-full h-full border-0"
+                                    sandbox="allow-scripts"
+                                />
+                            </div>
+                            <h3 className="font-semibold text-center text-gray-700 mt-3">Kanban Board</h3>
                         </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md">
-                           <div className="aspect-video bg-gray-100 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">Music Player</p></div>
+                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
+                           <div className="aspect-video bg-indigo-900 rounded-md overflow-hidden flex-1">
+                                <iframe
+                                    srcDoc={musicPlayerPreview}
+                                    title="Music Player Preview"
+                                    className="w-full h-full border-0"
+                                    sandbox="allow-scripts"
+                                />
+                            </div>
+                            <h3 className="font-semibold text-center text-gray-700 mt-3">Music Player</h3>
                         </div>
-                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md">
-                           <div className="aspect-video bg-gray-100 rounded-md mb-3 flex items-center justify-center"><p className="text-gray-500">SaaS Dashboard</p></div>
+                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
+                           <div className="aspect-video bg-slate-100 rounded-md overflow-hidden flex-1">
+                                <iframe
+                                    srcDoc={dashboardPreview}
+                                    title="SaaS Dashboard Preview"
+                                    className="w-full h-full border-0"
+                                    sandbox="allow-scripts"
+                                />
+                            </div>
+                             <h3 className="font-semibold text-center text-gray-700 mt-3">SaaS Dashboard</h3>
                         </div>
                     </div>
                 </div>
