@@ -7,6 +7,7 @@ import { SaveIcon, SparklesIcon, HomeIcon, AgentIcon, TrashIcon, DownloadIcon } 
 import { Type } from '@google/genai';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -15,6 +16,7 @@ const initialSettings: Settings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   githubPat: '',
+  netlifyPat: '',
 };
 
 const defaultAgentConfig: AgentConfig = {

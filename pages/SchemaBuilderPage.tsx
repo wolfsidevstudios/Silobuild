@@ -5,6 +5,7 @@ import { Table, Column, DataType, Settings, AiGeneratedTable } from '../types';
 import { generateSchemaFromPrompt } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
 
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -13,6 +14,7 @@ const initialSettings: Settings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   githubPat: '',
+  netlifyPat: '',
 };
 
 const DATA_TYPES: DataType[] = ['uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'];

@@ -3,7 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { SupabaseLogo } from '../components/icons';
 
-// FIX: Add missing 'githubPat' property to satisfy the Settings type.
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
     geminiApiKey: '',
     vercelApiKey: '',
@@ -12,6 +12,7 @@ const initialSettings: Settings = {
     stripePublicKey: '',
     stripeSecretKey: '',
     githubPat: '',
+    netlifyPat: '',
 };
 
 export const DatabasePage: React.FC = () => {

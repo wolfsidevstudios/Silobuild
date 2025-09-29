@@ -8,7 +8,7 @@ import { StudioHeader } from '../components/StudioHeader';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 import { ComponentLibrary } from '../components/ComponentLibrary';
 
-// FIX: Add missing 'githubPat' property to satisfy the Settings type.
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -17,6 +17,7 @@ const initialSettings: Settings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   githubPat: '',
+  netlifyPat: '',
 };
 
 

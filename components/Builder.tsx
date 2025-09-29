@@ -13,6 +13,7 @@ import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
 import { showLocalNotification } from '../utils/projectUtils';
 
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -21,6 +22,7 @@ const initialSettings: Settings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   githubPat: '',
+  netlifyPat: '',
 };
 
 interface BuilderProps {

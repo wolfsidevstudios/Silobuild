@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon } from '../components/icons';
+import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon, LaunchpadIcon } from '../components/icons';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -12,6 +12,7 @@ const initialSettings: Settings = {
   stripePublicKey: '',
   stripeSecretKey: '',
   githubPat: '',
+  netlifyPat: '',
 };
 
 const SettingsInput: React.FC<{
@@ -91,6 +92,13 @@ export const SettingsPage: React.FC = () => {
             onChange={(e) => handleChange(e, 'githubPat')}
             placeholder="Enter your GitHub PAT"
             icon={<GithubIcon className="w-5 h-5 text-black" />}
+        />
+        <SettingsInput
+            label="Netlify Access Token"
+            value={localSettings.netlifyPat}
+            onChange={(e) => handleChange(e, 'netlifyPat')}
+            placeholder="Enter your Netlify Access Token"
+            icon={<LaunchpadIcon className="w-5 h-5 text-cyan-500" />}
         />
         <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Service Integrations</h2>
