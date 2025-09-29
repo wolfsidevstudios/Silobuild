@@ -11,6 +11,7 @@ import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
+import { showLocalNotification } from '../utils/projectUtils';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -101,7 +102,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
       const isEdit = isGenerated;
       const filesForContext = isEdit ? multiFileCode : undefined;
-      const appName = currentProject?.name;
+      let appName = currentProject?.name;
       const appIcon = currentProject?.appIcon;
 
       try {
@@ -122,6 +123,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setGeneratedFilesProgress(prev => [...prev, update.file.path]);
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
+            // Infer app name from preview title if not set
+            if (!appName) {
+                const titleMatch = update.file.content.match(/<title>(.*?)<\/title>/);
+                if (titleMatch && titleMatch[1]) {
+                    appName = titleMatch[1];
+                }
+            }
           }
         }, stackToUse, filesForContext, appName, appIcon);
 
@@ -135,6 +143,15 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
         setIsGenerated(true);
+
+        showLocalNotification(
+            'Build Complete!',
+            {
+                body: `Your project "${appName || 'New App'}" has finished generating.`,
+                icon: 'https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png',
+                tag: `build-${currentProject?.id || Date.now()}`
+            }
+        );
 
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { GeminiLogo, StripeLogo, SupabaseLogo, GithubIcon, SparklesIcon, KeyIcon, UserCircleIcon, StarIcon, CubeTransparentIcon } from '../components/icons';
+import { subscribeUserToPush } from '../utils/projectUtils';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -13,7 +14,7 @@ const initialSettings: Settings = {
   githubPat: '',
 };
 
-type SettingsTab = 'apiKeys' | 'integrations' | 'account' | 'pro';
+type SettingsTab = 'apiKeys' | 'integrations' | 'notifications' | 'pro';
 
 const SettingsNavLink: React.FC<{
   id: SettingsTab;
@@ -43,14 +44,23 @@ export const SettingsPage: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [isPro, setIsPro] = useLocalStorage<boolean>('silo-build-is-pro', false);
   const [activeTab, setActiveTab] = useState<SettingsTab>('apiKeys');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
   useEffect(() => {
     setLocalSettings(settings);
+    if ('permission' in Notification) {
+        setNotificationPermission(Notification.permission);
+    }
   }, [settings]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLocalSettings(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleEnableNotifications = async () => {
+    const newPermission = await subscribeUserToPush();
+    setNotificationPermission(newPermission);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -211,6 +221,35 @@ export const SettingsPage: React.FC = () => {
                     </div>
                 </div>
             );
+        case 'notifications':
+            return (
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 className="text-xl font-semibold">Notifications</h2>
+                    <p className="text-sm text-gray-600 mt-2 mb-4">
+                        Enable push notifications to be alerted when your app builds are complete.
+                    </p>
+                    {notificationPermission === 'granted' ? (
+                        <div className="p-3 bg-green-50 text-green-700 border border-green-200 rounded-md text-sm">
+                            Push notifications are enabled.
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                             <button
+                                onClick={handleEnableNotifications}
+                                disabled={notificationPermission === 'denied'}
+                                className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                Enable Notifications
+                            </button>
+                            {notificationPermission === 'denied' && (
+                                <p className="text-sm text-red-600">
+                                    Notifications are blocked. You'll need to change this in your browser settings.
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
         case 'pro':
              return (
                  <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -274,6 +313,7 @@ export const SettingsPage: React.FC = () => {
           <nav className="space-y-1">
              <SettingsNavLink id="apiKeys" label="API Keys" icon={<KeyIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
              <SettingsNavLink id="integrations" label="Integrations" icon={<CubeTransparentIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
+             <SettingsNavLink id="notifications" label="Notifications" icon={<UserCircleIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
              <SettingsNavLink id="pro" label="Pro Plan" icon={<StarIcon />} activeTab={activeTab} setActiveTab={setActiveTab} />
           </nav>
         </aside>
@@ -281,15 +321,17 @@ export const SettingsPage: React.FC = () => {
         <main className="flex-1 max-w-2xl">
            <form onSubmit={handleSubmit}>
               {renderContent()}
-              <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
-                  <button
-                      type="submit"
-                      className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                      Save Settings
-                  </button>
-                  {saved && <span className="text-green-600 text-sm">Settings saved!</span>}
-              </div>
+              {activeTab !== 'notifications' && activeTab !== 'pro' && (
+                 <div className="flex items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        Save Settings
+                    </button>
+                    {saved && <span className="text-green-600 text-sm">Settings saved!</span>}
+                </div>
+              )}
             </form>
         </main>
       </div>
