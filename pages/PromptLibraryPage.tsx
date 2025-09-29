@@ -40,6 +40,7 @@ export const PromptLibraryPage: React.FC = () => {
   const categoryOrder = [
     "Productivity & Business",
     "Utilities & Tools",
+    "Backend & APIs",
     "Games & Entertainment",
     "UI Components & Landing Pages",
     "Data & APIs",
@@ -57,7 +58,7 @@ export const PromptLibraryPage: React.FC = () => {
 
       <div className="space-y-10">
         {categoryOrder.map(category => (
-          <div key={category}>
+          groupedPrompts[category] && <div key={category}>
             <h2 className="text-xl font-semibold mb-4 border-b border-gray-200 pb-2">{category}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {groupedPrompts[category].map(prompt => (

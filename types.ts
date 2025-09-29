@@ -6,7 +6,7 @@ export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
-export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte';
+export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs';
 
 export interface GeneratedFile {
   path: string;
@@ -26,6 +26,7 @@ export interface Settings {
   stripePublicKey: string;
   stripeSecretKey: string;
   githubPat: string;
+  netlifyPat: string;
 }
 
 export interface Deployment {

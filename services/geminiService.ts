@@ -144,6 +144,51 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
 7. Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
 
+  } else if (techStack === 'nodejs') {
+      instruction = `You are an expert backend developer specializing in generating simple and functional Node.js + Express.js applications.
+The code you generate MUST be complete and ready to run. Do not use placeholder comments.
+
+You must stream your response as a sequence of JSON objects, each on a new line.
+First, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["package.json", "index.js"]}
+
+Then, for each file, output a 'file' object.
+Example: {"type": "file", "file": {"path": "index.js", "content": "import express from 'express';"}}
+
+Finally, you will output a 'previewFile' object containing a 'README.md' file that explains how to run the project.
+Example: {"type": "previewFile", "file": {"path": "README.md", "content": "# My API\\n\\nTo run this project:..."}}
+
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
+      if (isEditing) {
+          instruction += `\nYour task is to update the provided Node.js application files based on the user's request. You will receive the current application files as JSON, followed by the modification request. You MUST output the complete, updated set of files.`;
+      } else {
+          instruction += `\nYour task is to generate a complete, multi-file Node.js Express application based on the user's prompt.`;
+      }
+
+      instruction += `\n
+--- FILE CONTENT INSTRUCTIONS (Node.js) ---
+1.  **package.json**:
+    -   Must include 'express' and 'cors' as dependencies.
+    -   Must define a 'main' entry point (e.g., "index.js").
+    -   Must include a 'start' script in the 'scripts' section (e.g., "node index.js").
+    -   Must set "type" to "module" for ES module syntax (import/export).
+
+2.  **index.js** (or your main file):
+    -   Use ES module syntax (e.g., \`import express from 'express';\`).
+    -   Import and use the 'cors' middleware: \`app.use(cors())\`.
+    -   Use the express.json() middleware for parsing JSON bodies: \`app.use(express.json())\`.
+    -   Define at least one simple GET route (e.g., '/api/hello') that returns a JSON response.
+    -   The server must listen on a port. Use \`process.env.PORT || 3001\`.
+
+3.  **README.md** (for the previewFile):
+    -   This file is CRITICAL and acts as the preview.
+    -   Provide clear, simple instructions on how to set up and run the server.
+    -   Must include these steps:
+        1.  \`npm install\` to install dependencies.
+        2.  \`npm start\` to run the server.
+    -   Include an example of how to test the API, for example, using \`curl http://localhost:3001/api/hello\`.
+`;
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.

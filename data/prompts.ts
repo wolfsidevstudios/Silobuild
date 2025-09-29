@@ -316,4 +316,26 @@ const morePrompts: Prompt[] = [
       prompt: "Build a simple blog application that fetches its data from the JSONPlaceholder API. Create a page that lists all post titles. When a title is clicked, it should navigate to a details page that shows the full post content and its comments."
     }
   ];
-prompts.push(...morePrompts);
+
+const backendPrompts: Prompt[] = [
+  {
+    title: "Simple User API",
+    category: "Backend & APIs",
+    description: "A CRUD API for managing users with in-memory storage.",
+    prompt: "Create a Node.js Express backend for managing users. It should have endpoints for GET /api/users, GET /api/users/:id, POST /api/users, PUT /api/users/:id, and DELETE /api/users/:id. Use a simple in-memory array to store the user data. The user object should have an id, name, and email.",
+  },
+  {
+    title: "Blog Posts API",
+    category: "Backend & APIs",
+    description: "A RESTful API for creating and retrieving blog posts.",
+    prompt: "Build a RESTful API for a blog using Node.js and Express. It needs endpoints to create a new post (POST /api/posts), and retrieve all posts (GET /api/posts). A post should have an id, title, content, and createdAt timestamp. Store posts in an in-memory array.",
+  },
+  {
+    title: "URL Shortener Backend",
+    category: "Backend & APIs",
+    description: "An API to create short URLs that redirect to long URLs.",
+    prompt: "Create a backend for a URL shortener service using Node.js and Express. It should have one endpoint POST /api/shorten that takes a 'longUrl' in the body, generates a short code, and stores the mapping. It should also have a GET /:shortCode endpoint that redirects to the original long URL. Use an in-memory object to store the URL mappings.",
+  },
+];
+
+prompts.push(...morePrompts, ...backendPrompts);
