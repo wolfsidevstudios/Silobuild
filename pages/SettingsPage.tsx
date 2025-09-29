@@ -1,157 +1,127 @@
-// FIX: Replaced placeholder content with a fully functional SettingsPage component.
-import React, { useState, useEffect } from 'react';
+// FIX: Replaced API key management with application-level settings for notifications and data management.
+import React from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Settings } from '../types';
-import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon, NetlifyIcon } from '../components/icons';
+import { SettingsIcon, TrashIcon } from '../components/icons';
 
-const initialSettings: Settings = {
-  geminiApiKey: '',
-  vercelApiKey: '',
-  supabaseUrl: '',
-  supabaseAnonKey: '',
-  stripePublicKey: '',
-  stripeSecretKey: '',
-  githubPat: '',
-  netlifyPat: '',
+interface UserPreferences {
+  notifications: {
+    updates: boolean;
+    deployments: boolean;
+  };
+}
+
+const initialPreferences: UserPreferences = {
+  notifications: {
+    updates: true,
+    deployments: true,
+  }
 };
 
-const SettingsInput: React.FC<{
-    label: string;
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    placeholder: string;
-    icon: React.ReactNode;
-    isPassword?: boolean;
-}> = ({ label, value, onChange, placeholder, icon, isPassword = true }) => (
-    <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
-        <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                {icon}
-            </div>
-            <input
-                type={isPassword ? 'password' : 'text'}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void; description: string; }> = ({ label, enabled, onChange, description }) => (
+    <div className="flex items-center justify-between py-4 border-b border-gray-200">
+        <div>
+            <label className="font-medium text-gray-800">{label}</label>
+            <p className="text-sm text-gray-500">{description}</p>
         </div>
+        <button
+            type="button"
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                enabled ? 'bg-blue-600' : 'bg-gray-200'
+            }`}
+            onClick={() => onChange(!enabled)}
+        >
+            <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    enabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+            />
+        </button>
     </div>
 );
 
 
 export const SettingsPage: React.FC = () => {
-  const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
-  const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
-  const [isSaved, setIsSaved] = useState(false);
+  const [preferences, setPreferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
+  const [, setProjects] = useLocalStorage('ai-app-builder-projects', []);
+  const [, setSettings] = useLocalStorage('ai-app-builder-settings', {});
 
-  useEffect(() => {
-    setLocalSettings(settings);
-  }, [settings]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>, key: keyof Settings) => {
-    setLocalSettings({ ...localSettings, [key]: e.target.value });
-    setIsSaved(false);
+  const handleToggle = (key: keyof UserPreferences['notifications']) => {
+      setPreferences(prev => ({
+          ...prev,
+          notifications: {
+              ...prev.notifications,
+              [key]: !prev.notifications[key]
+          }
+      }));
+  };
+  
+  const handleClearProjects = () => {
+    if(window.confirm('Are you sure you want to delete all your projects? This action cannot be undone.')) {
+        setProjects([]);
+        alert('All projects have been deleted.');
+    }
   };
 
-  const handleSave = () => {
-    setSettings(localSettings);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
-  };
+  const handleClearSettings = () => {
+      if(window.confirm('Are you sure you want to delete all your API keys and settings? This action cannot be undone.')) {
+        setSettings({});
+        alert('All settings have been deleted.');
+    }
+  }
 
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-6">
-        <KeyIcon className="w-8 h-8 text-blue-500" />
-        <h1 className="text-3xl font-bold">API Key Settings</h1>
+        <SettingsIcon className="w-8 h-8 text-blue-500" />
+        <h1 className="text-3xl font-bold">Settings</h1>
       </div>
       <p className="text-gray-600 mb-8 max-w-3xl">
-        Your API keys are stored securely in your browser's local storage and are never sent to our servers. They are used directly by your browser to communicate with the respective services.
+        Manage your application preferences and data. API keys and service credentials can be configured on the <a href="#/dashboard/integrations" className="text-blue-600 hover:underline">Integrations</a> page.
       </p>
 
-      <div className="max-w-2xl mx-auto space-y-8 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-        <SettingsInput 
-            label="Google Gemini API Key"
-            value={localSettings.geminiApiKey}
-            onChange={(e) => handleChange(e, 'geminiApiKey')}
-            placeholder="Enter your Gemini API Key"
-            icon={<GeminiLogo />}
-        />
-        <SettingsInput 
-            label="Vercel Access Token"
-            value={localSettings.vercelApiKey}
-            onChange={(e) => handleChange(e, 'vercelApiKey')}
-            placeholder="Enter your Vercel Access Token"
-            icon={<VercelIcon className="h-5 w-5 text-black" />}
-        />
-         <SettingsInput 
-            label="GitHub Personal Access Token"
-            value={localSettings.githubPat}
-            onChange={(e) => handleChange(e, 'githubPat')}
-            placeholder="Enter your GitHub PAT"
-            icon={<GithubIcon className="w-5 h-5 text-black" />}
-        />
-        <SettingsInput
-            label="Netlify Access Token"
-            value={localSettings.netlifyPat}
-            onChange={(e) => handleChange(e, 'netlifyPat')}
-            placeholder="Enter your Netlify Access Token"
-            icon={<NetlifyIcon className="w-5 h-5" />}
-        />
-        <div className="border-t border-gray-200 pt-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">Service Integrations</h2>
-            <div className="space-y-6">
-                <div>
-                     <h3 className="text-lg font-medium mb-3 flex items-center gap-2"><SupabaseLogo /> Supabase</h3>
-                     <div className="space-y-4">
-                        <SettingsInput 
-                            label="Supabase URL"
-                            value={localSettings.supabaseUrl}
-                            onChange={(e) => handleChange(e, 'supabaseUrl')}
-                            placeholder="https://<project-id>.supabase.co"
-                            icon={<div className="w-5 h-5"/>}
-                            isPassword={false}
-                        />
-                         <SettingsInput 
-                            label="Supabase Anon Key"
-                            value={localSettings.supabaseAnonKey}
-                            onChange={(e) => handleChange(e, 'supabaseAnonKey')}
-                            placeholder="Supabase public anon key"
-                            icon={<div className="w-5 h-5"/>}
-                        />
-                     </div>
+      <div className="max-w-2xl mx-auto space-y-10">
+        <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">Notifications</h2>
+            <p className="text-gray-500 mb-4 text-sm">Configure which notifications you want to receive.</p>
+            <ToggleSwitch 
+                label="Product Updates"
+                description="Receive notifications about new features and improvements."
+                enabled={preferences.notifications.updates}
+                onChange={() => handleToggle('updates')}
+            />
+             <ToggleSwitch 
+                label="Deployment Status"
+                description="Get notified when your deployments succeed or fail."
+                enabled={preferences.notifications.deployments}
+                onChange={() => handleToggle('deployments')}
+            />
+        </div>
+
+        <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">Data Management</h2>
+            <p className="text-gray-500 mb-4 text-sm">Manage the data stored in your browser's local storage.</p>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div>
+                        <h3 className="font-medium">Clear Project Data</h3>
+                        <p className="text-sm text-gray-500">This will permanently delete all of your saved projects.</p>
+                    </div>
+                     <button onClick={handleClearProjects} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
+                        <TrashIcon className="w-4 h-4" />
+                        Clear Projects
+                    </button>
                 </div>
-                 <div>
-                     <h3 className="text-lg font-medium mb-3 flex items-center gap-2"><StripeLogo /> Stripe</h3>
-                     <div className="space-y-4">
-                        <SettingsInput 
-                            label="Stripe Public Key"
-                            value={localSettings.stripePublicKey}
-                            onChange={(e) => handleChange(e, 'stripePublicKey')}
-                            placeholder="pk_live_..."
-                             icon={<div className="w-5 h-5"/>}
-                        />
-                         <SettingsInput 
-                            label="Stripe Secret Key (optional)"
-                            value={localSettings.stripeSecretKey}
-                            onChange={(e) => handleChange(e, 'stripeSecretKey')}
-                            placeholder="sk_live_... (used for AI-generated backend logic)"
-                             icon={<div className="w-5 h-5"/>}
-                        />
-                     </div>
+                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div>
+                        <h3 className="font-medium">Clear Settings Data</h3>
+                        <p className="text-sm text-gray-500">This will permanently delete all saved API keys and credentials.</p>
+                    </div>
+                     <button onClick={handleClearSettings} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
+                        <TrashIcon className="w-4 h-4" />
+                        Clear Settings
+                    </button>
                 </div>
             </div>
-        </div>
-        <div className="flex justify-end pt-6">
-            <button 
-                onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-                <SaveIcon />
-                {isSaved ? 'Saved!' : 'Save Settings'}
-            </button>
         </div>
       </div>
     </div>

@@ -1,75 +1,185 @@
-import React from 'react';
-import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, KeyIcon, SlackIcon, JiraIcon } from '../components/icons';
+import React, { useState, useEffect } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { Settings } from '../types';
+import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon } from '../components/icons';
+
+const initialSettings: Settings = {
+  geminiApiKey: '',
+  vercelApiKey: '',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  stripePublicKey: '',
+  stripeSecretKey: '',
+  githubPat: '',
+  netlifyPat: '',
+};
+
+const SettingsInput: React.FC<{
+    label: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    isPassword?: boolean;
+}> = ({ label, value, onChange, placeholder, isPassword = true }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <input
+            type={isPassword ? 'password' : 'text'}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+    </div>
+);
+
 
 const IntegrationCard: React.FC<{
     icon?: React.ReactNode;
     title: string;
     description: string;
-}> = ({ icon, title, description }) => (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 flex flex-col items-start hover:shadow-lg transition-shadow duration-300">
+    children: React.ReactNode;
+}> = ({ icon, title, description, children }) => (
+    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
         <div className="flex items-center gap-4 mb-3 min-h-[40px]">
             {icon}
             <h3 className="text-xl font-bold">{title}</h3>
         </div>
-        <p className="text-gray-600 text-sm flex-grow mb-4">{description}</p>
-        <a href="#/dashboard/settings" className="mt-auto flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-800 rounded-lg transition-colors">
-            <KeyIcon className="w-4 h-4" />
-            Configure
-        </a>
+        <p className="text-gray-600 text-sm mb-4">{description}</p>
+        <div className="space-y-4 border-t border-gray-200 pt-4">
+            {children}
+        </div>
     </div>
 );
 
 
 export const IntegrationsPage: React.FC = () => {
+    const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+    const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
+    const [isSaved, setIsSaved] = useState(false);
+
+    useEffect(() => {
+        setLocalSettings(settings);
+    }, [settings]);
+
+    const handleChange = (key: keyof Settings, value: string) => {
+        setLocalSettings(prev => ({ ...prev, [key]: value }));
+        setIsSaved(false);
+    };
+
+    const handleSave = () => {
+        setSettings(localSettings);
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+    };
+
   return (
     <div className="p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <IntegrationsIcon className="w-8 h-8 text-blue-500" />
-        <h1 className="text-3xl font-bold">Integrations</h1>
-      </div>
-      <p className="text-gray-600 mb-8 max-w-3xl">
-        Connect your favorite tools and services. Provide API keys in the <a href="#/dashboard/settings" className="text-blue-600 hover:underline">Settings</a> page to enable the AI to build full-stack applications.
-      </p>
+        <div className="sticky top-0 bg-gray-50/80 backdrop-blur-md z-10 py-4 -my-4 mb-4">
+             <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <IntegrationsIcon className="w-8 h-8 text-blue-500" />
+                    <h1 className="text-3xl font-bold">Integrations</h1>
+                </div>
+                 <button 
+                    onClick={handleSave}
+                    className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                    <SaveIcon />
+                    {isSaved ? 'Saved!' : 'Save Settings'}
+                </button>
+            </div>
+             <p className="text-gray-600 mt-2 max-w-3xl">
+                Connect your favorite tools. Your keys are stored securely in your browser and are never sent to our servers.
+            </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <IntegrationCard 
             icon={<GeminiLogo className="h-8"/>}
             title="Google Gemini"
-            description="The core AI model that powers code generation, chat, and other intelligent features in Silo Build."
-        />
-        <IntegrationCard 
-            icon={<VercelIcon className="h-7 text-black"/>}
-            title="Vercel"
-            description="Deploy your generated web applications to Vercel's global edge network with a single click."
-        />
+            description="The core AI model that powers code generation and chat."
+        >
+             <SettingsInput 
+                label="Gemini API Key"
+                value={localSettings.geminiApiKey}
+                onChange={(e) => handleChange('geminiApiKey', e.target.value)}
+                placeholder="Enter your Gemini API Key"
+            />
+        </IntegrationCard>
         <IntegrationCard 
             icon={<GithubIcon className="w-7 h-7 text-black"/>}
             title="GitHub"
-            description="Enable the AI to create new repositories and push your generated code directly to GitHub."
-        />
+            description="Enable creating repositories and pushing code directly to GitHub."
+        >
+            <SettingsInput 
+                label="GitHub Personal Access Token"
+                value={localSettings.githubPat}
+                onChange={(e) => handleChange('githubPat', e.target.value)}
+                placeholder="Enter your GitHub PAT"
+            />
+        </IntegrationCard>
+         <IntegrationCard 
+            icon={<VercelIcon className="h-7 text-black"/>}
+            title="Vercel"
+            description="Deploy your web applications to Vercel's global edge network."
+        >
+            <SettingsInput 
+                label="Vercel Access Token"
+                value={localSettings.vercelApiKey}
+                onChange={(e) => handleChange('vercelApiKey', e.target.value)}
+                placeholder="Enter your Vercel Access Token"
+            />
+        </IntegrationCard>
         <IntegrationCard 
+            icon={<NetlifyIcon className="h-7"/>}
+            title="Netlify"
+            description="Connect your Netlify account for one-click deployments."
+        >
+             <SettingsInput
+                label="Netlify Access Token"
+                value={localSettings.netlifyPat}
+                onChange={(e) => handleChange('netlifyPat', e.target.value)}
+                placeholder="Enter your Netlify Access Token"
+            />
+        </IntegrationCard>
+         <IntegrationCard 
             icon={<SupabaseLogo className="h-8"/>}
             title="Supabase"
-            description="The AI can automatically scaffold projects with Supabase for database, authentication, and storage."
-        />
+            description="Scaffold projects with a Supabase backend for database and auth."
+        >
+            <SettingsInput 
+                label="Supabase URL"
+                value={localSettings.supabaseUrl}
+                onChange={(e) => handleChange('supabaseUrl', e.target.value)}
+                placeholder="https://<project-id>.supabase.co"
+                isPassword={false}
+            />
+            <SettingsInput 
+                label="Supabase Anon Key"
+                value={localSettings.supabaseAnonKey}
+                onChange={(e) => handleChange('supabaseAnonKey', e.target.value)}
+                placeholder="Supabase public anon key"
+            />
+        </IntegrationCard>
         <IntegrationCard 
             icon={<StripeLogo className="h-7"/>}
             title="Stripe"
-            description="Generate applications with payment processing capabilities, including checkout flows and subscriptions."
-        />
-         <IntegrationCard 
-            icon={<NetlifyIcon className="h-7"/>}
-            title="Netlify"
-            description="Connect your Netlify account to enable one-click deployments for your static sites and frontend apps."
-        />
-        <IntegrationCard 
-            title="Slack"
-            description="Get notifications about deployments and project updates directly in your Slack channels. (Coming soon)"
-        />
-         <IntegrationCard 
-            title="Jira"
-            description="Automatically create Jira issues from feedback or link projects to your existing Jira boards. (Coming soon)"
-        />
+            description="Generate applications with payment processing capabilities."
+        >
+             <SettingsInput 
+                label="Stripe Public Key"
+                value={localSettings.stripePublicKey}
+                onChange={(e) => handleChange('stripePublicKey', e.target.value)}
+                placeholder="pk_live_..."
+            />
+            <SettingsInput 
+                label="Stripe Secret Key (optional)"
+                value={localSettings.stripeSecretKey}
+                onChange={(e) => handleChange('stripeSecretKey', e.target.value)}
+                placeholder="sk_live_... (used for backend logic)"
+            />
+        </IntegrationCard>
       </div>
     </div>
   );
