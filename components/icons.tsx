@@ -123,7 +123,11 @@ export const KeyIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5
 );
 
 export const GeminiLogo: React.FC<{ className?: string }> = ({ className = 'h-6' }) => (
-     <svg className={className} viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="38.74%" y1="100%" x2="68.21%" y2="100%" id="a"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient><linearGradient x1="31.79%" y1="100%" x2="61.26%" y2="100%" id="b"><stop stop-color="#4285F4" offset="0%"></stop><stop stop-color="#2962FF" offset="100%"></stop></linearGradient></defs><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fillRule="evenodd" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><g fillRule="nonzero" transform="matrix(.48 0 0 .48 66.56 66.56)"><path d="M128 256c70.69 0 128-57.31 128-128S198.69 0 128 0 0 57.31 0 128s57.31 128 128 128z" fill="#6F32FF"></path><path d="M128 160a32 32 0 100-64 32 32 0 000 64z" fill="#FFF"></path><path d="M256 128c0 35.34-14.36 67.24-37.5 90.5L90.5 37.5C113.76 14.36 145.66 0 176 0c44.18 0 80 35.82 80 80v48z" fill="url(#a)"></path><path d="M0 128c0-35.34 14.36-67.24 37.5-90.5L165.5 218.5c-23.26 23.14-55.16 37.5-90.5 37.5-44.18 0-80-35.82-80-80V80z" fill="url(#b)"></path></g></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className}>
+        <g>
+            <path fill="currentColor" fillRule="evenodd" d="M17 1.5c0 1.93296 -1.567 3.49991 -3.5 3.49991v2c1.933 0 3.5 1.56701 3.5 3.49999l1.0001 0.0001H19c0 -1.93298 1.567 -3.50009 3.5 -3.50009l0.0001 -2c-1.9329 0 -3.5 -1.56695 -3.5001 -3.49991zM4.03613 17.8623v2H20.0361v-2zm0 -4v2H20.0361v-2zm0 -4v2h8.99997v-2zm0 -4v2h5.99997v-2z" clipRule="evenodd"></path>
+        </g>
+    </svg>
 );
 
 export const VercelIcon: React.FC<{ className?: string }> = ({ className = 'h-6' }) => (
