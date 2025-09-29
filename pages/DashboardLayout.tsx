@@ -40,7 +40,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
   };
 
   return (
-    <div className="h-screen w-screen bg-gray-950 text-white flex font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-transparent text-gray-900 flex font-sans overflow-hidden">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderPage()}

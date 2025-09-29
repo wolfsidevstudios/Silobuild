@@ -62,7 +62,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
 
   if (files.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-gray-500 bg-gray-900">
+      <div className="h-full flex flex-col items-center justify-center text-gray-500 bg-white">
         <p className="mb-4">No code generated yet.</p>
         <button onClick={handleNewFile} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors duration-300">
           <PlusIcon />
@@ -73,11 +73,11 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
   }
 
   return (
-    <div className="h-full flex bg-gray-900">
-      <aside className="w-56 bg-gray-900/50 border-r border-white/10 p-2 flex flex-col">
+    <div className="h-full flex bg-white">
+      <aside className="w-56 bg-gray-50 border-r border-gray-200 p-2 flex flex-col">
         <div className="flex items-center justify-between mb-2 px-2">
-            <h3 className="text-sm font-semibold text-gray-400">Files</h3>
-            <button onClick={handleNewFile} className="p-1 text-gray-400 hover:text-white" aria-label="New File">
+            <h3 className="text-sm font-semibold text-gray-500">Files</h3>
+            <button onClick={handleNewFile} className="p-1 text-gray-500 hover:text-gray-800" aria-label="New File">
                 <PlusIcon className="w-4 h-4" />
             </button>
         </div>
@@ -88,8 +88,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
                 onClick={() => setActiveFile(file.path)}
                 className={`w-full text-left pl-2 py-1.5 rounded flex items-center gap-2 transition-colors duration-200 truncate ${
                   activeFile === file.path
-                    ? 'bg-blue-500/20 text-blue-300'
-                    : 'text-gray-300 hover:bg-white/5'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-200/50'
                 }`}
               >
                 <FileIcon className="w-5 h-5 flex-shrink-0" />
@@ -97,7 +97,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
               </button>
               <button 
                 onClick={() => handleDelete(file.path)}
-                className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 aria-label={`Delete ${file.path}`}
               >
                 <TrashIcon className="w-4 h-4" />
@@ -106,7 +106,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files, onFileUpdat
           ))}
         </ul>
       </aside>
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden bg-gray-900">
         {displayedFile ? (
           <textarea
             key={displayedFile.path}

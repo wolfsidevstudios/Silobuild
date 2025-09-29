@@ -15,9 +15,9 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component }) => {
     <div
       draggable="true"
       onDragStart={handleDragStart}
-      className="bg-white/5 border border-white/10 rounded-md p-3 cursor-grab hover:bg-blue-500/10 hover:border-blue-500/50 transition-all duration-200"
+      className="bg-white border border-gray-200 rounded-md p-3 cursor-grab hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
     >
-      <p className="text-sm font-semibold text-white truncate">{component.title}</p>
+      <p className="text-sm font-semibold text-gray-800 truncate">{component.title}</p>
     </div>
   );
 };
@@ -52,10 +52,10 @@ export const ComponentLibrary: React.FC = () => {
     ];
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white">
-      <div className="flex-shrink-0 p-3 border-b border-white/10">
+    <div className="h-full flex flex-col bg-gray-50 text-gray-900">
+      <div className="flex-shrink-0 p-3 border-b border-gray-200">
         <div className="flex items-center gap-2 mb-3">
-          <TemplateIcon className="w-6 h-6 text-blue-400" />
+          <TemplateIcon className="w-6 h-6 text-blue-500" />
           <h2 className="text-lg font-bold">Component Library</h2>
         </div>
         <input
@@ -63,14 +63,14 @@ export const ComponentLibrary: React.FC = () => {
             placeholder="Search components..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white/5 border border-white/20 rounded-md p-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-white border border-gray-300 rounded-md p-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-6">
         {categoryOrder.map(category => 
             groupedComponents[category] && (
                 <div key={category}>
-                    <h3 className="text-sm font-bold text-gray-400 mb-2 px-1">{category}</h3>
+                    <h3 className="text-sm font-bold text-gray-500 mb-2 px-1">{category}</h3>
                     <div className="grid grid-cols-1 gap-2">
                         {groupedComponents[category].map(component => (
                             <ComponentItem key={component.title} component={component} />

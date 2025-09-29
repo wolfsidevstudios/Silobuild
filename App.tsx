@@ -20,7 +20,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (isChecking) {
     return (
-      <div className="h-screen w-screen bg-black flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center">
         <Spinner className="w-10 h-10" />
       </div>
     );

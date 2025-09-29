@@ -73,31 +73,31 @@ const ProjectCardActions: React.FC<{ project: Project; onEdit: () => void; onDel
 
     return (
         <div className="relative" ref={menuRef}>
-            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10">
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100">
                 <DotsHorizontalIcon />
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-md shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                     <div className="py-1">
-                        <a href={`#/project/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                        <a href={`#/project/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                             <SparklesIcon className="w-4 h-4" /> Builder
                         </a>
-                        <a href={`#/studio/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                        <a href={`#/studio/${project.id}`} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                             <CodeIcon className="w-4 h-4" /> Studio
                         </a>
-                        <button onClick={onEdit} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                        <button onClick={onEdit} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                             <EditIcon className="w-4 h-4" /> Edit
                         </button>
                         {project.githubUrl && (
-                            <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                            <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                                 <GithubIcon className="w-4 h-4" /> View on GitHub
                             </a>
                         )}
-                        <button onClick={() => downloadProjectAsZip(project)} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-white/10 w-full text-left">
+                        <button onClick={() => downloadProjectAsZip(project)} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
                             <DownloadIcon className="w-4 h-4" /> Download
                         </button>
-                        <div className="border-t border-white/10 my-1"></div>
-                        <button onClick={onDelete} className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full text-left">
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <button onClick={onDelete} className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left">
                             <TrashIcon className="w-4 h-4" /> Delete
                         </button>
                     </div>
@@ -109,15 +109,15 @@ const ProjectCardActions: React.FC<{ project: Project; onEdit: () => void; onDel
 
 
 const ProjectCard: React.FC<{ project: Project; onEdit: (project: Project) => void; onDelete: (id: string) => void }> = ({ project, onEdit, onDelete }) => (
-    <div className="bg-black/20 border border-white/10 rounded-lg p-4 flex flex-col justify-between hover:border-white/20 transition-all duration-300 group hover:shadow-2xl hover:-translate-y-1">
+    <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between hover:border-gray-300 transition-all duration-300 group hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-            <a href={`#/project/${project.id}`} className="w-12 h-12 rounded-lg bg-black/20 flex-shrink-0 flex items-center justify-center border border-white/10 group-hover:border-blue-500/50 transition-colors">
-            {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-7 h-7 text-gray-500" />}
+            <a href={`#/project/${project.id}`} className="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center border border-gray-200 group-hover:border-blue-300 transition-colors">
+            {project.appIcon ? <img src={project.appIcon} alt={`${project.name} icon`} className="w-full h-full object-cover rounded-md"/> : <FileIcon className="w-7 h-7 text-gray-400" />}
             </a>
             <div className="min-w-0">
-                <a href={`#/project/${project.id}`} className="text-lg font-semibold truncate hover:text-blue-400 transition-colors">{project.name}</a>
-                <p className="text-sm text-gray-400">
+                <a href={`#/project/${project.id}`} className="text-lg font-semibold truncate hover:text-blue-600 transition-colors">{project.name}</a>
+                <p className="text-sm text-gray-500">
                     Updated {timeAgo(project.updatedAt || project.createdAt)}
                 </p>
             </div>
@@ -127,13 +127,14 @@ const ProjectCard: React.FC<{ project: Project; onEdit: (project: Project) => vo
       
       <div className="flex items-center justify-between mt-2">
          <div className="flex items-center gap-2 text-sm">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300 capitalize">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700 capitalize">
                 {project.stack}
             </span>
-            {project.githubUrl && <GithubIcon className="w-4 h-4 text-gray-500" title="Linked to GitHub"/>}
+            {/* FIX: The GithubIcon component does not accept a `title` prop. Wrapped it in a span to provide the tooltip. */}
+            {project.githubUrl && <span title="Linked to GitHub"><GithubIcon className="w-4 h-4 text-gray-500"/></span>}
          </div>
          <div className="flex items-center gap-2 text-sm">
-            <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-white/10 rounded-full hover:bg-blue-600 transition-colors text-xs font-semibold">
+            <a href={`#/project/${project.id}`} className="px-3 py-1.5 bg-gray-100 border border-gray-200 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-xs font-semibold">
                 Open Builder
             </a>
          </div>
@@ -202,7 +203,7 @@ export const ProjectsPage: React.FC = () => {
                 <SparklesIcon />
                 New AI Project
             </a>
-             <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors duration-300">
+             <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg transition-colors duration-300">
                 <CodeIcon />
                 New Studio Project
             </button>
@@ -215,13 +216,13 @@ export const ProjectsPage: React.FC = () => {
                 placeholder="Search projects..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full max-w-sm bg-black/30 border border-white/10 rounded-lg p-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full max-w-sm bg-white border border-gray-300 rounded-lg p-2.5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
         </div>
 
       {projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-black/20 rounded-lg p-8">
-            <h2 className="text-xl font-semibold mb-2 text-white">No projects yet</h2>
+        <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/50 rounded-lg p-8">
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">No projects yet</h2>
             <p>Create a new project using the AI builder or the code studio.</p>
         </div>
       ) : (

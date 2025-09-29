@@ -38,7 +38,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
     <div className="fixed bottom-0 left-0 right-0 p-4 flex justify-center z-10">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-3xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl flex items-center p-2 gap-2 transition-all duration-300 focus-within:border-white/30"
+        className="w-full max-w-3xl bg-white/80 backdrop-blur-xl border border-gray-200 rounded-full shadow-2xl flex items-center p-2 gap-2 transition-all duration-300 focus-within:border-gray-400"
       >
         <button
           type="button"
@@ -46,7 +46,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
           className={`rounded-full px-4 py-2 flex items-center gap-2 text-sm font-semibold flex-shrink-0 transition-colors ${
             isIdeaMode
               ? 'bg-blue-500 text-white hover:bg-blue-600'
-              : 'bg-white text-gray-900 hover:bg-gray-200'
+              : 'bg-white text-gray-900 hover:bg-gray-200 border border-gray-200'
           }`}
         >
           <BoltIcon className="w-4 h-4" />
@@ -58,12 +58,12 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={placeholderText()}
           disabled={isLoading || (!isReadyToPrompt && !isAppGenerated)}
-          className="w-full bg-transparent py-2 text-white placeholder-gray-400 focus:outline-none disabled:opacity-50"
+          className="w-full bg-transparent py-2 text-gray-900 placeholder-gray-500 focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={isLoading || !prompt.trim() || (!isReadyToPrompt && !isAppGenerated)}
-          className="bg-blue-500 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed flex-shrink-0"
+          className="bg-blue-500 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
         >
           <SendIcon />
         </button>

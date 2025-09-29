@@ -89,7 +89,7 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   if (!projectData) {
     return (
-      <div className="h-screen w-screen bg-black flex items-center justify-center">
+      <div className="h-screen w-screen bg-transparent flex items-center justify-center">
         <Spinner className="w-10 h-10" />
         <p className="ml-4">Loading project...</p>
       </div>
@@ -97,7 +97,7 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
   }
 
   return (
-    <div className="h-screen w-screen bg-black text-white flex flex-col font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-transparent text-gray-900 flex flex-col font-sans overflow-hidden">
       <StudioHeader 
         projectName={projectData.name}
         onSave={handleSave}
@@ -106,11 +106,11 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
       />
       <main className="flex-1 grid grid-cols-12 overflow-hidden">
         {/* Component Library */}
-        <div className="col-span-3 h-full overflow-hidden border-r border-white/10 bg-gray-900/50">
+        <div className="col-span-3 h-full overflow-hidden border-r border-gray-200">
             <ComponentLibrary />
         </div>
         {/* Workspace */}
-        <div className="col-span-5 h-full overflow-hidden border-r border-white/10">
+        <div className="col-span-5 h-full overflow-hidden border-r border-gray-200">
             <WorkspaceView 
                 files={[...(previewFile ? [previewFile] : []), ...files.filter(f => f.path !== previewFile?.path)]}
                 onFileUpdate={handleFileUpdate}

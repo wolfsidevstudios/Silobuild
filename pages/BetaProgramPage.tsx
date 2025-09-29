@@ -3,11 +3,11 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { FlaskIcon, CheckIcon, BugIcon, PaintBrushIcon } from '../components/icons';
 
 const BetaFeature: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
-    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
-        <div className="text-blue-400 mt-1">{icon}</div>
+    <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200">
+        <div className="text-blue-500 mt-1">{icon}</div>
         <div>
-            <h4 className="font-semibold text-white">{title}</h4>
-            <p className="text-sm text-gray-400">{description}</p>
+            <h4 className="font-semibold text-gray-900">{title}</h4>
+            <p className="text-sm text-gray-600">{description}</p>
         </div>
     </div>
 );
@@ -18,22 +18,22 @@ export const BetaProgramPage: React.FC = () => {
     return (
         <div className="p-8 h-full overflow-y-auto">
             <div className="flex items-center gap-3 mb-4">
-                <FlaskIcon className="w-8 h-8 text-yellow-400" />
+                <FlaskIcon className="w-8 h-8 text-yellow-500" />
                 <h1 className="text-3xl font-bold">Beta Program</h1>
             </div>
 
             {isBetaMember ? (
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 max-w-3xl">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6 max-w-3xl">
                     <div className="flex items-center gap-3 mb-3">
-                        <CheckIcon className="w-6 h-6 text-green-400" />
-                        <h2 className="text-2xl font-semibold text-green-300">You're in the Beta Program!</h2>
+                        <CheckIcon className="w-6 h-6 text-green-600" />
+                        <h2 className="text-2xl font-semibold text-green-800">You're in the Beta Program!</h2>
                     </div>
-                    <p className="text-green-200/80 mb-6">
+                    <p className="text-green-700/80 mb-6">
                         You have early access to our newest features. You'll see new tools appear in your sidebar.
                     </p>
 
                     <div className="space-y-4 mb-6">
-                        <h3 className="text-lg font-semibold text-white">Unlocked Features:</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">Unlocked Features:</h3>
                         <BetaFeature 
                             icon={<BugIcon />}
                             title="AI Debugger"
@@ -48,15 +48,15 @@ export const BetaProgramPage: React.FC = () => {
 
                     <button
                         onClick={() => setIsBetaMember(false)}
-                        className="bg-red-500/20 text-red-300 px-4 py-2 text-sm rounded-lg font-semibold hover:bg-red-500/30 transition-colors"
+                        className="bg-red-100 text-red-700 px-4 py-2 text-sm rounded-lg font-semibold hover:bg-red-200 transition-colors"
                     >
                         Leave Beta Program
                     </button>
                 </div>
             ) : (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-6 max-w-3xl">
+                <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-3xl shadow-sm">
                     <h2 className="text-2xl font-semibold mb-3">Get Early Access to New Features</h2>
-                    <p className="text-gray-400 mb-6">
+                    <p className="text-gray-600 mb-6">
                         Join the Silo Build Beta Program to try out new tools and features before they're released to everyone.
                         Help us shape the future of AI-powered development!
                     </p>

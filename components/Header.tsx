@@ -25,7 +25,7 @@ const NavButton: React.FC<{
         ${
           isActive
             ? 'bg-blue-500 text-white'
-            : 'text-gray-300 hover:bg-white/10 hover:text-white'
+            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
         }`}
     >
       {icon}
@@ -44,13 +44,13 @@ export const Header: React.FC<HeaderProps> = ({
   project
 }) => {
   return (
-    <header className="flex justify-between items-center p-4">
-       <a href="#/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white rounded-full transition-colors duration-300">
+    <header className="flex justify-between items-center p-4 bg-white/50 backdrop-blur-md border-b border-gray-200">
+       <a href="#/dashboard" className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-full transition-colors duration-300">
           <HomeIcon />
           Dashboard
       </a>
 
-      <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-full p-1 flex items-center space-x-1 shadow-lg">
+      <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-lg">
         <NavButton
           label="Chat"
           isActive={activeMode === 'CHAT'}
@@ -74,14 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="w-auto flex items-center justify-end gap-4">
         {project?.teamId && (
             <div className="flex items-center -space-x-2" title="This is a team project">
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-gray-800 object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-gray-800 object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
-                <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-gray-800 bg-gray-600 text-xs font-bold text-white">+2</div>
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" />
+                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
+                <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-600 text-xs font-bold text-white">+2</div>
             </div>
         )}
         {isSaveEnabled && (
           isGithubLinked && onCommitAndPush ? (
-            <button onClick={onCommitAndPush} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white rounded-full transition-colors duration-300">
+            <button onClick={onCommitAndPush} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-colors duration-300">
               <GithubIcon className="w-4 h-4" />
               Commit & Push
             </button>

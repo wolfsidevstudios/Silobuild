@@ -33,11 +33,11 @@ const ViewModeToggle: React.FC<{
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 }> = ({ viewMode, setViewMode }) => (
-  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-full p-1 flex items-center space-x-1 shadow-lg mb-2">
+  <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-sm mb-2">
     <button
       onClick={() => setViewMode('CODE')}
       className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 ${
-        viewMode === 'CODE' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-white/10'
+        viewMode === 'CODE' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200'
       }`}
     >
       <CodeIcon /> Code
@@ -45,7 +45,7 @@ const ViewModeToggle: React.FC<{
     <button
       onClick={() => setViewMode('PREVIEW')}
       className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 ${
-        viewMode === 'PREVIEW' ? 'bg-blue-500 text-white' : 'text-gray-300 hover:bg-white/10'
+        viewMode === 'PREVIEW' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200'
       }`}
     >
       <EyeIcon /> Preview
@@ -59,16 +59,16 @@ const FileGenerationChecklist: React.FC<{ plan: string[]; progress: string[] }> 
   }
 
   return (
-    <div className="border-t border-white/10 mt-3 pt-3">
-      <h4 className="text-xs font-semibold text-gray-400 mb-2">Generating Files:</h4>
+    <div className="border-t border-gray-200 mt-3 pt-3">
+      <h4 className="text-xs font-semibold text-gray-500 mb-2">Generating Files:</h4>
       <ul className="space-y-1.5 text-sm">
         {plan.map(filePath => {
           const isDone = progress.includes(filePath);
           return (
-            <li key={filePath} className={`flex items-center gap-2 transition-colors duration-300 ${isDone ? 'text-gray-400' : 'text-gray-200'}`}>
+            <li key={filePath} className={`flex items-center gap-2 transition-colors duration-300 ${isDone ? 'text-gray-500' : 'text-gray-800'}`}>
               <div className="w-4 h-4 flex items-center justify-center">
                 {isDone ? (
-                  <CheckIcon className="text-green-400" />
+                  <CheckIcon className="text-green-500" />
                 ) : (
                   <Spinner className="h-4 w-4" />
                 )}
@@ -109,8 +109,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
-      <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-        <h2 className="text-lg font-bold p-4 border-b border-white/10">Chat</h2>
+      <div className="flex flex-col bg-white/50 backdrop-blur-md border border-gray-200 rounded-xl overflow-hidden shadow-lg">
+        <h2 className="text-lg font-bold p-4 border-b border-gray-200">Chat</h2>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {showStackSelector ? (
             <StackSelection onSelect={onSelectStack} />
@@ -125,7 +125,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     className={`max-w-md p-3 rounded-lg ${
                       msg.role === 'user'
                         ? 'bg-blue-600 text-white rounded-br-none'
-                        : 'bg-gray-700 text-gray-200 rounded-bl-none'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200'
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
@@ -134,7 +134,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               ))}
               {isLoading && (
                 <div className="flex items-start">
-                  <div className="max-w-md w-full p-3 rounded-lg bg-gray-700 text-gray-200 rounded-bl-none">
+                  <div className="max-w-md w-full p-3 rounded-lg bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200">
                     <div className="flex items-center gap-2">
                       <Spinner />
                       <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
@@ -145,7 +145,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               )}
               {error && (
                 <div className="flex items-start">
-                  <div className="max-w-md p-3 rounded-lg bg-red-800 text-white rounded-bl-none">
+                  <div className="max-w-md p-3 rounded-lg bg-red-100 text-red-800 rounded-bl-none border border-red-200">
                     <p className="text-sm font-semibold">Error</p>
                     <p className="text-sm">{error}</p>
                   </div>
@@ -156,8 +156,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       </div>
       {!isIdeaMode && (
-        <div className="flex flex-col bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-            <div className="flex justify-between items-center p-2 border-b border-white/10">
+        <div className="flex flex-col bg-white/50 backdrop-blur-md border border-gray-200 rounded-xl overflow-hidden shadow-lg">
+            <div className="flex justify-between items-center p-2 border-b border-gray-200">
             <h2 className="text-lg font-bold px-2">
                 {viewMode === 'CODE' ? 'Code Workspace' : 'App Preview'}
             </h2>

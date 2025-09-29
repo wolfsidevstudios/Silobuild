@@ -359,7 +359,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const isBusy = isLoading || isPushing;
 
   return (
-    <div className="h-screen w-screen bg-black text-white flex flex-col font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-transparent text-gray-900 flex flex-col font-sans overflow-hidden">
       <Header 
         activeMode={appMode} 
         setAppMode={setAppMode}
@@ -371,10 +371,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isBusy && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="flex flex-col items-center gap-2">
                 <Spinner className="h-10 w-10" />
-                <span className="text-sm text-gray-300">
+                <span className="text-sm text-gray-600">
                     {isPushing ? 'Pushing to GitHub...' : 'Generating...'}
                 </span>
             </div>

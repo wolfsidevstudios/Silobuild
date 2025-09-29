@@ -64,12 +64,12 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-gray-800 border border-white/10 rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="projectName" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1">
               Project Name
             </label>
             <input
@@ -77,16 +77,16 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               id="projectName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               App Icon (Optional)
             </label>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-black/20 rounded-lg flex items-center justify-center border border-white/10">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
                 {preview ? (
                   <img src={preview} alt="App icon preview" className="w-full h-full object-cover rounded-lg" />
                 ) : (
@@ -103,7 +103,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 type="button"
-                className="bg-white/10 px-4 py-2 text-sm rounded-md font-semibold hover:bg-white/20 transition-colors"
+                className="bg-gray-100 px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
               >
                 Upload Icon
               </button>
@@ -111,14 +111,14 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
             <p className="text-xs text-gray-500 mt-2">Recommended: 192x192 or 512x512 PNG file.</p>
           </div>
            <div>
-            <label htmlFor="team" className="block text-sm font-medium text-gray-300 mb-1">
+            <label htmlFor="team" className="block text-sm font-medium text-gray-700 mb-1">
               Team
             </label>
             <select
               id="team"
               value={teamId || ''}
               onChange={(e) => setTeamId(e.target.value || null)}
-              className="w-full bg-white/5 border border-white/10 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Personal</option>
               {teams.map(team => (
@@ -127,15 +127,15 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
             </select>
           </div>
           {!isGithubLinked && (
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-gray-200 pt-4">
                <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={createRepo}
                     onChange={(e) => setCreateRepo(e.target.checked)}
-                    className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded bg-gray-100 border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
                     <GithubIcon className="w-4 h-4" />
                     <span>Create GitHub Repository</span>
                   </div>
@@ -145,13 +145,13 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
           )}
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-white/10 transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim()}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Save
           </button>
