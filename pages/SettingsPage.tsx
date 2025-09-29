@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
-import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon, LaunchpadIcon } from '../components/icons';
+import { KeyIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, SaveIcon, NetlifyIcon } from '../components/icons';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -98,7 +98,7 @@ export const SettingsPage: React.FC = () => {
             value={localSettings.netlifyPat}
             onChange={(e) => handleChange(e, 'netlifyPat')}
             placeholder="Enter your Netlify Access Token"
-            icon={<LaunchpadIcon className="w-5 h-5 text-cyan-500" />}
+            icon={<NetlifyIcon className="w-5 h-5" />}
         />
         <div className="border-t border-gray-200 pt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-800">Service Integrations</h2>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, LaunchpadIcon, KeyIcon, SlackIcon, JiraIcon } from '../components/icons';
+import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, KeyIcon, SlackIcon, JiraIcon } from '../components/icons';
 
 const IntegrationCard: React.FC<{
     icon?: React.ReactNode;
@@ -53,12 +53,12 @@ export const IntegrationsPage: React.FC = () => {
             description="The AI can automatically scaffold projects with Supabase for database, authentication, and storage."
         />
         <IntegrationCard 
-            icon={<StripeLogo className="h-8"/>}
+            icon={<StripeLogo className="h-7"/>}
             title="Stripe"
             description="Generate applications with payment processing capabilities, including checkout flows and subscriptions."
         />
          <IntegrationCard 
-            icon={<LaunchpadIcon className="w-7 h-7 text-cyan-500"/>}
+            icon={<NetlifyIcon className="h-7"/>}
             title="Netlify"
             description="Connect your Netlify account to enable one-click deployments for your static sites and frontend apps."
         />
