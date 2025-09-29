@@ -192,7 +192,10 @@ export const LoginPage: React.FC = () => {
     <div className="bg-transparent text-gray-800 min-h-screen font-sans overflow-x-hidden">
         <header className="fixed top-0 left-0 right-0 bg-[#F8F7F4]/80 backdrop-blur-lg z-20 border-b border-gray-200">
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
-                <a href="#/" className="text-xl font-bold">Silo Build</a>
+                <a href="#/" className="flex items-center gap-2">
+                    <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
+                    <span className="text-xl font-bold">Silo Build</span>
+                </a>
                 {user ? (
                     <div className="flex items-center gap-4">
                          <a href="#/dashboard/projects" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Dashboard</a>

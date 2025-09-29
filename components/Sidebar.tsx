@@ -37,8 +37,9 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-white/50 backdrop-blur-md border-r border-gray-200 flex flex-col p-4">
       <div className="mb-4">
-        <a href="#/dashboard" className="flex items-center gap-2 text-gray-900 font-bold text-xl px-2">
-            Silo Build
+        <a href="#/dashboard" className="flex items-center gap-2 px-2">
+            <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
+            <span className="font-bold text-xl">Silo Build</span>
         </a>
       </div>
        <div className="mb-6 px-2 space-y-2">
