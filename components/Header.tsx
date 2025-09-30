@@ -71,20 +71,20 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => setAppMode('PREVIEW')}
           icon={<EyeIcon />}
         />
+        {hasWorkflow && (
+          <NavButton
+            label="Backend"
+            isActive={activeMode === 'WORKFLOW'}
+            onClick={() => setAppMode('WORKFLOW')}
+            icon={<WorkflowIcon />}
+          />
+        )}
         <NavButton
           label="Publish"
           isActive={activeMode === 'PUBLISH'}
           onClick={() => setAppMode('PUBLISH')}
           icon={<UploadIcon />}
         />
-        {hasWorkflow && (
-          <NavButton
-            label="Workflow"
-            isActive={activeMode === 'WORKFLOW'}
-            onClick={() => setAppMode('WORKFLOW')}
-            icon={<WorkflowIcon />}
-          />
-        )}
       </div>
       
       <div className="w-auto flex items-center justify-end gap-2 min-w-[200px]">
