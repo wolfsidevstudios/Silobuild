@@ -105,7 +105,7 @@ export const MobileApp: React.FC = () => {
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
     const visualProjects = projects
-        .filter(p => ['react', 'html', 'vue', 'svelte', 'mobile'].includes(p.stack) && p.previewFile)
+        .filter(p => ['react', 'html', 'vue', 'svelte', 'react-native'].includes(p.stack) && p.previewFile)
         .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
 
     if (!user) {

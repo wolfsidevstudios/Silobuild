@@ -494,8 +494,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         );
       case 'PREVIEW':
         return <PreviewView 
-          file={previewFile} 
-          multiFileCode={multiFileCode}
+          file={previewFile}
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           deployments={deployments}
           techStack={techStack}

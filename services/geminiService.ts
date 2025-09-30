@@ -273,44 +273,70 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 `;
       instruction += NODEJS_WATERMARK_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
-  } else if (techStack === 'mobile') {
-      instruction = `You are an expert mobile app developer specializing in generating fully functional, production-ready mobile applications using React and Tailwind CSS. The apps you create are web-based but MUST perfectly mimic the look and feel of a native mobile app.
+  } else if (techStack === 'react-native') {
+      instruction = `You are an expert React Native engineer specializing in generating and modifying fully functional, production-ready mobile applications using Expo.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object.
-Example: {"type": "summary", "summary": "- A social media app for sharing photos.\\n- Features a bottom navigation bar and a profile page."}
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making).
+Example: {"type": "summary", "summary": "- A simple welcome screen for a mobile app.\\n- A button that shows an alert."}
 
 Second, you MUST output a 'plan' object listing all file paths for the application.
-Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.tsx", "src/index.css"]}
+Example: {"type": "plan", "files": ["App.js", "package.json", "app.json"]}
 
 Then, for each file, output a 'file' object.
-Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
+Example: {"type": "file", "file": {"path": "App.js", "content": "import React from 'react';"}}
 
-You are NOT required to output a 'previewFile' object. The preview is handled automatically.
+Finally, you will output a 'previewFile' object containing a 'README.md' file that explains how to run the project.
+Example: {"type": "previewFile", "file": {"path": "README.md", "content": "# My React Native App\\n\\nTo run this project:..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
       if (isEditing) {
-        instruction += `\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files.`;
+          instruction += `\nYour task is to update the provided React Native application files based on the user's request. You will receive the current application files as JSON, followed by the modification request. You MUST output the complete, updated set of files.`;
       } else {
-        instruction += `\nYour task is to generate a complete, multi-file mobile-style React TypeScript application based on the user's prompt.`;
+          instruction += `\nYour task is to generate a complete, multi-file React Native Expo application based on the user's prompt.`;
       }
 
-      instruction += `\n
---- MULTI-FILE CODE INSTRUCTIONS ---
-All applications you generate MUST be Progressive Web Apps (PWAs), structured for a modern Vite-like environment.
-This requires the following files:
-1.  **\`src/index.css\`**: Must contain the Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
-2.  **\`index.html\`**: The main entry point. It must have a gray background (\`bg-gray-200\`), a \`<div id="root"></div>\`, and link to \`src/index.tsx\` as a module.
-3.  **\`src/index.tsx\`**: Mounts the main React application into the root div. It MUST import 'src/index.css'.
-4.  **\`src/App.tsx\`**: The root component. The main container inside this component MUST have a fixed maximum width (e.g., \`max-w-sm\`), be centered horizontally, and have a white background to create the mobile screen illusion.
-5.  A 'manifest.json' file and a service worker 'public/sw.js' for PWA functionality.
+      const REACT_NATIVE_README_WATERMARK_INSTRUCTION = `
+--- WATERMARK REQUIREMENT (README.md) ---
+The generated README.md file MUST end with the following line, separated by a horizontal rule:
+
+---
+*Built with Silo Build*
 `;
-    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
-    instruction += DATABASE_INSTRUCTION;
-    instruction += WORKFLOW_INSTRUCTION;
-  } else { // 'react'
+
+      instruction += `\n
+--- FILE CONTENT INSTRUCTIONS (React Native) ---
+1.  **package.json**:
+    -   Must include 'react', 'react-native', and 'expo' as dependencies. 'expo-status-bar' is also common.
+    -   Must define a 'main' entry point (e.g., "node_modules/expo/AppEntry.js").
+    -   Must include scripts like 'start', 'android', 'ios', 'web' that call the expo CLI.
+    -   Set "private": true.
+
+2.  **app.json**:
+    -   This is the Expo config file.
+    -   It must contain an 'expo' object with basic properties like 'slug', 'name', 'version', 'orientation', 'icon', 'splash', 'assetBundlePatterns', and platforms ('ios', 'android', 'web').
+
+3.  **App.js** (or App.tsx if user asks for TypeScript):
+    -   This is the root component.
+    -   Use React Native components like \`View\`, \`Text\`, \`StyleSheet\`.
+    -   Do NOT use HTML tags like \`div\` or \`p\`.
+    -   Styling MUST be done using \`StyleSheet.create()\`. Do NOT use CSS or Tailwind classes.
+
+4.  **README.md** (for the previewFile):
+    -   This file is CRITICAL and acts as the preview.
+    -   Provide clear, simple instructions on how to set up and run the app.
+    -   Must include these steps:
+        1.  \`npm install\` to install dependencies.
+        2.  \`npx expo start\` to run the development server.
+        3.  Explain that the user needs to scan the QR code with the Expo Go app on their mobile device.
+`;
+      instruction += REACT_NATIVE_README_WATERMARK_INSTRUCTION;
+      instruction += DATABASE_INSTRUCTION;
+      instruction += WORKFLOW_INSTRUCTION;
+  } else if (techStack === 'react') {
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
@@ -319,13 +345,14 @@ You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'summary' object.
 Example: {"type": "summary", "summary": "- Pomodoro Timer with 25-minute work and 5-minute break cycles."}
 
-Second, you MUST output a 'plan' object that lists all the file paths for the application.
+Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx", "src/index.css"]}
 
 Then, for each file, you will output a 'file' object containing its path and content.
 Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
-You are NOT required to output a 'previewFile' object. The preview is handled automatically from the files you generate.
+Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
@@ -336,8 +363,8 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       }
 
       instruction += `\n
---- PWA & FILE STRUCTURE INSTRUCTIONS ---
-All applications you generate MUST be Progressive Web Apps (PWAs).
+--- PWA & CUSTOMIZATION INSTRUCTIONS ('multiFileCode') ---
+All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs).
 This requires the following file structure and content:
 1.  **\`src/index.css\`**: MUST contain the three standard Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
 2.  **\`index.html\`**: The main entry point. It must contain a \`<div id="root"></div>\` and a module script tag pointing to the entry point: \`<script type="module" src="/src/index.tsx"></script>\`. It also needs a link to the manifest file.
@@ -346,6 +373,34 @@ This requires the following file structure and content:
 5.  A **\`manifest.json\`** file.
 6.  A service worker file, **\`public/sw.js\`**.
 7.  The service worker MUST be registered in a script inside **\`index.html\`**.
+
+--- PREVIEW FILE INSTRUCTIONS (React) ---
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' that can render a React application in an iframe.
+1.  Start with HTML5 boilerplate.
+2.  In <head>, include Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>.
+3.  In <head>, include these scripts for React and Babel Standalone:
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>.
+5.  At the end of the <body>, add a <script type="text/babel"> tag.
+6.  Inside this script, you MUST define all React components and render the main App component.
+    Example:
+    const App = () => {
+      const [count, setCount] = React.useState(0);
+      return (
+        <div>
+          <h1>Hello, React!</h1>
+          <p>Count: {count}</p>
+          <button onClick={() => setCount(c => c + 1)}>Increment</button>
+        </div>
+      );
+    };
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+7.  All logic and components from your multi-file version must be consolidated into this single script tag for the preview. You MUST NOT use 'import' or 'export' statements in the preview file's script.
+8.  Do NOT include PWA features (service worker, manifest) in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;

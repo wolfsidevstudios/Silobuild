@@ -123,13 +123,8 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
         <div className="col-span-4 h-full overflow-hidden">
             <PreviewView 
                 file={livePreviewFile}
-                vercelToken={settings.vercelApiKey}
-                multiFileCode={files}
-                projectName={projectData.name}
                 onToggleMacPreview={() => setIsMacPreviewVisible(true)}
                 deployments={projectData.deployments}
-                onNewDeployment={() => { /* Not implemented in studio */ }}
-                onAddSupabase={() => { /* Not implemented in studio */ }}
                 techStack={projectData.stack}
             />
         </div>

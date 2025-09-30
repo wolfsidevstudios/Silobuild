@@ -2,11 +2,9 @@ import React from 'react';
 import { GeneratedFile, Deployment, TechStack } from '../types';
 import { DesktopIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
-import { PowerfulPreview } from './PowerfulPreview';
 
 interface PreviewViewProps {
   file: GeneratedFile | null;
-  multiFileCode: GeneratedFile[];
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   techStack: TechStack | null;
@@ -14,7 +12,6 @@ interface PreviewViewProps {
 
 export const PreviewView: React.FC<PreviewViewProps> = ({ 
   file, 
-  multiFileCode, 
   onToggleMacPreview,
   deployments,
   techStack,
@@ -23,17 +20,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   const latestDeployment = deployments.length > 0 ? deployments[0] : null;
   
   const renderPreviewContent = () => {
-    if (techStack === 'react' || techStack === 'mobile') {
-        if (multiFileCode.length > 0) {
-            return <PowerfulPreview files={multiFileCode} />;
-        }
-        return (
-            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
-                <p>Generate a React app to see the live preview.</p>
-            </div>
-        );
-    }
-    
     if (file) {
       return (
         <iframe

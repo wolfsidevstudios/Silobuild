@@ -37,8 +37,8 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
         />
         <StackCard
           icon={<MobileIcon />}
-          title="Mobile (React)"
-          onClick={() => onSelect('mobile')}
+          title="React Native"
+          onClick={() => onSelect('react-native')}
         />
          <StackCard
           icon={<SvelteIcon />}
