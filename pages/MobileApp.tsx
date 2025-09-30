@@ -164,7 +164,7 @@ const MobileProjectsPage: React.FC<{ onProjectClick: (project: Project) => void 
 
 // --- BUILDER PAGE ---
 
-const MobileBuilderPage: React.FC = () => {
+const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'settings') => void; }> = ({ setView }) => {
     const [viewMode, setViewMode] = useState<'chat' | 'preview'>('chat');
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [multiFileCode, setMultiFileCode] = useState<GeneratedFile[]>([]);
@@ -240,9 +240,11 @@ const MobileBuilderPage: React.FC = () => {
 
 
     return (
-        <div className="h-full flex flex-col bg-gray-50 pb-16">
+        <div className="h-full flex flex-col bg-gray-50">
             <header className="flex-shrink-0 bg-white/80 backdrop-blur-lg border-b border-gray-200 p-2 flex items-center justify-between sticky top-0 z-10">
-                <h1 className="text-lg font-bold ml-2">New App</h1>
+                <button onClick={() => setView('projects')} className="p-2 text-gray-600 active:bg-gray-200 rounded-full">
+                    <HomeIcon />
+                </button>
                 <div className="flex items-center gap-2">
                     {isGenerated && (
                         <div className="bg-gray-100 rounded-full p-1 flex items-center space-x-1">
@@ -259,7 +261,7 @@ const MobileBuilderPage: React.FC = () => {
                 ) : (
                     <>
                         {viewMode === 'chat' && (
-                             <div className="h-full overflow-y-auto p-4 space-y-4">
+                             <div className="h-full overflow-y-auto p-4 space-y-4 pb-24">
                                 {messages.map((msg, index) => (
                                     <div key={index} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                         <div className={`max-w-xs p-3 rounded-lg shadow-sm ${msg.role === 'user' ? 'bg-black text-white rounded-br-none' : 'bg-white text-black rounded-bl-none'}`}>
@@ -283,7 +285,7 @@ const MobileBuilderPage: React.FC = () => {
                 )}
             </main>
             {techStack && viewMode === 'chat' && (
-                <div className="bg-transparent -mt-24">
+                <div className="bg-transparent">
                     <PromptInput 
                         onSend={handleSend}
                         isLoading={isLoading}
@@ -408,7 +410,7 @@ export const MobileApp: React.FC = () => {
 
     const renderView = () => {
         switch(view) {
-            case 'builder': return <MobileBuilderPage />;
+            case 'builder': return <MobileBuilderPage setView={setView} />;
             case 'settings': return <MobileSettingsPage />;
             case 'projects':
             default:
@@ -424,7 +426,7 @@ export const MobileApp: React.FC = () => {
             
             <div className={`h-full w-full ${selectedProject ? 'hidden' : 'block'}`}>
                 {renderView()}
-                <BottomNavBar activeView={view} setView={setView} />
+                {view !== 'builder' && <BottomNavBar activeView={view} setView={setView} />}
             </div>
         </div>
     );
