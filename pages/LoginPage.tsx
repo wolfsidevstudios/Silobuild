@@ -257,13 +257,18 @@ const HelpBot: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
 
 export const LoginPage: React.FC = () => {
-  const { user, login } = useAuth();
+  const { user, login, isGuest, loginAsGuest } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [isBotOpen, setIsBotOpen] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user && window.google) {
+    if (user || isGuest) {
+        window.location.hash = '#/dashboard/projects';
+        return;
+    }
+
+    if (window.google) {
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (response) => {
@@ -291,7 +296,7 @@ export const LoginPage: React.FC = () => {
       // Also show the one-tap prompt for a seamless sign-in experience for returning users
       window.google.accounts.id.prompt();
     }
-  }, [user, login]);
+  }, [user, isGuest, login]);
   
   const handleSignInClick = () => {
     if (window.google) {
@@ -341,7 +346,7 @@ export const LoginPage: React.FC = () => {
                         Describe your app, and let our AI generate production-ready code in seconds. Go from idea to deployed MVP faster than ever before.
                     </p>
                     <div className="flex justify-center">
-                        {user ? (
+                        {user || isGuest ? (
                             <div className="w-full max-w-3xl">
                                 <form onSubmit={handlePromptSubmit}>
                                     <div className="relative bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-4 backdrop-blur-lg">
@@ -365,12 +370,24 @@ export const LoginPage: React.FC = () => {
                                 </div>
                             </div>
                         ) : (
-                             <div className="w-full max-w-3xl bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-8 backdrop-blur-lg text-center">
+                             <div className="w-full max-w-sm bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-8 backdrop-blur-lg text-center">
                                 <h3 className="text-2xl font-bold mb-4">Ready to Build?</h3>
-                                <p className="text-gray-600 mb-6">Sign in with your Google account to start creating.</p>
+                                <p className="text-gray-600 mb-6">Sign in to sync your projects across devices or continue as a guest.</p>
                                 <div className="flex justify-center">
                                     <div ref={googleButtonContainerRef}></div>
                                 </div>
+                                <div className="relative flex py-5 items-center">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+                                <button
+                                    onClick={loginAsGuest}
+                                    className="w-full text-center px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+                                >
+                                    Continue as Guest
+                                </button>
+                                <p className="text-xs text-gray-500 mt-2">Projects will be saved on this device only.</p>
                             </div>
                         )}
                     </div>
@@ -726,140 +743,4 @@ export const LoginPage: React.FC = () => {
                                 Get Started
                             </a>
                         </div>
-                        <div className="border-2 border-blue-600 rounded-2xl p-8 relative shadow-2xl shadow-blue-500/10">
-                            <p className="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">MOST POPULAR</p>
-                            <h4 className="text-lg font-semibold text-blue-600">Pro</h4>
-                            <p className="text-gray-500 mt-2">For professionals and teams who need more.</p>
-                            <p className="mt-6">
-                                <span className="text-4xl font-bold">$10</span>
-                                <span className="text-gray-500"> / one-time</span>
-                            </p>
-                            <p className="text-gray-500 mt-1">Get a supporter badge!</p>
-                            <ul className="mt-8 space-y-3 text-sm text-gray-700">
-                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Everything in Hobby</li>
-                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> "PRO" Supporter Badge</li>
-                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Early access to beta features</li>
-                                <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Priority Support</li>
-                            </ul>
-                            <a href="https://pay.digitalfemsa.io/link/3dfd409c47a041e9bdc310578db6a91e" target="_blank" rel="noopener noreferrer" className="w-full mt-8 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors block text-center">
-                                Upgrade to Pro
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="get-started" className="py-20 bg-transparent border-t border-gray-200">
-                <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h3 className="text-4xl font-bold">Get Started in Seconds</h3>
-                        <p className="text-gray-600 mt-2">Just three simple steps to your first AI-generated app.</p>
-                    </div>
-                    <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
-                        <div className="text-center">
-                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                                <p className="text-2xl font-bold text-gray-600">1</p>
-                            </div>
-                            <h4 className="font-bold text-lg">Sign In</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Create an account or sign in with Google. It's free and takes just a moment.
-                            </p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                                <p className="text-2xl font-bold text-gray-600">2</p>
-                            </div>
-                            <h4 className="font-bold text-lg">Add API Key</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Add your Google Gemini API key in the settings. Your key is stored securely in your browser.
-                            </p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                                <p className="text-2xl font-bold text-gray-600">3</p>
-                            </div>
-                            <h4 className="font-bold text-lg">Start Building</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Describe your app in the prompt bar and let the AI handle the rest.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-             <section id="faq" className="py-20 bg-transparent border-t border-gray-200">
-                <div className="container mx-auto px-6 max-w-3xl">
-                    <div className="text-center mb-12">
-                        <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
-                    </div>
-                    <div className="space-y-4">
-                        <FaqItem
-                            question="Who owns the code that's generated?"
-                            answer="You do. All generated code is yours to use, modify, and distribute as you see fit, for both personal and commercial projects. We claim no ownership over the output."
-                        />
-                        <FaqItem
-                            question="Are my API keys and project data secure?"
-                            answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It never touches our servers, ensuring your information remains private and under your control."
-                        />
-                        <FaqItem
-                            question="How much does it cost to use?"
-                            answer="Silo Build itself is free to use. However, you are responsible for the costs associated with the API services you use, such as the Google Gemini API, which is accessed via your own API key."
-                        />
-                        <FaqItem
-                            question="What technology stack does it use?"
-                            answer="The AI generates standard, production-ready React applications using TypeScript. For styling, it utilizes Tailwind CSS. The generated code is clean, un-opinionated, and easy to extend."
-                        />
-                    </div>
-                </div>
-            </section>
-            
-            <section id="cta" className="py-20">
-                <div className="container mx-auto px-6">
-                    <div className="relative isolate overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-100 px-6 py-24 text-center shadow-2xl rounded-2xl sm:px-16 border border-gray-200">
-                        <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                            Ready to build your next idea?
-                        </h2>
-                        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
-                            Stop wiring boilerplate and start creating. Your next project is just a prompt away.
-                        </p>
-                        <div className="mt-10 flex items-center justify-center gap-x-6">
-                            {user ? (
-                                <a href="#/builder" className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
-                                    Go to Builder
-                                </a>
-                            ) : (
-                                <button onClick={handleSignInClick} className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
-                                    Sign In & Get Started
-                                </button>
-                            )}
-                        </div>
-                        <div className="absolute -top-24 right-0 -z-10 transform-gpu blur-3xl" aria-hidden="true">
-                            <div className="aspect-[1404/767] w-[87.75rem] bg-gradient-to-r from-[#80caff] to-[#4f46e5] opacity-10" style={{clipPath: 'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 37.9%, 73.6% 51.7%)'}}></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <footer className="py-8 text-center text-gray-500 border-t border-gray-200">
-            <div className="container mx-auto px-6">
-                <p>&copy; {new Date().getFullYear()} Silo Build. All rights reserved.</p>
-                <div className="flex justify-center gap-6 mt-4">
-                  <a href="#/terms" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Terms of Service</a>
-                  <a href="#/privacy" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Privacy Policy</a>
-                </div>
-            </div>
-        </footer>
-
-        {isBotOpen && <HelpBot onClose={() => setIsBotOpen(false)} />}
-        <button
-            onClick={() => setIsBotOpen(prev => !prev)}
-            className="fixed bottom-5 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 z-40"
-            aria-label="Toggle Help Bot"
-        >
-            {isBotOpen ? <CloseIcon className="w-7 h-7"/> : <HelpCircleIcon className="w-7 h-7" />}
-        </button>
-    </div>
-  );
-};
+                        <div className="border-2 border-blue-600 rounded-2xl p-8 relative shadow-2xl

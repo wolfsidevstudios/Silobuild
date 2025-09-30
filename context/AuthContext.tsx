@@ -4,8 +4,10 @@ import { jwtDecode } from 'jwt-decode';
 
 interface AuthContextType {
   user: DecodedCredential | null;
+  isGuest: boolean;
   login: (credential: string) => void;
   logout: () => void;
+  loginAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,14 +30,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('isGuest') === 'true';
+    }
+    return false;
+  });
+
   const login = (credential: string) => {
     try {
       const decoded: DecodedCredential = jwtDecode(credential);
       // Persist user to local storage and update state
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
+        sessionStorage.removeItem('isGuest');
       }
       setUser(decoded);
+      setIsGuest(false);
     } catch (error) {
       console.error("Failed to decode JWT:", error);
       // Clear any invalid user data
@@ -46,17 +57,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const loginAsGuest = () => {
+    if (typeof window !== 'undefined') {
+        sessionStorage.setItem('isGuest', 'true');
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+    }
+    setUser(null);
+    setIsGuest(true);
+  };
+
   const logout = () => {
     // Clear user from local storage and state
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(USER_STORAGE_KEY);
+      sessionStorage.removeItem('isGuest');
     }
     setUser(null);
+    setIsGuest(false);
     // You might also want to call google.accounts.id.disableAutoSelect() here
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, isGuest, login, logout, loginAsGuest }}>
       {children}
     </AuthContext.Provider>
   );

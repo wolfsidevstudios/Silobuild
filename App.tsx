@@ -13,7 +13,7 @@ import { MobileApp } from './pages/MobileApp';
 const isMobile = () => window.innerWidth < 768;
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (!user) {
+  if (!user && !isGuest) {
     window.location.hash = '#/';
     return null;
   }
