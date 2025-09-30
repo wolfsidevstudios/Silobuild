@@ -1,5 +1,5 @@
 {
   "name": "Silo Build",
-  "description": "An AI-powered application that generates complete, multi-file React applications from a chat prompt. It features separate views for chat, code editing, and live preview, along with a mock Vercel deployment.",
+  "description": "An AI-powered application that generates complete, multi-file React applications from a chat prompt. It features separate views for chat, code editing, and live preview, along with a mock Netlify deployment.",
   "requestFramePermissions": []
 }

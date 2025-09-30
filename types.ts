@@ -21,7 +21,6 @@ export interface ChatMessage {
 
 export interface Settings {
   geminiApiKey: string;
-  vercelApiKey: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
   stripePublicKey: string;

@@ -102,7 +102,7 @@ export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, 
                             <span>New Deployment</span>
                         </button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">Deploy your project to a live URL using Vercel.</p>
+                    <p className="text-sm text-gray-600 mb-4">Deploy your project to a live URL using Netlify.</p>
                      <div className="mt-4 border-t pt-4">
                         <h3 className="font-semibold mb-3">Deployment History</h3>
                         <DeploymentHistory deployments={deployments} />

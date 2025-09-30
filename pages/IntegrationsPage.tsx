@@ -5,7 +5,6 @@ import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, Git
 
 const initialSettings: Settings = {
   geminiApiKey: '',
-  vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',
@@ -117,18 +116,6 @@ export const IntegrationsPage: React.FC = () => {
                 value={localSettings.githubPat}
                 onChange={(e) => handleChange('githubPat', e.target.value)}
                 placeholder="Enter your GitHub PAT"
-            />
-        </IntegrationCard>
-         <IntegrationCard 
-            icon={<VercelIcon className="h-7 text-black"/>}
-            title="Vercel"
-            description="Deploy your web applications to Vercel's global edge network."
-        >
-            <SettingsInput 
-                label="Vercel Access Token"
-                value={localSettings.vercelApiKey}
-                onChange={(e) => handleChange('vercelApiKey', e.target.value)}
-                placeholder="Enter your Vercel Access Token"
             />
         </IntegrationCard>
         <IntegrationCard 

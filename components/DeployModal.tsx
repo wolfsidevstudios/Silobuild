@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Spinner } from './Spinner';
-import { VercelIcon } from './icons';
+import { NetlifyIcon } from './icons';
 
 interface DeployModalProps {
   isOpen: boolean;
@@ -42,16 +42,16 @@ export const DeployModal: React.FC<DeployModalProps> = ({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
       <div className="bg-white rounded-xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
-            <VercelIcon className="h-6" />
-            <h2 className="text-xl font-bold">Deploy to Vercel</h2>
+            <NetlifyIcon className="h-6" />
+            <h2 className="text-xl font-bold">Deploy to Netlify</h2>
         </div>
         <p className="text-sm text-gray-600 mb-6">
-            Enter your Vercel Access Token to create a new deployment. This will be a production deployment.
+            Enter your Netlify Access Token to create a new deployment. This will create a new site and deploy it.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-1">
-              Project Name
+              Site Name
             </label>
             <input
               type="text"
@@ -63,15 +63,15 @@ export const DeployModal: React.FC<DeployModalProps> = ({
             />
           </div>
            <div>
-            <label htmlFor="vercelToken" className="block text-sm font-medium text-gray-700 mb-1">
-              Vercel Access Token
+            <label htmlFor="netlifyToken" className="block text-sm font-medium text-gray-700 mb-1">
+              Netlify Personal Access Token
             </label>
             <input
               type="password"
-              id="vercelToken"
+              id="netlifyToken"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder="Vercel Access Token"
+              placeholder="Netlify Access Token"
               className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -86,7 +86,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({
             <button
               type="submit"
               disabled={!token.trim() || !projectName.trim() || isDeploying}
-              className="bg-black text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+              className="bg-teal-500 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-teal-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
             >
               {isDeploying ? <Spinner className="w-5 h-5 text-white" /> : 'Deploy'}
             </button>

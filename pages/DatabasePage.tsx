@@ -8,7 +8,6 @@ import { Spinner } from '../components/Spinner';
 // FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
-  vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',

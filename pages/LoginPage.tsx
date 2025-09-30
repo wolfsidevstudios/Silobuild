@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, NetlifyIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon } from '../components/icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
@@ -8,10 +8,8 @@ import { Spinner } from '../components/Spinner';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
-// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
-  vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',
@@ -583,11 +581,11 @@ export const LoginPage: React.FC = () => {
                         </div>
                         <div className="relative bg-[#F8F7F4] p-6 rounded-lg z-10">
                             <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4 border-4 border-[#F8F7F4]">
-                                <VercelIcon className="h-7 text-black" />
+                                <NetlifyIcon className="h-7" />
                             </div>
-                            <h4 className="font-bold text-lg">3. Deploy with Vercel</h4>
+                            <h4 className="font-bold text-lg">3. Deploy with Netlify</h4>
                             <p className="text-sm text-gray-600 mt-1">
-                                Go live instantly with our seamless Vercel deployment integration (simulation).
+                                Go live instantly with our seamless Netlify deployment integration.
                             </p>
                         </div>
                     </div>
@@ -684,7 +682,7 @@ export const LoginPage: React.FC = () => {
                         <GithubIcon className="h-8 w-8 text-gray-800" />
                         <SupabaseLogo className="h-8" />
                         <StripeLogo className="h-8 text-gray-700" />
-                        <VercelIcon className="h-7 text-black" />
+                        <NetlifyIcon className="h-7" />
                     </div>
                 </div>
             </section>

@@ -10,7 +10,6 @@ import { downloadProjectAsZip } from '../utils/projectUtils';
 // FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
-  vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',

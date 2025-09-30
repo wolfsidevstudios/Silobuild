@@ -8,7 +8,6 @@ import saveAs from 'file-saver';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
-  vercelApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',

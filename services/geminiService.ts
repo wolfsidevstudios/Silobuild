@@ -695,9 +695,9 @@ Key Features of Silo Build:
 - Users can generate multi-file applications (React, Vue, Svelte, Node.js) or single-file HTML apps.
 - It has a chat interface for prompting, a code editor, and a live preview.
 - Users can save projects, which are stored in their browser's local storage.
-- Users can connect their own API keys (Gemini, Vercel, GitHub, Supabase, Stripe) in the Settings page. Keys are also stored locally.
+- Users can connect their own API keys (Gemini, Netlify, GitHub, Supabase, Stripe) in the Settings page. Keys are also stored locally.
 - It can integrate services like Supabase or Stripe if the user's prompt mentions it and keys are provided.
-- Projects can be downloaded as a ZIP, deployed to Vercel (simulation), or pushed to a new GitHub repo.
+- Projects can be downloaded as a ZIP, deployed to Netlify, or pushed to a new GitHub repo.
 - There is a "Studio" mode for manual coding with a component library.
 - There is an "Agent Builder" for creating custom conversational AI agents.
 
