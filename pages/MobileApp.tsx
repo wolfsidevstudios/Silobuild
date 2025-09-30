@@ -246,13 +246,19 @@ const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'se
                     <HomeIcon />
                 </button>
                 <div className="flex items-center gap-2">
-                    {isGenerated && (
+                    {techStack && (
                         <div className="bg-gray-100 rounded-full p-1 flex items-center space-x-1">
                             <button onClick={() => setViewMode('chat')} className={`px-3 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${viewMode === 'chat' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}><ChatIcon className="w-4 h-4" /> Chat</button>
                             <button onClick={() => setViewMode('preview')} className={`px-3 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${viewMode === 'preview' ? 'bg-blue-500 text-white' : 'text-gray-600'}`}><EyeIcon className="w-4 h-4" /> Preview</button>
                         </div>
                     )}
-                    <button onClick={handleSave} disabled={!isGenerated} className="p-2 text-gray-600 disabled:opacity-50"><SaveIcon /></button>
+                    <button 
+                        onClick={handleSave} 
+                        disabled={!isGenerated} 
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50"
+                    >
+                        <SaveIcon className="w-4 h-4" /> Save
+                    </button>
                 </div>
             </header>
             <main className="flex-1 overflow-hidden relative">
