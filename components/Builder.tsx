@@ -129,6 +129,9 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         await generateAppStream(prompt, settings, (update) => {
           if (update.type === 'summary' && typeof update.summary === 'string') {
             setGenerationSummary(update.summary);
+          } else if (update.type === 'thoughts' && update.thoughts) {
+            const thoughtsMessage: ChatMessage = { role: 'model', content: "I've drafted a plan to build your app.", thoughts: update.thoughts };
+            setMessages(prev => [...prev, thoughtsMessage]);
           } else if (update.type === 'plan' && Array.isArray(update.files)) {
               if(!planReceived) {
                   tempFiles = [];
@@ -260,7 +263,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setCurrentProject(project);
         setMultiFileCode(project.files);
         setPreviewFile(project.previewFile);
-        setMessages([{ role: 'model', content: `Loaded project: ${project.name}` }]);
+        const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
+        if (project.thoughts) {
+          initialMessages.push({ role: 'model', content: "I've loaded my previous plan for this project.", thoughts: project.thoughts });
+        }
+        setMessages(initialMessages);
         setIsGenerated(true);
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
@@ -305,6 +312,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
     
     setIsSaveModalOpen(false);
+    
+    const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
 
     const now = new Date().toISOString();
     const projectStub: Omit<Project, 'id'> = {
@@ -319,6 +328,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         githubUrl: currentProject?.githubUrl,
         teamId: teamId || undefined,
         workflow: workflow || undefined,
+        thoughts: lastThoughts || currentProject?.thoughts,
     };
 
     let projectToSave: Project;

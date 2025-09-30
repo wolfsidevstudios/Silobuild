@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable, Project } from '../types';
-import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, DownloadIcon } from './icons';
+import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, DownloadIcon, SparklesIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
 import { StackSelection } from './StackSelection';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 import { CredentialRequestForm } from './CredentialRequestForm';
+import { ThoughtsModal } from './ThoughtsModal';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -148,6 +149,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   techStack,
   onCredentialSubmit,
 }) => {
+  const [modalThoughts, setModalThoughts] = useState<string | null>(null);
+
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
       <div className={`flex flex-col overflow-hidden ${isIdeaMode ? 'col-span-1' : 'md:col-span-2'}`}>
@@ -171,6 +174,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
+                    {msg.thoughts && (
+                      <div className="mt-3 border-t border-gray-200 pt-3">
+                        <button
+                          onClick={() => setModalThoughts(msg.thoughts ?? null)}
+                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full transition-colors"
+                        >
+                          <SparklesIcon className="w-4 h-4" />
+                          View Plan
+                        </button>
+                      </div>
+                    )}
                     {msg.schema && <DatabaseSchemaView schema={msg.schema} />}
                     {msg.credentialRequest && (
                       <CredentialRequestForm 
@@ -229,6 +243,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
         </div>
       )}
+      {modalThoughts && <ThoughtsModal thoughts={modalThoughts} onClose={() => setModalThoughts(null)} />}
     </div>
   );
 };

@@ -31,6 +31,7 @@ export interface ChatMessage {
   content: string;
   schema?: AiGeneratedTable;
   credentialRequest?: CredentialRequest;
+  thoughts?: string;
 }
 
 export interface Settings {
@@ -75,6 +76,7 @@ export interface Project {
   teamId?: string;
   agentConfig?: AgentConfig;
   workflow?: WorkflowDefinition;
+  thoughts?: string;
 }
 
 export interface DecodedCredential {

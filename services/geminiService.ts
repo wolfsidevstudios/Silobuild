@@ -83,7 +83,10 @@ You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
 Example: {"type": "summary", "summary": "- A simple landing page\\n- Includes a header, feature section, and footer."}
 
-Second, you MUST output a 'plan' object that lists the single file path: "index.html".
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan for how you will build the application. Describe the HTML structure, the Tailwind CSS classes you'll use, and any JavaScript logic.
+Example: {"type": "thoughts", "thoughts": "1. I'll start with a standard HTML5 boilerplate... 2. The main content will be in a <main> tag with a dark background... 3. JavaScript for the counter will be in a <script> tag..."}
+
+Third, you MUST output a 'plan' object that lists the single file path: "index.html".
 Example: {"type": "plan", "files": ["index.html"]}
 
 Then, you will output one 'file' object for "index.html".
@@ -110,10 +113,13 @@ The code you generate MUST be complete and implement all requested features. Do 
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making).
 Example: {"type": "summary", "summary": "- User authentication with login/logout\\n- A dashboard page to display user data."}
 
-Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan. Describe the component hierarchy, state management strategy (e.g., using 'ref' or 'reactive'), props, and logic.
+Example: {"type": "thoughts", "thoughts": "1. Main component will be App.vue... 2. I will create a reactive 'user' state... 3. A HelloWorld.vue component will receive a 'msg' prop..."}
+
+Third, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.vue", "src/components/HelloWorld.vue"]}
 
 Then, for each file, output a 'file' object.
@@ -183,10 +189,13 @@ The code you generate MUST be complete and implement all requested features. Do 
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making).
 Example: {"type": "summary", "summary": "- Interactive counter component\\n- State management with Svelte 5 runes."}
 
-Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan. Describe the component hierarchy, state management strategy (e.g., using '$state'), props, and logic.
+Example: {"type": "thoughts", "thoughts": "1. App.svelte will be the main component... 2. I will use '$state' for the counter variable... 3. A separate Counter.svelte component will be created..."}
+
+Third, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "src/main.ts", "src/App.svelte", "src/lib/Counter.svelte"]}
 
 Then, for each file, output a 'file' object.
@@ -246,10 +255,13 @@ The code you generate MUST be complete and ready to run. Do not use placeholder 
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the API you are about to generate (or the changes you are making), outlining the key endpoints in a bulleted list.
+First, you MUST output a 'summary' object with a brief, user-friendly description of the API you are about to generate (or the changes you are making).
 Example: {"type": "summary", "summary": "- GET /api/items to fetch all items\\n- POST /api/items to create a new item."}
 
-Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan. Describe the file structure, API endpoints, data handling (e.g., in-memory array), and middleware.
+Example: {"type": "thoughts", "thoughts": "1. I will set up an Express server in index.js... 2. I'll use an in-memory array to store 'items'... 3. The POST /api/items endpoint will handle adding new items..."}
+
+Third, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["package.json", "index.js"]}
 
 Then, for each file, output a 'file' object.
@@ -301,7 +313,10 @@ You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making).
 Example: {"type": "summary", "summary": "- A simple welcome screen for a mobile app.\\n- A button that shows an alert."}
 
-Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan. Describe the component hierarchy, state management, styling with StyleSheet, and logic.
+Example: {"type": "thoughts", "thoughts": "1. The main component will be App.tsx... 2. I'll use StyleSheet.create for all styles... 3. State for a counter will be managed with useState..."}
+
+Third, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["App.tsx", "package.json", "README.md"]}
 
 Then, for each file, output a 'file' object.
@@ -381,7 +396,10 @@ You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'summary' object.
 Example: {"type": "summary", "summary": "- Pomodoro Timer with 25-minute work and 5-minute break cycles."}
 
-Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan. Describe the component hierarchy, state management strategy (e.g., using useState, useEffect), props, and any helper functions.
+Example: {"type": "thoughts", "thoughts": "1. I'll create a main App component... 2. The timer's remaining time will be a state variable managed with useState... 3. I'll use a useEffect hook with a setInterval to handle the countdown logic..."}
+
+Third, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
 Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx", "src/index.css"]}
 
 Then, for each file, you will output a 'file' object containing its path and content.
