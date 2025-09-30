@@ -19,6 +19,7 @@ interface ChatViewProps {
   generationSummary: string | null;
   isIdeaMode: boolean;
   vercelToken: string;
+  netlifyToken: string;
   onFileUpdate: (path: string, content: string) => void;
   onFileDelete: (path: string) => void;
   onFileAdd: (path: string) => boolean;
@@ -139,6 +140,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   generationSummary,
   isIdeaMode,
   vercelToken,
+  netlifyToken,
   onFileUpdate,
   onFileDelete,
   onFileAdd,
@@ -220,6 +222,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <PreviewView 
                   file={previewFile} 
                   vercelToken={vercelToken}
+                  netlifyToken={netlifyToken}
                   multiFileCode={multiFileCode}
                   projectName={projectName}
                   onToggleMacPreview={onToggleMacPreview}

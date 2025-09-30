@@ -3,10 +3,12 @@ import { GeneratedFile, Deployment } from '../types';
 import { DeployModal } from './DeployModal';
 import { DesktopIcon, UploadIcon, DatabaseIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
+import { deployToNetlify } from '../services/netlifyService';
 
 interface PreviewViewProps {
   file: GeneratedFile | null;
   vercelToken: string;
+  netlifyToken: string;
   multiFileCode: GeneratedFile[];
   projectName?: string;
   onToggleMacPreview: () => void;
@@ -18,6 +20,7 @@ interface PreviewViewProps {
 export const PreviewView: React.FC<PreviewViewProps> = ({ 
   file, 
   vercelToken, 
+  netlifyToken,
   multiFileCode, 
   projectName, 
   onToggleMacPreview,
@@ -29,9 +32,9 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
-  const handleDeploy = async (token: string, newProjectName: string) => {
+  const handleDeploy = async (provider: 'vercel' | 'netlify', token: string, newProjectName: string) => {
     if (!token || multiFileCode.length === 0) {
-      setDeploymentError("Vercel token is missing or there are no files to deploy.");
+      setDeploymentError(`${provider === 'vercel' ? 'Vercel' : 'Netlify'} token is missing or there are no files to deploy.`);
       return;
     }
 
@@ -39,53 +42,61 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     setDeploymentError(null);
 
     try {
-      const filesForApi = multiFileCode.map(({ path, content }) => ({
-        file: path,
-        data: content,
-      }));
+      let deploymentUrl: string;
 
-      const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+      if (provider === 'netlify') {
+          const result = await deployToNetlify(token, newProjectName, multiFileCode);
+          deploymentUrl = result.url;
+      } else { // Vercel
+          const filesForApi = multiFileCode.map(({ path, content }) => ({
+            file: path,
+            data: content,
+          }));
 
-      filesForApi.push({
-        file: 'package.json',
-        data: JSON.stringify({
-          name: sanitizedProjectName,
-          version: '0.1.0',
-          private: true,
-        }),
-      });
+          const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
 
-      const response = await fetch('https://api.vercel.com/v13/deployments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: sanitizedProjectName,
-          files: filesForApi,
-          projectSettings: {
-            framework: null, // Let Vercel auto-detect
-          },
-          target: 'production',
-        }),
-      });
+          filesForApi.push({
+            file: 'package.json',
+            data: JSON.stringify({
+              name: sanitizedProjectName,
+              version: '0.1.0',
+              private: true,
+            }),
+          });
 
-      const result = await response.json();
+          const response = await fetch('https://api.vercel.com/v13/deployments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              name: sanitizedProjectName,
+              files: filesForApi,
+              projectSettings: {
+                framework: null, // Let Vercel auto-detect
+              },
+              target: 'production',
+            }),
+          });
 
-      if (!response.ok) {
-        throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
+          }
+          deploymentUrl = `https://${result.url}`;
       }
-
+      
       const newDeployment: Deployment = {
-        url: `https://${result.url}`,
+        url: deploymentUrl,
         timestamp: new Date().toISOString(),
       };
       onNewDeployment(newDeployment);
       setIsDeployModalOpen(false);
 
     } catch (error) {
-      console.error("Vercel deployment failed:", error);
+      console.error(`${provider} deployment failed:`, error);
       const message = error instanceof Error ? error.message : "An unknown error occurred during deployment.";
       setDeploymentError(`Deployment failed: ${message}`);
     } finally {
@@ -195,6 +206,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         isDeploying={isDeploying}
         initialProjectName={projectName}
         initialToken={vercelToken}
+        initialNetlifyToken={netlifyToken}
         deploymentError={deploymentError}
       />
     </div>
