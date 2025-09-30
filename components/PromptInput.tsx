@@ -45,7 +45,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
     if (isAppGenerated) {
       return "Describe a change to your app...";
     }
-    return "Ask Silo...";
+    return "Ask Codepilot...";
   };
 
   return (

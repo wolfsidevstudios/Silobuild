@@ -39,7 +39,7 @@ export const Sidebar: React.FC = () => {
       <div className="mb-4">
         <a href="#/dashboard" className="flex items-center gap-2 px-2">
             <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
-            <span className="font-bold text-xl">Silo Build</span>
+            <span className="font-bold text-xl">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded-full">2.0</span></span>
         </a>
       </div>
        <div className="mb-6 px-2 space-y-2">
@@ -47,8 +47,8 @@ export const Sidebar: React.FC = () => {
           href="#/builder" 
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full transition-colors duration-300"
         >
-            <PlusIcon />
-            New AI App
+            <SparklesIcon />
+            New App with Codepilot
         </a>
         <a 
           href="#/agent-builder" 

@@ -5,6 +5,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
+import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -25,86 +26,6 @@ declare global {
   }
 }
 
-const kanbanPreview = `
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 p-2 sm:p-4 font-sans text-white overflow-hidden select-none">
-  <div class="grid grid-cols-3 gap-2 h-full">
-    <div class="bg-gray-800 rounded-lg p-2">
-      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">To Do</h3>
-      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs mb-2">Design new landing page</div>
-      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs">Write documentation</div>
-    </div>
-    <div class="bg-gray-800 rounded-lg p-2">
-      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">In Progress</h3>
-      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs">Develop API endpoints</div>
-    </div>
-    <div class="bg-gray-800 rounded-lg p-2">
-      <h3 class="font-bold text-xs sm:text-sm mb-2 text-gray-300">Done</h3>
-      <div class="bg-gray-700 p-2 rounded-md text-[10px] sm:text-xs line-through opacity-60">Initial project setup</div>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-const musicPlayerPreview = `
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gradient-to-br from-purple-900 to-indigo-900 p-4 font-sans text-white overflow-hidden flex items-center justify-center select-none">
-  <div class="bg-black/20 backdrop-blur-lg rounded-xl p-4 w-full max-w-xs text-center border border-white/10">
-    <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=300&q=80" class="w-full aspect-square rounded-md shadow-lg mb-4" />
-    <h3 class="font-bold">Starlight Echoes</h3>
-    <p class="text-xs text-gray-400">Synthwave Rider</p>
-    <div class="w-full h-1 bg-white/20 rounded-full mt-4"><div class="w-1/3 h-1 bg-white rounded-full"></div></div>
-    <div class="flex justify-center items-center gap-6 mt-4 text-2xl">
-      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14.17V5.83a1 1 0 00-1.555-.832L4.12 8.168a1 1 0 000 1.664l4.325 3.001zM11 5.83a1 1 0 011.555-.832l4.325 3.001a1 1 0 010 1.664l-4.325 3.001A1 1 0 0111 14.17V5.83z"></path></svg>
-      <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"></path></svg>
-      <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 5.168A1 1 0 0010 5.83v8.34a1 1 0 001.555.832l4.325-3.001a1 1 0 000-1.664l-4.325-3.001zM9 5.83a1 1 0 00-1.555-.832L3.12 8.168a1 1 0 000 1.664l4.325 3.001A1 1 0 009 14.17V5.83z"></path></svg>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-const dashboardPreview = `
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 p-2 sm:p-4 font-sans text-gray-800 overflow-hidden select-none">
-  <div class="grid grid-cols-2 gap-2 sm:gap-4">
-    <div class="bg-white p-3 rounded-lg shadow-sm">
-      <p class="text-[10px] sm:text-xs text-gray-500">Revenue</p>
-      <p class="text-lg sm:text-xl font-bold">$12,450</p>
-    </div>
-    <div class="bg-white p-3 rounded-lg shadow-sm">
-      <p class="text-[10px] sm:text-xs text-gray-500">New Users</p>
-      <p class="text-lg sm:text-xl font-bold">142</p>
-    </div>
-  </div>
-  <div class="bg-white p-3 rounded-lg shadow-sm mt-2 sm:mt-4">
-    <p class="text-xs sm:text-sm font-semibold mb-2">Sales Over Time</p>
-    <div class="flex items-end gap-2 h-24">
-      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 40%"></div>
-      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 60%"></div>
-      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 50%"></div>
-      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 80%"></div>
-      <div class="w-1/6 bg-blue-500 rounded-t-sm" style="height: 75%"></div>
-      <div class="w-1/6 bg-blue-400 rounded-t-sm" style="height: 90%"></div>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
     <div className="relative p-6 rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-blue-300 hover:bg-white hover:-translate-y-1">
         <div className="flex items-start gap-4">
@@ -115,19 +36,6 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
                 <h4 className="text-lg font-bold text-gray-900">{title}</h4>
                 <p className="text-gray-600 text-sm mt-1">{description}</p>
              </div>
-        </div>
-    </div>
-);
-
-const TestimonialCard: React.FC<{ quote: string; name: string; title: string; avatar: string }> = ({ quote, name, title, avatar }) => (
-    <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <p className="text-gray-700 mb-4 italic">"{quote}"</p>
-        <div className="flex items-center gap-3">
-            <img src={avatar} alt={name} className="w-10 h-10 rounded-full" />
-            <div>
-                <p className="font-semibold text-gray-900">{name}</p>
-                <p className="text-sm text-gray-500">{title}</p>
-            </div>
         </div>
     </div>
 );
@@ -316,7 +224,7 @@ export const LoginPage: React.FC = () => {
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
                 <a href="#/" className="flex items-center gap-2">
                     <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
-                    <span className="text-xl font-bold">Silo Build</span>
+                    <span className="text-xl font-bold">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">2.0</span></span>
                 </a>
                 {user ? (
                     <div className="flex items-center gap-4">
@@ -338,21 +246,22 @@ export const LoginPage: React.FC = () => {
              <section className="pt-32 pb-20 text-center relative overflow-hidden">
                 <div className="container mx-auto px-6 relative">
                     <h1 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-gray-900 to-gray-600 leading-tight">
-                        From Prompt to Product, Instantly.
+                        Build with Codepilot v1.
                     </h1>
+                    <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-700 leading-tight">Powerful apps from a single prompt.</h2>
                     <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-10">
-                        Describe your app, and let our AI generate production-ready code in seconds. Go from idea to deployed MVP faster than ever before.
+                        Describe your app, and let Codepilot v1, our next-generation AI agent, generate complete, production-ready code in seconds. Experience a new era of AI-powered development.
                     </p>
                     <div className="flex justify-center">
                         {user || isGuest ? (
                             <div className="w-full max-w-3xl">
                                 <form onSubmit={handlePromptSubmit}>
                                     <div className="relative bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-4 backdrop-blur-lg">
-                                        <label className="text-left block text-sm font-medium text-gray-700 mb-2 px-2">Ask Silo Build to build a prototype of...</label>
+                                        <label className="text-left block text-sm font-medium text-gray-700 mb-2 px-2">Ask Codepilot to build a prototype of...</label>
                                         <textarea
                                             value={prompt}
                                             onChange={(e) => setPrompt(e.target.value)}
-                                            placeholder="a pomodoro timer with a clean, minimalist interface and a task list"
+                                            placeholder="a modern SaaS dashboard with a sidebar, charts, and a data table for user management"
                                             className="w-full h-24 bg-transparent resize-none text-gray-900 text-base placeholder-gray-500 focus:outline-none p-2"
                                         />
                                         <button type="submit" disabled={!prompt.trim()} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -362,9 +271,9 @@ export const LoginPage: React.FC = () => {
                                 </form>
                                 <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
                                     <span className="text-gray-500">Try one →</span>
-                                    <button onClick={() => setPrompt('a landing page for a new SaaS product')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Landing page</button>
-                                    <button onClick={() => setPrompt('a personal portfolio website to showcase my projects')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Personal website</button>
-                                    <button onClick={() => setPrompt('a SaaS app for tracking habits')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">SaaS App</button>
+                                    <button onClick={() => setPrompt('a kanban board with draggable cards and multiple columns')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
+                                    <button onClick={() => setPrompt('a movie search app using the TMDB API')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Movie Finder</button>
+                                    <button onClick={() => setPrompt('a real-time chat application')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Chat App</button>
                                 </div>
                             </div>
                         ) : (
@@ -392,47 +301,9 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-             <section id="showcase" className="py-20 bg-transparent border-y border-gray-200">
+             <section id="showcase" className="py-20 bg-transparent">
                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold">Built with Silo Build</h2>
-                        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">From simple utilities to complex dashboards, generate functional prototypes in minutes.</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
-                            <div className="aspect-video bg-gray-900 rounded-md overflow-hidden flex-1">
-                                <iframe
-                                    srcDoc={kanbanPreview}
-                                    title="Kanban Board Preview"
-                                    className="w-full h-full border-0"
-                                    sandbox="allow-scripts"
-                                />
-                            </div>
-                            <h3 className="font-semibold text-center text-gray-700 mt-3">Kanban Board</h3>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
-                           <div className="aspect-video bg-indigo-900 rounded-md overflow-hidden flex-1">
-                                <iframe
-                                    srcDoc={musicPlayerPreview}
-                                    title="Music Player Preview"
-                                    className="w-full h-full border-0"
-                                    sandbox="allow-scripts"
-                                />
-                            </div>
-                            <h3 className="font-semibold text-center text-gray-700 mt-3">Music Player</h3>
-                        </div>
-                         <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md flex flex-col">
-                           <div className="aspect-video bg-slate-100 rounded-md overflow-hidden flex-1">
-                                <iframe
-                                    srcDoc={dashboardPreview}
-                                    title="SaaS Dashboard Preview"
-                                    className="w-full h-full border-0"
-                                    sandbox="allow-scripts"
-                                />
-                            </div>
-                             <h3 className="font-semibold text-center text-gray-700 mt-3">SaaS Dashboard</h3>
-                        </div>
-                    </div>
+                  <MotionPreview />
                 </div>
             </section>
 
@@ -687,31 +558,25 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="testimonials" className="py-20 bg-transparent border-y border-gray-200">
-                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h3 className="text-4xl font-bold">Loved by Developers</h3>
-                        <p className="text-gray-600 mt-2">See what others are saying about the AI App Builder.</p>
-                    </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                        <TestimonialCard 
-                            quote="This tool is a game-changer. I went from a rough idea to a deployed PWA in an afternoon. The conversational edits feel like magic."
-                            name="Sarah L."
-                            title="Indie Developer"
-                            avatar="https://randomuser.me/api/portraits/women/44.jpg"
-                        />
-                         <TestimonialCard 
-                            quote="As a designer who codes, this helps me bridge the gap beautifully. I can describe UI/UX concepts and get functional React components instantly."
-                            name="Mike R."
-                            title="UI/UX Designer"
-                            avatar="https://randomuser.me/api/portraits/men/32.jpg"
-                        />
-                         <TestimonialCard 
-                            quote="The boilerplate code it generates is surprisingly clean. It sets up PWAs and integrates with Supabase flawlessly, saving hours of setup time."
-                            name="Jessica P."
-                            title="Frontend Engineer"
-                            avatar="https://randomuser.me/api/portraits/women/65.jpg"
-                        />
+            <section id="dear-silo" className="py-20 bg-gray-50 border-y border-gray-200">
+                <div className="container mx-auto px-6">
+                    <div className="max-w-3xl mx-auto">
+                        <h2 className="text-center text-4xl font-bold text-gray-900 mb-4">A Letter to Silo</h2>
+                        <div className="bg-white p-8 sm:p-12 rounded-lg border border-gray-200 shadow-xl mt-10">
+                            <p className="text-gray-700 leading-relaxed mb-6">Dear Silo Build Team,</p>
+                            <p className="text-gray-700 leading-relaxed mb-6">
+                                I had an idea for a small non-profit app to connect local volunteers with community gardens. I'm not a professional developer, and the thought of spending months learning or hiring someone was daunting. I stumbled upon Silo Build, and honestly, I was skeptical.
+                            </p>
+                            <p className="text-gray-700 leading-relaxed mb-6">
+                                Within a single weekend, I went from a simple prompt—"build an app to list community gardens and let volunteers sign up for events"—to a fully functional, deployed prototype. I was able to show this to local community leaders, and the visual, working app made all the difference. We secured a small grant based on that prototype alone.
+                            </p>
+                            <p className="text-gray-700 leading-relaxed mb-8">
+                                Your tool didn't just build an app for me; it brought my project to life when it was just an idea. You've empowered someone outside the traditional tech world to make a real impact. Thank you for that.
+                            </p>
+                            <p className="text-gray-800 font-semibold">Sincerely,</p>
+                            <p className="font-serif italic text-xl text-gray-900">Alex Johnson</p>
+                            <p className="text-sm text-gray-600">Founder, GardenConnect</p>
+                        </div>
                     </div>
                 </div>
             </section>

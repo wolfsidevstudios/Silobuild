@@ -148,7 +148,6 @@ export const MotionPreview: React.FC = () => {
     const currentStep = animationSteps[stepIndex];
 
     useEffect(() => {
-        // FIX: Replaced NodeJS.Timeout with ReturnType<typeof setTimeout> for browser compatibility.
         let timer: ReturnType<typeof setTimeout>;
         if (phase === 'thinking') {
             timer = setTimeout(() => setPhase('coding'), 1000);
