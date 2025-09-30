@@ -26,13 +26,7 @@ interface ChatViewProps {
   onSelectStack: (stack: TechStack) => void;
   onToggleMacPreview: () => void;
   deployments: Deployment[];
-  onAddSupabase: () => void;
   techStack: TechStack | null;
-  // New props for controls
-  currentProject: Project | null;
-  onDeployClick: () => void;
-  onSaveClick: () => void;
-  onCommitAndPush?: () => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -149,32 +143,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onSelectStack,
   onToggleMacPreview,
   deployments,
-  onAddSupabase,
   techStack,
-  currentProject,
-  onDeployClick,
-  onSaveClick,
-  onCommitAndPush,
 }) => {
-
-   const handleDownload = () => {
-    if (!currentProject?.name) {
-        alert("Please save the project first to give it a name.");
-        return;
-    }
-    const projectToDownload: Project = {
-        id: currentProject.id,
-        name: currentProject.name,
-        createdAt: currentProject.createdAt,
-        files: multiFileCode,
-        previewFile: previewFile,
-        stack: techStack!,
-        deployments: deployments,
-    };
-    downloadProjectAsZip(projectToDownload);
-  };
-
-
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
       <div className={`flex flex-col overflow-hidden ${isIdeaMode ? 'col-span-1' : 'md:col-span-2'}`}>
@@ -230,22 +200,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
         <div className="md:col-span-3 flex flex-col bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-lg">
             <div className="flex justify-between items-center p-2.5 border-b border-gray-200">
                 <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
-                <div className="flex items-center gap-2">
-                    <button onClick={onAddSupabase} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
-                        <DatabaseIcon className="w-4 h-4 text-green-500" /> Connect Supabase
-                    </button>
-                    {currentProject?.githubUrl ? (
-                        <button onClick={onCommitAndPush} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
-                            <GithubIcon className="w-4 h-4" /> Commit Changes
-                        </button>
-                    ) : (
-                         <button onClick={onSaveClick} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
-                           <GithubIcon className="w-4 h-4" /> Connect GitHub
-                        </button>
-                    )}
-                    <button onClick={handleDownload} disabled={!currentProject} className="px-4 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50">Download</button>
-                    <button onClick={onDeployClick} className="px-4 py-1.5 text-xs font-medium bg-black hover:bg-gray-800 text-white rounded-full transition-colors">Deploy</button>
-                </div>
             </div>
             <div className="flex-1 overflow-hidden">
             {viewMode === 'CODE' ? (

@@ -11,9 +11,10 @@ import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
-import { showLocalNotification } from '../utils/projectUtils';
+import { showLocalNotification, downloadProjectAsZip } from '../utils/projectUtils';
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 import { DeployModal } from './DeployModal';
+import { PublishView } from './PublishView';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -440,6 +441,19 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
   };
 
+  const handleDownload = () => {
+    if (!currentProject) {
+        alert("Please save the project first to give it a name.");
+        return;
+    }
+    const projectToDownload: Project = {
+        ...currentProject,
+        files: multiFileCode,
+        previewFile: previewFile,
+    };
+    downloadProjectAsZip(projectToDownload);
+  };
+
 
   const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
 
@@ -466,12 +480,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onSelectStack={handleSelectStack}
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
             deployments={deployments}
-            onAddSupabase={handleAddSupabase}
             techStack={techStack}
-            currentProject={currentProject}
-            onDeployClick={() => setIsDeployModalOpen(true)}
-            onSaveClick={() => setIsSaveModalOpen(true)}
-            onCommitAndPush={handleCommitAndPush}
           />
         );
       case 'CODE':
@@ -490,6 +499,15 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           deployments={deployments}
           techStack={techStack}
+        />;
+      case 'PUBLISH':
+        return <PublishView 
+            project={currentProject}
+            deployments={deployments}
+            onCommitAndPush={handleCommitAndPush}
+            onDeployClick={() => setIsDeployModalOpen(true)}
+            onConnectGitHub={() => setIsSaveModalOpen(true)}
+            isPushing={isPushing}
         />;
       case 'WORKFLOW':
         return workflow ? <WorkflowBuilderPage workflow={workflow} /> : 
@@ -510,6 +528,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setAppMode={setAppMode}
         project={currentProject}
         hasWorkflow={!!workflow}
+        onAddSupabase={handleAddSupabase}
+        onConnectGitHub={() => setIsSaveModalOpen(true)}
+        onDownload={handleDownload}
+        isGithubConnected={!!currentProject?.githubUrl}
       />
       <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isPushing && (

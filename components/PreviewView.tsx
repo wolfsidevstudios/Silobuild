@@ -89,34 +89,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
             )}
         </div>
       </div>
-
-      {deployments.length > 0 && (
-            <div className="flex-shrink-0 flex flex-col border border-gray-200 bg-white shadow-md rounded-lg p-4">
-              <h4 className="text-base font-semibold mb-4 text-center text-gray-700">Deployment History</h4>
-              <ul className="space-y-3 max-w-lg mx-auto">
-                  {deployments.map((dep) => (
-                    <li key={dep.url} className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center text-sm">
-                      <div>
-                        <a href={dep.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-mono truncate">
-                          {dep.url}
-                        </a>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {timeAgo(dep.timestamp)}
-                        </p>
-                      </div>
-                      <a
-                        href={dep.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-gray-200 text-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-gray-300 transition-colors"
-                      >
-                        Open
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-            </div>
-          )}
     </div>
   );
 };

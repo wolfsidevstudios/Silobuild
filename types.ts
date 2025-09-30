@@ -2,7 +2,7 @@
 // This file should only contain type exports, not React components.
 // This resolves numerous compilation errors across the project caused by missing or incorrect types.
 
-export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW';
+export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW' | 'PUBLISH';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 

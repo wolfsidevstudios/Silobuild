@@ -1,12 +1,16 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   project?: Project | null;
   hasWorkflow: boolean;
+  onAddSupabase: () => void;
+  onConnectGitHub: () => void;
+  onDownload: () => void;
+  isGithubConnected: boolean;
 }
 
 const NavButton: React.FC<{
@@ -35,7 +39,11 @@ export const Header: React.FC<HeaderProps> = ({
   activeMode,
   setAppMode,
   project,
-  hasWorkflow
+  hasWorkflow,
+  onAddSupabase,
+  onConnectGitHub,
+  onDownload,
+  isGithubConnected,
 }) => {
   return (
     <header className="flex justify-between items-center p-4 bg-white/50 backdrop-blur-md border-b border-gray-200">
@@ -63,6 +71,12 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => setAppMode('PREVIEW')}
           icon={<EyeIcon />}
         />
+        <NavButton
+          label="Publish"
+          isActive={activeMode === 'PUBLISH'}
+          onClick={() => setAppMode('PUBLISH')}
+          icon={<UploadIcon />}
+        />
         {hasWorkflow && (
           <NavButton
             label="Workflow"
@@ -73,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
       
-      <div className="w-auto flex items-center justify-end gap-4 min-w-[200px]">
+      <div className="w-auto flex items-center justify-end gap-2 min-w-[200px]">
         {project?.teamId && (
             <div className="flex items-center -space-x-2" title="This is a team project">
                 <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" />
@@ -81,6 +95,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-600 text-xs font-bold text-white">+2</div>
             </div>
         )}
+         <button onClick={onAddSupabase} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
+            <DatabaseIcon className="w-4 h-4 text-green-500" /> Connect Supabase
+        </button>
+        {!isGithubConnected && (
+            <button onClick={onConnectGitHub} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
+                <GithubIcon className="w-4 h-4" /> Connect GitHub
+            </button>
+        )}
+        <button onClick={onDownload} disabled={!project} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50">
+            <DownloadIcon className="w-4 h-4" /> Download
+        </button>
       </div>
     </header>
   );
