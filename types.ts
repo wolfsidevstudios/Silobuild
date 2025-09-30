@@ -13,10 +13,22 @@ export interface GeneratedFile {
   content: string;
 }
 
+export interface CredentialField {
+  key: string; // e.g., 'apiKey', 'apiSecret'
+  label: string; // e.g., 'OpenWeather API Key'
+  description: string; // e.g., 'Your API key from OpenWeatherMap'
+}
+
+export interface CredentialRequest {
+  toolName: string; // e.g., 'OpenWeatherMap'
+  fields: CredentialField[];
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   content: string;
   schema?: AiGeneratedTable;
+  credentialRequest?: CredentialRequest;
 }
 
 export interface Settings {

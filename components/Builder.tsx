@@ -60,13 +60,16 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
+  const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
 
 
-  const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack) => {
+  const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>) => {
     if (!prompt.trim()) return;
 
     const userMessage: ChatMessage = { role: 'user', content: prompt };
-    setMessages(prev => [...prev, userMessage]);
+    if (!customCredentials) {
+       setMessages(prev => [...prev, userMessage]);
+    }
     setIsLoading(true);
     setError(null);
     
@@ -116,6 +119,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       let appName = currentProject?.name;
       const appIcon = currentProject?.appIcon;
 
+      // FIX: Moved wasCredentialRequestHandled outside the try block to make it accessible in the finally block.
+      let wasCredentialRequestHandled = false;
       try {
         let planReceived = false;
         let tempFiles: GeneratedFile[] = [];
@@ -174,8 +179,18 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 content: "I've created or updated the workflow for your application. You can view it in the 'Workflow' tab."
             };
             setMessages(prev => [...prev, workflowMessage]);
+          } else if (update.type === 'credential_request' && update.request) {
+              const credentialMessage: ChatMessage = {
+                  role: 'model',
+                  content: `To continue, I need some information for ${update.request.toolName}.`,
+                  credentialRequest: update.request,
+              };
+              setMessages(prev => [...prev, credentialMessage]);
+              setPromptForCredentials(prompt);
+              wasCredentialRequestHandled = true;
+              throw new Error('CREDENTIAL_REQUEST_PENDING');
           }
-        }, stackToUse, filesForContext, appName, appIcon);
+        }, stackToUse, filesForContext, appName, appIcon, customCredentials);
 
         const modelMessage: ChatMessage = {
           role: 'model',
@@ -198,15 +213,33 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         );
 
       } catch (err) {
+        if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
+            // This is an expected interruption, not an error.
+            setIsLoading(false);
+            return;
+        }
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(`Failed to generate app: ${errorMessage}`);
         const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
         setMessages(prev => [...prev, modelErrorMessage]);
       } finally {
-        setIsLoading(false);
+        if (!wasCredentialRequestHandled) {
+            setIsLoading(false);
+        }
       }
     }
   }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack, setSchema]);
+
+  const handleCredentialSubmit = (credentials: Record<string, string>) => {
+    if (!promptForCredentials) return;
+
+    const userMessage: ChatMessage = { role: 'user', content: "Okay, I've provided the credentials." };
+    setMessages(prev => [...prev, userMessage]);
+    
+    handleSend(promptForCredentials, techStack, credentials);
+
+    setPromptForCredentials(null);
+  };
   
   const handleAddSupabase = () => {
     if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
@@ -503,6 +536,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
             deployments={deployments}
             techStack={techStack}
+            onCredentialSubmit={handleCredentialSubmit}
           />
         );
       case 'CODE':

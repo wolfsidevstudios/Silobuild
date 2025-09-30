@@ -6,6 +6,7 @@ import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
 import { StackSelection } from './StackSelection';
 import { downloadProjectAsZip } from '../utils/projectUtils';
+import { CredentialRequestForm } from './CredentialRequestForm';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -27,6 +28,7 @@ interface ChatViewProps {
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   techStack: TechStack | null;
+  onCredentialSubmit: (credentials: Record<string, string>) => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -144,6 +146,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onToggleMacPreview,
   deployments,
   techStack,
+  onCredentialSubmit,
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
@@ -169,6 +172,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   >
                     <p className="text-sm">{msg.content}</p>
                     {msg.schema && <DatabaseSchemaView schema={msg.schema} />}
+                    {msg.credentialRequest && (
+                      <CredentialRequestForm 
+                        request={msg.credentialRequest}
+                        onSubmit={onCredentialSubmit}
+                      />
+                    )}
                   </div>
                 </div>
               ))}

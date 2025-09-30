@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig } from "../types";
 
-const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack): string => {
+const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>): string => {
   const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo</div>`;
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
@@ -59,6 +59,21 @@ Example of your required response:
 After outputting the 'workflow_definition' object, you MUST continue with the normal application generation flow (summary, plan, files, etc.) if other changes are requested.
 `;
 
+const CREDENTIAL_REQUEST_INSTRUCTION = `
+--- CUSTOM API CREDENTIALS ---
+If the user's prompt requires an API key or other credentials for a third-party service that is NOT a pre-configured integration (like Supabase or Stripe), you MUST ask the user for these credentials before generating the code.
+To do this, you MUST output a specific JSON object of type 'credential_request'.
+- This JSON object MUST be on its own line.
+- The 'request' key must contain 'toolName' (string) and 'fields' (array of field objects).
+- Each field object must have 'key' (a programmatic key like 'apiKey'), 'label' (a user-friendly name like 'OpenWeather API Key'), and 'description'.
+
+Example of your required response if the user asks for a weather app:
+{"type": "credential_request", "request": {"toolName": "OpenWeatherMap", "fields": [{"key": "apiKey", "label": "OpenWeatherMap API Key", "description": "You can get a free API key from the OpenWeatherMap website."}]}}
+
+IMPORTANT: After outputting the 'credential_request' object, you MUST STOP your response. Do not output any other JSON objects like 'summary', 'plan', or 'file'. Wait for the user to provide the credentials in their next message. The user will provide the values, and you must then use them in the generated code.
+`;
+
+
   let instruction;
   
   if (techStack === 'html') {
@@ -88,6 +103,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
       instruction += DATABASE_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
+      instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   } else if (techStack === 'vue') {
     instruction = `You are an expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -159,6 +175,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
+    instruction += CREDENTIAL_REQUEST_INSTRUCTION;
 
   } else if (techStack === 'svelte') {
     instruction = `You are an expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript.
@@ -221,6 +238,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
+    instruction += CREDENTIAL_REQUEST_INSTRUCTION;
 
   } else if (techStack === 'nodejs') {
       instruction = `You are an expert backend developer specializing in generating simple and functional Node.js + Express.js applications.
@@ -273,6 +291,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 `;
       instruction += NODEJS_WATERMARK_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
+      instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   } else if (techStack === 'react-native') {
       instruction = `You are an expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo).
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -352,6 +371,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += REACT_NATIVE_README_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
+    instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   } else if (techStack === 'react') {
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -421,6 +441,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
+    instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
@@ -443,6 +464,16 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     }
     instruction += "\n------------------------------------";
   }
+
+  if (customCredentials && Object.keys(customCredentials).length > 0) {
+    instruction += "\n\n--- USER-PROVIDED CREDENTIALS ---";
+    instruction += "\nThe user has provided the following credentials that you requested. Use these exact values in the generated code where appropriate. Do not use placeholders for these.";
+    for (const [key, value] of Object.entries(customCredentials)) {
+        instruction += `\n- ${key}: ${value}`;
+    }
+    instruction += "\n------------------------------------";
+  }
+
   return instruction;
 };
 
@@ -455,6 +486,7 @@ export const generateAppStream = (
   existingFiles?: GeneratedFile[],
   appName?: string,
   appIcon?: string, // base64 string
+  customCredentials?: Record<string, string>
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -466,7 +498,7 @@ export const generateAppStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       const isEditing = !!existingFiles && existingFiles.length > 0;
-      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack);
+      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials);
       
       let fullPrompt: string;
       if (isEditing) {
