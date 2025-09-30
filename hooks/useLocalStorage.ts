@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const { user } = useAuth();
 
-  const getStorageKey = () => user ? `${key}-${user.sub}` : `${key}-guest`;
+  const getStorageKey = () => user ? `${key}-${user.id}` : `${key}-guest`;
 
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') {

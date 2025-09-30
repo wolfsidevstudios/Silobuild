@@ -13,16 +13,15 @@ import { MobileApp } from './pages/MobileApp';
 const isMobile = () => window.innerWidth < 768;
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isGuest } = useAuth();
-  const [isChecking, setIsChecking] = useState(true);
-
+  const { user, loading } = useAuth();
+  
   useEffect(() => {
-    // Give the auth context a moment to load the user from local storage
-    const timer = setTimeout(() => setIsChecking(false), 50);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!loading && !user) {
+      window.location.hash = '#/';
+    }
+  }, [user, loading]);
 
-  if (isChecking) {
+  if (loading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Spinner className="w-10 h-10" />
@@ -30,12 +29,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     );
   }
 
-  if (!user && !isGuest) {
-    window.location.hash = '#/';
-    return null;
+  if (user) {
+     return <>{children}</>;
   }
 
-  return <>{children}</>;
+  return null;
 };
 
 export const App: React.FC = () => {

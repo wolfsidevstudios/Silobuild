@@ -1,85 +1,68 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { DecodedCredential } from '../types';
-import { jwtDecode } from 'jwt-decode';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: DecodedCredential | null;
-  isGuest: boolean;
-  login: (credential: string) => void;
-  logout: () => void;
-  loginAsGuest: () => void;
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  logout: () => Promise<void>;
+  signInWithOAuth: (provider: 'google' | 'github' | 'discord') => Promise<void>;
+  signInWithPassword: (email: string, pass: string) => Promise<any>;
+  signUpWithPassword: (email: string, pass: string) => Promise<any>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// A static key for storing the user object itself. This should not be user-scoped.
-const USER_STORAGE_KEY = 'ai-app-builder-user';
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<DecodedCredential | null>(() => {
-    // On initial load, try to read the user from local storage.
-    try {
-      if (typeof window !== 'undefined') {
-        const item = window.localStorage.getItem(USER_STORAGE_KEY);
-        return item ? JSON.parse(item) : null;
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+    }
+    
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
-      return null;
-    } catch (error) {
-      console.error("Error reading user from local storage", error);
-      return null;
-    }
-  });
+    );
 
-  const [isGuest, setIsGuest] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('isGuest') === 'true';
-    }
-    return false;
-  });
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
-  const login = (credential: string) => {
-    try {
-      const decoded: DecodedCredential = jwtDecode(credential);
-      // Persist user to local storage and update state
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
-        sessionStorage.removeItem('isGuest');
-      }
-      setUser(decoded);
-      setIsGuest(false);
-    } catch (error) {
-      console.error("Failed to decode JWT:", error);
-      // Clear any invalid user data
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(USER_STORAGE_KEY);
-      }
-      setUser(null);
+  const value: AuthContextType = {
+    user,
+    session,
+    loading,
+    logout: () => supabase.auth.signOut(),
+    signInWithOAuth: async (provider) => {
+        const { error } = await supabase.auth.signInWithOAuth({ provider });
+        if (error) throw error;
+    },
+    signInWithPassword: (email: string, pass: string) => supabase.auth.signInWithPassword({ email, password: pass }),
+    signUpWithPassword: (email: string, pass: string) => supabase.auth.signUp({ email, password: pass }),
+    sendPasswordResetEmail: async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) throw error;
     }
-  };
-
-  const loginAsGuest = () => {
-    if (typeof window !== 'undefined') {
-        sessionStorage.setItem('isGuest', 'true');
-        window.localStorage.removeItem(USER_STORAGE_KEY);
-    }
-    setUser(null);
-    setIsGuest(true);
-  };
-
-  const logout = () => {
-    // Clear user from local storage and state
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(USER_STORAGE_KEY);
-      sessionStorage.removeItem('isGuest');
-    }
-    setUser(null);
-    setIsGuest(false);
-    // You might also want to call google.accounts.id.disableAutoSelect() here
   };
 
   return (
-    <AuthContext.Provider value={{ user, isGuest, login, logout, loginAsGuest }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
