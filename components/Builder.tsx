@@ -442,7 +442,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
 
   const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
-  const isBusy = isLoading || isPushing;
 
   const renderContent = () => {
     switch (appMode) {
@@ -473,12 +472,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onDeployClick={() => setIsDeployModalOpen(true)}
             onSaveClick={() => setIsSaveModalOpen(true)}
             onCommitAndPush={handleCommitAndPush}
-            // Props for PromptInput
-            onSend={handleSend}
-            isPromptInputLoading={isBusy}
-            isAppGenerated={isGenerated}
-            onToggleIdeaMode={toggleIdeaMode}
-            isReadyToPrompt={!!techStack || isGenerated}
           />
         );
       case 'CODE':
@@ -508,6 +501,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
   };
   
+  const isBusy = isLoading || isPushing;
 
   return (
     <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">
@@ -517,7 +511,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         project={currentProject}
         hasWorkflow={!!workflow}
       />
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
         {isPushing && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="flex flex-col items-center gap-2">
@@ -528,7 +522,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         )}
         {renderContent()}
       </main>
-      
+      <PromptInput
+        onSend={handleSend}
+        isLoading={isBusy}
+        isAppGenerated={isGenerated}
+        isIdeaMode={isIdeaMode}
+        onToggleIdeaMode={toggleIdeaMode}
+        isReadyToPrompt={!!techStack || isGenerated}
+      />
        {isMacPreviewVisible && previewFile && (
         <MacPreview
             previewFile={previewFile}

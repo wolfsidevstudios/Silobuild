@@ -6,7 +6,6 @@ import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
 import { StackSelection } from './StackSelection';
 import { downloadProjectAsZip } from '../utils/projectUtils';
-import { PromptInput } from './PromptInput';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -34,12 +33,6 @@ interface ChatViewProps {
   onDeployClick: () => void;
   onSaveClick: () => void;
   onCommitAndPush?: () => void;
-  // Props for PromptInput
-  onSend: (prompt: string) => void;
-  isPromptInputLoading: boolean;
-  isAppGenerated: boolean;
-  onToggleIdeaMode: () => void;
-  isReadyToPrompt: boolean;
 }
 
 const ViewModeToggle: React.FC<{
@@ -162,11 +155,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onDeployClick,
   onSaveClick,
   onCommitAndPush,
-  onSend,
-  isPromptInputLoading,
-  isAppGenerated,
-  onToggleIdeaMode,
-  isReadyToPrompt,
 }) => {
 
    const handleDownload = () => {
@@ -236,16 +224,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
               )}
             </>
           )}
-        </div>
-         <div className="p-4">
-          <PromptInput
-            onSend={onSend}
-            isLoading={isPromptInputLoading}
-            isAppGenerated={isAppGenerated}
-            isIdeaMode={isIdeaMode}
-            onToggleIdeaMode={onToggleIdeaMode}
-            isReadyToPrompt={isReadyToPrompt}
-          />
         </div>
       </div>
       {!isIdeaMode && (
