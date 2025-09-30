@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project, Settings, TechStack, ChatMessage, GeneratedFile } from '../types';
 import { timeAgo } from '../utils/projectUtils';
-import { FileIcon, CloseIcon, SparklesIcon, HomeIcon, SettingsIcon, EyeIcon, ChatIcon, SaveIcon } from '../components/icons';
+import { FileIcon, CloseIcon, SparklesIcon, HomeIcon, SettingsIcon, EyeIcon, ChatIcon, SaveIcon, DownloadIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { generateAppStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
@@ -328,7 +328,7 @@ const IntegrationCard: React.FC<{ icon?: React.ReactNode; title: string; childre
 );
 
 
-const MobileSettingsPage: React.FC = () => {
+const MobileSettingsPage: React.FC<{ onInstallClick: () => void; canInstall: boolean; }> = ({ onInstallClick, canInstall }) => {
     const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
     const [isSaved, setIsSaved] = useState(false);
@@ -355,6 +355,29 @@ const MobileSettingsPage: React.FC = () => {
                 </button>
             </header>
             <main className="flex-1 overflow-y-auto p-4 space-y-4">
+                 <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <DownloadIcon className="w-6 h-6 text-green-500" />
+                        <h3 className="text-lg font-bold">Download for Android</h3>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-4">
+                        Install the Silo Build Go app on your Android device. This will add it to your home screen and app drawer, just like a native app from the Play Store.
+                    </p>
+                    <button
+                        onClick={onInstallClick}
+                        disabled={!canInstall}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        <DownloadIcon />
+                        <span>{canInstall ? 'Install Web APK' : 'Installation not available'}</span>
+                    </button>
+                    {!canInstall && (
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                            To install manually, use the "Add to Home Screen" option in your browser's menu. This may not be available if the app is already installed.
+                        </p>
+                    )}
+                </div>
+
                 <IntegrationCard icon={<GeminiLogo className="h-7"/>} title="Google Gemini">
                     <SettingsInput label="Gemini API Key" value={localSettings.geminiApiKey} onChange={(e) => handleChange('geminiApiKey', e.target.value)} placeholder="Enter your Gemini API Key" />
                 </IntegrationCard>
@@ -409,6 +432,30 @@ export const MobileApp: React.FC = () => {
     const { user, isGuest } = useAuth();
     const [view, setView] = useState<'projects' | 'builder' | 'settings'>('projects');
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handler = (e: Event) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handler);
+        };
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            setDeferredPrompt(null);
+        } else {
+            alert('To install the app on Android, tap the menu button (⋮) in your browser and select "Install app" or "Add to Home Screen".');
+        }
+    };
+
 
     if (!user && !isGuest) {
         return <MobileLoginPage />;
@@ -417,7 +464,7 @@ export const MobileApp: React.FC = () => {
     const renderView = () => {
         switch(view) {
             case 'builder': return <MobileBuilderPage setView={setView} />;
-            case 'settings': return <MobileSettingsPage />;
+            case 'settings': return <MobileSettingsPage onInstallClick={handleInstallClick} canInstall={!!deferredPrompt} />;
             case 'projects':
             default:
                 return <MobileProjectsPage onProjectClick={setSelectedProject} />;
