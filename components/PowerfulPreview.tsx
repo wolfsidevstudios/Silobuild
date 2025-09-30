@@ -27,6 +27,12 @@ const createResolverPlugin = (allFiles: GeneratedFile[], currentFilePath: string
         for (const ext of extensions) {
             if (filePaths.has(`${path}${ext}`)) return `${path}${ext}`;
         }
+        
+        // Check for index file
+        for (const ext of extensions) {
+             if (filePaths.has(`${path}/index${ext}`)) return `${path}/index${ext}`;
+        }
+
         return null;
     };
 
@@ -45,11 +51,7 @@ const createResolverPlugin = (allFiles: GeneratedFile[], currentFilePath: string
                     }
                     
                     let resolvedFile = resolveExtension(resolvedPath);
-                    if (!resolvedFile) {
-                        const indexPath = resolvedPath.endsWith('/') ? `${resolvedPath}index` : `${resolvedPath}/index`;
-                        resolvedFile = resolveExtension(indexPath);
-                    }
-
+                    
                     if (resolvedFile) {
                         path.node.source.value = `/${resolvedFile}`;
                     } else {
@@ -65,15 +67,12 @@ const createResolverPlugin = (allFiles: GeneratedFile[], currentFilePath: string
 const transpile = (code: string, path: string, allFiles: GeneratedFile[]): string => {
     try {
         const resolverPlugin = createResolverPlugin(allFiles, path);
-        window.Babel.registerPlugin('module-resolver', resolverPlugin);
-
         const removeCssPlugin = createRemoveCssImportsPlugin();
-        window.Babel.registerPlugin('remove-css-imports', removeCssPlugin);
 
         const result = window.Babel.transform(code, {
             presets: ['react', 'typescript'],
             filename: path,
-            plugins: ['module-resolver', 'remove-css-imports'],
+            plugins: [resolverPlugin, removeCssPlugin],
         });
         return result.code || '';
     } catch (e) {
@@ -127,6 +126,7 @@ export const PowerfulPreview: React.FC<{ files: GeneratedFile[] }> = ({ files })
                 "imports": {
                     "react": "https://esm.sh/react@18.2.0",
                     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
                     ${Object.entries(importMap).map(([path, url]) => `"${path}": "${url}"`).join(',\n')}
                 }
             }
