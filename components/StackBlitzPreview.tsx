@@ -11,12 +11,10 @@ interface StackBlitzPreviewProps {
 
 export const StackBlitzPreview: React.FC<StackBlitzPreviewProps> = ({ files, projectName }) => {
     const embedRef = useRef<HTMLDivElement>(null);
-    const hasEmbedded = useRef(false);
 
     useEffect(() => {
-        if (embedRef.current && files.length > 0 && !hasEmbedded.current) {
-            hasEmbedded.current = true; // Prevent re-embedding on re-renders
-            embedRef.current.innerHTML = ''; // Clear previous embed
+        if (embedRef.current && files.length > 0) {
+            embedRef.current.innerHTML = ''; // Clear previous embed before creating a new one
 
             const projectFiles = files.reduce((acc, file) => {
                 acc[file.path] = file.content;
@@ -42,6 +40,7 @@ export const StackBlitzPreview: React.FC<StackBlitzPreviewProps> = ({ files, pro
                     height: '100%',
                     showSidebar: false,
                     theme: 'dark',
+                    clickToLoad: true, // FIX: Use clickToLoad to avoid cross-origin isolation issues.
                 }
             );
         }
@@ -52,7 +51,7 @@ export const StackBlitzPreview: React.FC<StackBlitzPreviewProps> = ({ files, pro
             <div ref={embedRef} className="w-full h-full">
                 <div className="flex flex-col items-center justify-center h-full gap-2">
                     <Spinner className="w-8 h-8"/>
-                    <p>Loading StackBlitz preview...</p>
+                    <p>Preparing StackBlitz preview...</p>
                 </div>
             </div>
         </div>
