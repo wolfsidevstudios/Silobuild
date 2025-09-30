@@ -6,7 +6,7 @@ const createSystemInstruction = (prompt: string, settings: Settings, isEditing: 
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
 --- WATERMARK REQUIREMENT ---
-ALL generated visual applications (React, Vue, Svelte, HTML) MUST include a "Built with Silo" watermark badge.
+ALL generated visual applications (React, Vue, Svelte, HTML, React Native Web Preview) MUST include a "Built with Silo" watermark badge.
 - The badge MUST be a \`div\` tag.
 - It must be positioned in the bottom-right corner of the viewport.
 - You MUST use this exact HTML for the badge. It is self-contained and works with Tailwind CSS.
@@ -274,7 +274,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += NODEJS_WATERMARK_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
   } else if (techStack === 'react-native') {
-      instruction = `You are an expert React Native engineer specializing in generating and modifying fully functional, production-ready mobile applications using Expo.
+      instruction = `You are an expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo).
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
@@ -282,23 +282,23 @@ You must stream your response as a sequence of JSON objects, each on a new line.
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making).
 Example: {"type": "summary", "summary": "- A simple welcome screen for a mobile app.\\n- A button that shows an alert."}
 
-Second, you MUST output a 'plan' object listing all file paths for the application.
-Example: {"type": "plan", "files": ["App.js", "package.json", "app.json"]}
+Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["App.tsx", "package.json", "README.md"]}
 
 Then, for each file, output a 'file' object.
-Example: {"type": "file", "file": {"path": "App.js", "content": "import React from 'react';"}}
+Example: {"type": "file", "file": {"path": "App.tsx", "content": "import React from 'react';"}}
 
-Finally, you will output a 'previewFile' object containing a 'README.md' file that explains how to run the project.
-Example: {"type": "previewFile", "file": {"path": "README.md", "content": "# My React Native App\\n\\nTo run this project:..."}}
+Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview using React Native Web.
+Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
       if (isEditing) {
           instruction += `\nYour task is to update the provided React Native application files based on the user's request. You will receive the current application files as JSON, followed by the modification request. You MUST output the complete, updated set of files.`;
       } else {
-          instruction += `\nYour task is to generate a complete, multi-file React Native Expo application based on the user's prompt.`;
+          instruction += `\nYour task is to generate a complete, multi-file standard React Native application based on the user's prompt.`;
       }
-
+      
       const REACT_NATIVE_README_WATERMARK_INSTRUCTION = `
 --- WATERMARK REQUIREMENT (README.md) ---
 The generated README.md file MUST end with the following line, separated by a horizontal rule:
@@ -308,34 +308,50 @@ The generated README.md file MUST end with the following line, separated by a ho
 `;
 
       instruction += `\n
---- FILE CONTENT INSTRUCTIONS (React Native) ---
+--- FILE CONTENT INSTRUCTIONS ('multiFileCode') ---
 1.  **package.json**:
-    -   Must include 'react', 'react-native', and 'expo' as dependencies. 'expo-status-bar' is also common.
-    -   Must define a 'main' entry point (e.g., "node_modules/expo/AppEntry.js").
-    -   Must include scripts like 'start', 'android', 'ios', 'web' that call the expo CLI.
+    -   Must include 'react' and 'react-native' as dependencies. Also include 'react-native-web' to support the web preview.
+    -   Must define a 'main' entry point (e.g., "index.js", although you don't need to generate this file).
+    -   Must include scripts like 'android' and 'ios' that call 'npx react-native run-android' and 'npx react-native run-ios' respectively.
     -   Set "private": true.
+    -   Do NOT include 'expo' dependencies.
 
-2.  **app.json**:
-    -   This is the Expo config file.
-    -   It must contain an 'expo' object with basic properties like 'slug', 'name', 'version', 'orientation', 'icon', 'splash', 'assetBundlePatterns', and platforms ('ios', 'android', 'web').
-
-3.  **App.js** (or App.tsx if user asks for TypeScript):
+2.  **App.js** (or App.tsx if user asks for TypeScript):
     -   This is the root component.
     -   Use React Native components like \`View\`, \`Text\`, \`StyleSheet\`.
     -   Do NOT use HTML tags like \`div\` or \`p\`.
     -   Styling MUST be done using \`StyleSheet.create()\`. Do NOT use CSS or Tailwind classes.
 
-4.  **README.md** (for the previewFile):
-    -   This file is CRITICAL and acts as the preview.
-    -   Provide clear, simple instructions on how to set up and run the app.
-    -   Must include these steps:
-        1.  \`npm install\` to install dependencies.
-        2.  \`npx expo start\` to run the development server.
-        3.  Explain that the user needs to scan the QR code with the Expo Go app on their mobile device.
+3.  **README.md**:
+    -   This file explains how to set up and run the native project.
+    -   It must include steps to initialize a new React Native project (\`npx react-native init MyProjectName\`) and then copy the generated files into it.
+    -   Include instructions to run the native app: \`npm install\`, \`npx react-native run-android\`, and \`npx react-native run-ios\`.
+
+--- PREVIEW FILE INSTRUCTIONS (React Native Web) ---
+The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' that renders the app in a browser.
+1.  Start with HTML5 boilerplate.
+2.  In <head>, include Tailwind CSS CDN: <script src="https://cdn.tailwindcss.com"></script>.
+3.  In <head>, include these scripts for React, ReactDOM, and Babel Standalone:
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+4.  In <head>, include React Native Web from a CDN. Use this exact script tag:
+    <script src="https://unpkg.com/react-native-web@0.19.12/dist/umd/react-native.web.js"></script>
+5.  The <body> MUST contain a single root element, e.g., <div id="root"></div>.
+6.  At the end of the <body>, add a <script type="text/babel"> tag.
+7.  Inside this script, you MUST define all React components from your 'multiFileCode' files.
+8.  Use the 'AppRegistry' from the 'ReactNativeWeb' global object to mount the main component.
+    Example:
+    const App = () => { /* Your React Native App component */ };
+    const { AppRegistry } = ReactNativeWeb;
+    AppRegistry.registerComponent('App', () => App);
+    AppRegistry.runApplication('App', { rootTag: document.getElementById('root') });
+9.  All logic and components from your multi-file version must be consolidated into this single script tag for the preview.
 `;
-      instruction += REACT_NATIVE_README_WATERMARK_INSTRUCTION;
-      instruction += DATABASE_INSTRUCTION;
-      instruction += WORKFLOW_INSTRUCTION;
+    instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
+    instruction += REACT_NATIVE_README_WATERMARK_INSTRUCTION;
+    instruction += DATABASE_INSTRUCTION;
+    instruction += WORKFLOW_INSTRUCTION;
   } else if (techStack === 'react') {
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.

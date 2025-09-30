@@ -212,7 +212,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
             ) : (
                 <PreviewView 
                   file={previewFile}
-                  multiFileCode={multiFileCode}
                   onToggleMacPreview={onToggleMacPreview}
                   deployments={deployments}
                   techStack={techStack}
