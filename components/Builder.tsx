@@ -582,7 +582,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         activeMode={appMode} 
         setAppMode={setAppMode}
         project={currentProject}
-        hasWorkflow={!!workflow}
         onAddSupabase={handleAddSupabase}
         onConnectGitHub={() => setIsSaveModalOpen(true)}
         onDownload={handleDownload}

@@ -6,7 +6,6 @@ interface HeaderProps {
   activeMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   project?: Project | null;
-  hasWorkflow: boolean;
   onAddSupabase: () => void;
   onConnectGitHub: () => void;
   onDownload: () => void;
@@ -39,7 +38,6 @@ export const Header: React.FC<HeaderProps> = ({
   activeMode,
   setAppMode,
   project,
-  hasWorkflow,
   onAddSupabase,
   onConnectGitHub,
   onDownload,
@@ -71,14 +69,12 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => setAppMode('PREVIEW')}
           icon={<EyeIcon />}
         />
-        {hasWorkflow && (
-          <NavButton
+        <NavButton
             label="Backend"
             isActive={activeMode === 'WORKFLOW'}
             onClick={() => setAppMode('WORKFLOW')}
             icon={<WorkflowIcon />}
-          />
-        )}
+        />
         <NavButton
           label="Publish"
           isActive={activeMode === 'PUBLISH'}
