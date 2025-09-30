@@ -123,7 +123,7 @@ export const SettingsPage: React.FC = () => {
         <h1 className="text-3xl font-bold">Settings</h1>
       </div>
       <p className="text-gray-600 mb-8 max-w-3xl">
-        Manage your application preferences and data. API keys and service credentials can be configured on the <a href="#/dashboard/integrations" className="text-blue-600 hover:underline">Integrations</a> page.
+        Manage your application preferences and data. API keys, model selection, and service credentials can be configured on the <a href="#/dashboard/integrations" className="text-blue-600 hover:underline">Integrations</a> page.
       </p>
 
       <div className="max-w-2xl mx-auto space-y-10">

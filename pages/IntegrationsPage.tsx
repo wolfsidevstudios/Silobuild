@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Settings } from '../types';
+import { Settings, GeminiModel } from '../types';
 import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
 
@@ -12,6 +12,7 @@ const initialSettings: Settings = {
   stripeSecretKey: '',
   githubPat: '',
   netlifyPat: '',
+  model: 'gemini-2.5-flash',
 };
 
 const SettingsInput: React.FC<{
@@ -109,6 +110,39 @@ export const IntegrationsPage: React.FC = () => {
                 onChange={(e) => handleChange('geminiApiKey', e.target.value)}
                 placeholder="Enter your Gemini API Key"
             />
+            <div className="pt-4 mt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Model Selection</label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <label className="flex items-start sm:items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 flex-1">
+                        <input
+                            type="radio"
+                            name="gemini-model"
+                            value="gemini-2.5-flash"
+                            checked={localSettings.model === 'gemini-2.5-flash' || !localSettings.model}
+                            onChange={() => handleChange('model', 'gemini-2.5-flash')}
+                            className="h-4 w-4 mt-1 sm:mt-0 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <div>
+                            <span className="text-sm font-medium text-gray-800">Gemini 2.5 Flash</span>
+                            <p className="text-xs text-gray-500">Fast and cost-effective for most tasks.</p>
+                        </div>
+                    </label>
+                    <label className="flex items-start sm:items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 flex-1">
+                        <input
+                            type="radio"
+                            name="gemini-model"
+                            value="gemini-2.5-pro"
+                            checked={localSettings.model === 'gemini-2.5-pro'}
+                            onChange={() => handleChange('model', 'gemini-2.5-pro')}
+                            className="h-4 w-4 mt-1 sm:mt-0 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <div>
+                            <span className="text-sm font-medium text-gray-800">Gemini 2.5 Pro</span>
+                            <p className="text-xs text-gray-500">Highest capability for complex tasks.</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
         </IntegrationCard>
         <IntegrationCard 
             icon={<GithubIcon className="w-7 h-7 text-black"/>}

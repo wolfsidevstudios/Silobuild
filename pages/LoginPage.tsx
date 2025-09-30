@@ -17,6 +17,7 @@ const initialSettings: Settings = {
   stripeSecretKey: '',
   githubPat: '',
   netlifyPat: '',
+  model: 'gemini-2.5-flash',
 };
 
 

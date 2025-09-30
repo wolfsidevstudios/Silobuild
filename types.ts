@@ -8,6 +8,8 @@ export type ViewMode = 'CODE' | 'PREVIEW';
 
 export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs' | 'react-native';
 
+export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
+
 export interface GeneratedFile {
   path: string;
   content: string;
@@ -39,6 +41,7 @@ export interface Settings {
   stripeSecretKey: string;
   githubPat: string;
   netlifyPat: string;
+  model?: GeminiModel;
 }
 
 export interface Deployment {

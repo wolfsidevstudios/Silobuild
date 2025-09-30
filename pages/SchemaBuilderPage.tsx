@@ -14,6 +14,7 @@ const initialSettings: Settings = {
   stripeSecretKey: '',
   githubPat: '',
   netlifyPat: '',
+  model: 'gemini-2.5-flash',
 };
 
 const DATA_TYPES: DataType[] = ['uuid', 'text', 'varchar', 'int4', 'int8', 'float8', 'boolean', 'timestamp', 'timestamptz'];

@@ -530,7 +530,7 @@ export const generateAppStream = (
 
 
       const responseStream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: settings.model || "gemini-2.5-flash",
         contents: fullPrompt,
         config: {
           temperature: 0.2,
@@ -596,7 +596,7 @@ export const generateAgentChatResponse = async (
   const ai = new GoogleGenAI({ apiKey });
   
   const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: settings.model || "gemini-2.5-flash",
       contents: history,
       config: {
         systemInstruction: agentConfig.systemInstruction,
@@ -631,7 +631,7 @@ Do NOT be conversational. Do NOT explain the prompt. ONLY output the prompt itse
 User's idea: "${prompt}"`;
 
       const responseStream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: settings.model || "gemini-2.5-flash",
         contents: fullPrompt,
         config: {
           temperature: 0.7, // Higher temperature for more creative responses
@@ -665,7 +665,7 @@ export const generateSchemaFromPrompt = async (prompt: string, settings: Setting
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: settings.model || "gemini-2.5-flash",
       contents: `${systemInstruction}\n\nUser request: "${prompt}"`,
       config: {
         responseMimeType: "application/json",
@@ -739,7 +739,7 @@ Keep your answers concise and easy to understand.`;
       const fullPrompt = `${systemInstruction}\n\nHere is the user's question: "${prompt}"`;
 
       const responseStream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: settings.model || "gemini-2.5-flash",
         contents: fullPrompt,
         config: {
           temperature: 0.5,
