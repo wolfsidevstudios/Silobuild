@@ -1,6 +1,6 @@
 import React from 'react';
 import { GeneratedFile, Deployment, TechStack } from '../types';
-import { DesktopIcon } from './icons';
+import { DesktopIcon, ExpandIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
 
 interface PreviewViewProps {
@@ -19,6 +19,15 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 
   const latestDeployment = deployments.length > 0 ? deployments[0] : null;
   
+  const handleOpenInNewTab = () => {
+    if (file) {
+      const blob = new Blob([file.content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // The browser will revoke the object URL automatically when the tab is closed.
+    }
+  };
+
   const renderPreviewContent = () => {
     if (file) {
       return (
@@ -61,17 +70,30 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         <div className="flex-1 relative">
             {renderPreviewContent()}
             {file && (
-            <button
-                onClick={onToggleMacPreview}
-                disabled={!file}
-                className="absolute bottom-4 right-4 group flex items-center justify-center w-12 h-12 bg-white rounded-full border border-gray-200 text-gray-600 hover:bg-blue-600 hover:border-blue-500 hover:text-white transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Live Mac OS Preview"
-            >
-                <DesktopIcon className="w-6 h-6" />
-                <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded">
-                    Live Mac OS Preview
-                </span>
-            </button>
+            <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                <button
+                    onClick={handleOpenInNewTab}
+                    disabled={!file}
+                    className="group flex items-center justify-center w-12 h-12 bg-white rounded-full border border-gray-200 text-gray-600 hover:bg-blue-600 hover:border-blue-500 hover:text-white transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Open in new tab"
+                >
+                    <ExpandIcon className="w-6 h-6" />
+                    <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                        Open in New Tab
+                    </span>
+                </button>
+                <button
+                    onClick={onToggleMacPreview}
+                    disabled={!file}
+                    className="group flex items-center justify-center w-12 h-12 bg-white rounded-full border border-gray-200 text-gray-600 hover:bg-blue-600 hover:border-blue-500 hover:text-white transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Live Mac OS Preview"
+                >
+                    <DesktopIcon className="w-6 h-6" />
+                    <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                        Live Mac OS Preview
+                    </span>
+                </button>
+            </div>
             )}
         </div>
       </div>
