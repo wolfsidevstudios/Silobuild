@@ -14,7 +14,7 @@ const StackCard: React.FC<{
 }> = ({ icon, title, description, onClick }) => (
     <button
         onClick={onClick}
-        className="bg-white p-6 rounded-lg border border-gray-200 text-left w-full transition-all duration-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+        className="bg-white p-6 rounded-full border border-gray-200 text-left w-full transition-all duration-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
     >
         <div className="flex items-center gap-4">
             {icon}
@@ -46,23 +46,11 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
           description="A web-based app styled to look and feel like a native mobile app."
           onClick={() => onSelect('mobile')}
         />
-        <StackCard
-          icon={<VueIcon />}
-          title="Vue + TypeScript"
-          description="Generate a complete Vue 3 application using the Composition API."
-          onClick={() => onSelect('vue')}
-        />
          <StackCard
           icon={<SvelteIcon />}
           title="Svelte + TypeScript"
           description="Create a Svelte 5 project with a focus on performance."
           onClick={() => onSelect('svelte')}
-        />
-        <StackCard
-          icon={<NodejsIcon />}
-          title="Node.js + Express"
-          description="A simple REST API backend with a basic server setup."
-          onClick={() => onSelect('nodejs')}
         />
         <StackCard
           icon={<HtmlIcon />}

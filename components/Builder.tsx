@@ -13,8 +13,8 @@ import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
 import { showLocalNotification } from '../utils/projectUtils';
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
+import { DeployModal } from './DeployModal';
 
-// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -56,6 +56,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
+
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentError, setDeploymentError] = useState<string | null>(null);
 
 
   const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack) => {
@@ -371,6 +375,70 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
     setIsGenerated(true); // Enable save button if a deployment is made
   };
+  
+    const handleDeploy = async (token: string, newProjectName: string) => {
+    if (!token || multiFileCode.length === 0) {
+      setDeploymentError("Vercel token is missing or there are no files to deploy.");
+      return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentError(null);
+
+    try {
+      const filesForApi = multiFileCode.map(({ path, content }) => ({
+        file: path,
+        data: content,
+      }));
+
+      const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+
+      filesForApi.push({
+        file: 'package.json',
+        data: JSON.stringify({
+          name: sanitizedProjectName,
+          version: '0.1.0',
+          private: true,
+        }),
+      });
+
+      const response = await fetch('https://api.vercel.com/v13/deployments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: sanitizedProjectName,
+          files: filesForApi,
+          projectSettings: {
+            framework: null, // Let Vercel auto-detect
+          },
+          target: 'production',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
+      }
+
+      const newDeployment: Deployment = {
+        url: `https://${result.url}`,
+        timestamp: new Date().toISOString(),
+      };
+      handleNewDeployment(newDeployment);
+      setIsDeployModalOpen(false);
+
+    } catch (error) {
+      console.error("Vercel deployment failed:", error);
+      const message = error instanceof Error ? error.message : "An unknown error occurred during deployment.";
+      setDeploymentError(`Deployment failed: ${message}`);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
 
 
   const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
@@ -391,18 +459,19 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             generatedFilesProgress={generatedFilesProgress}
             generationSummary={generationSummary}
             isIdeaMode={isIdeaMode}
-            vercelToken={settings.vercelApiKey}
             onFileUpdate={handleFileUpdate}
             onFileDelete={handleFileDelete}
             onFileAdd={handleFileAdd}
-            projectName={currentProject?.name}
             showStackSelector={showStackSelector}
             onSelectStack={handleSelectStack}
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
             deployments={deployments}
-            onNewDeployment={handleNewDeployment}
             onAddSupabase={handleAddSupabase}
             techStack={techStack}
+            currentProject={currentProject}
+            onDeployClick={() => setIsDeployModalOpen(true)}
+            onSaveClick={() => setIsSaveModalOpen(true)}
+            onCommitAndPush={handleCommitAndPush}
           />
         );
       case 'CODE':
@@ -417,13 +486,9 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       case 'PREVIEW':
         return <PreviewView 
           file={previewFile} 
-          vercelToken={settings.vercelApiKey}
           multiFileCode={multiFileCode}
-          projectName={currentProject?.name}
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           deployments={deployments}
-          onNewDeployment={handleNewDeployment}
-          onAddSupabase={handleAddSupabase}
           techStack={techStack}
         />;
       case 'WORKFLOW':
@@ -439,14 +504,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const isBusy = isLoading || isPushing;
 
   return (
-    <div className="h-screen w-screen bg-transparent text-gray-900 flex flex-col font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">
       <Header 
         activeMode={appMode} 
         setAppMode={setAppMode}
-        onSaveProject={() => setIsSaveModalOpen(true)}
-        isSaveEnabled={isGenerated && !isBusy && !!techStack}
-        isGithubLinked={!!currentProject?.githubUrl}
-        onCommitAndPush={handleCommitAndPush}
         project={currentProject}
         hasWorkflow={!!workflow}
       />
@@ -487,6 +548,18 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         isGithubLinked={!!currentProject?.githubUrl}
         teams={teams}
         initialTeamId={currentProject?.teamId}
+      />
+       <DeployModal 
+        isOpen={isDeployModalOpen}
+        onClose={() => {
+            setIsDeployModalOpen(false);
+            setDeploymentError(null);
+        }}
+        onDeploy={handleDeploy}
+        isDeploying={isDeploying}
+        initialProjectName={currentProject?.name}
+        initialToken={settings.vercelApiKey}
+        deploymentError={deploymentError}
       />
     </div>
   );

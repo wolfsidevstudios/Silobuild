@@ -1,10 +1,11 @@
 import React from 'react';
-import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable } from '../types';
-import { CodeIcon, EyeIcon, CheckIcon } from './icons';
+import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable, Project } from '../types';
+import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, DownloadIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
 import { StackSelection } from './StackSelection';
+import { downloadProjectAsZip } from '../utils/projectUtils';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -18,25 +19,27 @@ interface ChatViewProps {
   generatedFilesProgress: string[];
   generationSummary: string | null;
   isIdeaMode: boolean;
-  vercelToken: string;
   onFileUpdate: (path: string, content: string) => void;
   onFileDelete: (path: string) => void;
   onFileAdd: (path: string) => boolean;
-  projectName?: string;
   showStackSelector: boolean;
   onSelectStack: (stack: TechStack) => void;
   onToggleMacPreview: () => void;
   deployments: Deployment[];
-  onNewDeployment: (deployment: Deployment) => void;
   onAddSupabase: () => void;
   techStack: TechStack | null;
+  // New props for controls
+  currentProject: Project | null;
+  onDeployClick: () => void;
+  onSaveClick: () => void;
+  onCommitAndPush?: () => void;
 }
 
 const ViewModeToggle: React.FC<{
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
 }> = ({ viewMode, setViewMode }) => (
-  <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-sm mb-2">
+  <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-sm">
     <button
       onClick={() => setViewMode('CODE')}
       className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 ${
@@ -139,26 +142,47 @@ export const ChatView: React.FC<ChatViewProps> = ({
   generatedFilesProgress,
   generationSummary,
   isIdeaMode,
-  vercelToken,
   onFileUpdate,
   onFileDelete,
   onFileAdd,
-  projectName,
   showStackSelector,
   onSelectStack,
   onToggleMacPreview,
   deployments,
-  onNewDeployment,
   onAddSupabase,
   techStack,
+  currentProject,
+  onDeployClick,
+  onSaveClick,
+  onCommitAndPush,
 }) => {
+
+   const handleDownload = () => {
+    if (!currentProject?.name) {
+        alert("Please save the project first to give it a name.");
+        return;
+    }
+    const projectToDownload: Project = {
+        id: currentProject.id,
+        name: currentProject.name,
+        createdAt: currentProject.createdAt,
+        files: multiFileCode,
+        previewFile: previewFile,
+        stack: techStack!,
+        deployments: deployments,
+    };
+    downloadProjectAsZip(projectToDownload);
+  };
+
+
   return (
-    <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
-      <div className="flex flex-col bg-white/50 backdrop-blur-md border border-gray-200 rounded-xl overflow-hidden shadow-lg">
-        <h2 className="text-lg font-bold p-4 border-b border-gray-200">Chat</h2>
+    <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
+      <div className={`flex flex-col overflow-hidden ${isIdeaMode ? 'col-span-1' : 'md:col-span-2'}`}>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {showStackSelector ? (
-            <StackSelection onSelect={onSelectStack} />
+            <div className="flex flex-col items-center justify-center h-full">
+              <StackSelection onSelect={onSelectStack} />
+            </div>
           ) : (
             <>
               {messages.map((msg, index) => (
@@ -167,10 +191,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <div
-                    className={`max-w-md p-3 rounded-lg ${
+                    className={`max-w-md p-3 rounded-2xl shadow-md ${
                       msg.role === 'user'
                         ? 'bg-blue-600 text-white rounded-br-none'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200'
+                        : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
                     }`}
                   >
                     <p className="text-sm">{msg.content}</p>
@@ -180,7 +204,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               ))}
               {isLoading && (
                 <div className="flex items-start">
-                  <div className="max-w-md w-full p-3 rounded-lg bg-gray-100 text-gray-800 rounded-bl-none border border-gray-200">
+                  <div className="max-w-md w-full p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none border border-gray-200 shadow-md">
                     <div className="flex items-center gap-2">
                       <Spinner />
                       <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
@@ -192,7 +216,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
               )}
               {error && (
                 <div className="flex items-start">
-                  <div className="max-w-md p-3 rounded-lg bg-red-100 text-red-800 rounded-bl-none border border-red-200">
+                  <div className="max-w-md p-3 rounded-2xl bg-red-100 text-red-800 rounded-bl-none border border-red-200 shadow-md">
                     <p className="text-sm font-semibold">Error</p>
                     <p className="text-sm">{error}</p>
                   </div>
@@ -203,12 +227,25 @@ export const ChatView: React.FC<ChatViewProps> = ({
         </div>
       </div>
       {!isIdeaMode && (
-        <div className="flex flex-col bg-white/50 backdrop-blur-md border border-gray-200 rounded-xl overflow-hidden shadow-lg">
-            <div className="flex justify-between items-center p-2 border-b border-gray-200">
-            <h2 className="text-lg font-bold px-2">
-                {viewMode === 'CODE' ? 'Code Workspace' : 'App Preview'}
-            </h2>
-            <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+        <div className="md:col-span-3 flex flex-col bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-lg">
+            <div className="flex justify-between items-center p-2.5 border-b border-gray-200">
+                <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
+                <div className="flex items-center gap-2">
+                    <button onClick={onAddSupabase} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
+                        <DatabaseIcon className="w-4 h-4 text-green-500" /> Connect Supabase
+                    </button>
+                    {currentProject?.githubUrl ? (
+                        <button onClick={onCommitAndPush} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
+                            <GithubIcon className="w-4 h-4" /> Commit Changes
+                        </button>
+                    ) : (
+                         <button onClick={onSaveClick} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
+                           <GithubIcon className="w-4 h-4" /> Connect GitHub
+                        </button>
+                    )}
+                    <button onClick={handleDownload} disabled={!currentProject} className="px-4 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50">Download</button>
+                    <button onClick={onDeployClick} className="px-4 py-1.5 text-xs font-medium bg-black hover:bg-gray-800 text-white rounded-full transition-colors">Deploy</button>
+                </div>
             </div>
             <div className="flex-1 overflow-hidden">
             {viewMode === 'CODE' ? (
@@ -220,14 +257,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 />
             ) : (
                 <PreviewView 
-                  file={previewFile} 
-                  vercelToken={vercelToken}
+                  file={previewFile}
                   multiFileCode={multiFileCode}
-                  projectName={projectName}
                   onToggleMacPreview={onToggleMacPreview}
                   deployments={deployments}
-                  onNewDeployment={onNewDeployment}
-                  onAddSupabase={onAddSupabase}
                   techStack={techStack}
                 />
             )}

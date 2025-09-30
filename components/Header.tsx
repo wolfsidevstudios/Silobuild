@@ -5,10 +5,6 @@ import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIc
 interface HeaderProps {
   activeMode: AppMode;
   setAppMode: (mode: AppMode) => void;
-  onSaveProject: () => void;
-  isSaveEnabled: boolean;
-  isGithubLinked?: boolean;
-  onCommitAndPush?: () => void;
   project?: Project | null;
   hasWorkflow: boolean;
 }
@@ -38,10 +34,6 @@ const NavButton: React.FC<{
 export const Header: React.FC<HeaderProps> = ({
   activeMode,
   setAppMode,
-  onSaveProject,
-  isSaveEnabled,
-  isGithubLinked,
-  onCommitAndPush,
   project,
   hasWorkflow
 }) => {
@@ -81,26 +73,13 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
       
-      <div className="w-auto flex items-center justify-end gap-4">
+      <div className="w-auto flex items-center justify-end gap-4 min-w-[200px]">
         {project?.teamId && (
             <div className="flex items-center -space-x-2" title="This is a team project">
                 <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" />
                 <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover" src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" />
                 <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-600 text-xs font-bold text-white">+2</div>
             </div>
-        )}
-        {isSaveEnabled && (
-          isGithubLinked && onCommitAndPush ? (
-            <button onClick={onCommitAndPush} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-full transition-colors duration-300">
-              <GithubIcon className="w-4 h-4" />
-              Commit & Push
-            </button>
-          ) : (
-            <button onClick={onSaveProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors duration-300">
-              <SaveIcon />
-              Save Project
-            </button>
-          )
         )}
       </div>
     </header>
