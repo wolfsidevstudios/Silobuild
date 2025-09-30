@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PlusIcon, ExpandIcon, LightbulbIcon, VoiceIcon, UpArrowIcon } from './icons';
+import { PlusIcon, LightbulbIcon, UpArrowIcon } from './icons';
 
 interface PromptInputProps {
   onSend: (prompt: string) => void;
@@ -45,7 +45,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
     if (isAppGenerated) {
       return "Describe a change to your app...";
     }
-    return "Ask Lovable...";
+    return "Ask Silo...";
   };
 
   return (
@@ -73,9 +73,6 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
             <button type="button" className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600">
                 <PlusIcon />
             </button>
-            <button type="button" className="py-2 px-3 rounded-lg hover:bg-stone-200 transition-colors flex items-center gap-1.5 text-sm font-medium text-gray-600">
-              <ExpandIcon className="w-4 h-4" /> Edit
-            </button>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -89,9 +86,6 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
             >
               <LightbulbIcon className="w-4 h-4" />
               <span>Chat</span>
-            </button>
-            <button type="button" className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600">
-                <VoiceIcon className="w-6 h-6" />
             </button>
             <button
               type="submit"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TechStack } from '../types';
-import { ReactIcon, HtmlIcon, VueIcon, SvelteIcon, NodejsIcon, MobileIcon } from './icons';
+import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon } from './icons';
 
 interface StackSelectionProps {
   onSelect: (stack: TechStack) => void;
@@ -9,20 +9,16 @@ interface StackSelectionProps {
 const StackCard: React.FC<{
     icon: React.ReactNode;
     title: string;
-    description: string;
     onClick: () => void;
-}> = ({ icon, title, description, onClick }) => (
+}> = ({ icon, title, onClick }) => (
     <button
         onClick={onClick}
-        className="bg-white p-6 rounded-full border border-gray-200 text-left w-full transition-all duration-300 hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+        className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
-        <div className="flex items-center gap-4">
+        <div className="w-5 h-5 flex items-center justify-center [&_svg]:w-full [&_svg]:h-full">
             {icon}
-            <div>
-                <h4 className="text-lg font-bold text-gray-900">{title}</h4>
-                <p className="text-gray-600 text-sm">{description}</p>
-            </div>
         </div>
+        <span>{title}</span>
     </button>
 );
 
@@ -33,29 +29,25 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
         <h3 className="text-2xl font-bold">Choose your stack</h3>
         <p className="text-gray-600">Select the technology for your new application.</p>
       </div>
-      <div className="w-full max-w-md space-y-4">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <StackCard
           icon={<ReactIcon />}
-          title="React + TypeScript"
-          description="A modern, multi-file PWA with a robust structure."
+          title="React + TS"
           onClick={() => onSelect('react')}
         />
         <StackCard
           icon={<MobileIcon />}
-          title="Mobile App (React)"
-          description="A web-based app styled to look and feel like a native mobile app."
+          title="Mobile (React)"
           onClick={() => onSelect('mobile')}
         />
          <StackCard
           icon={<SvelteIcon />}
-          title="Svelte + TypeScript"
-          description="Create a Svelte 5 project with a focus on performance."
+          title="Svelte + TS"
           onClick={() => onSelect('svelte')}
         />
         <StackCard
           icon={<HtmlIcon />}
-          title="HTML + Tailwind + JS"
-          description="A simple, single-file application for quick prototypes."
+          title="HTML + JS"
           onClick={() => onSelect('html')}
         />
       </div>
