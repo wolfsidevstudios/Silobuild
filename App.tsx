@@ -8,6 +8,9 @@ import { TermsPage } from './pages/TermsPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { StudioPage } from './pages/StudioPage';
 import { AgentBuilderPage } from './pages/AgentBuilderPage';
+import { MobileApp } from './pages/MobileApp';
+
+const isMobile = () => window.innerWidth < 768;
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -36,7 +39,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 export const App: React.FC = () => {
+  const [isMobileView, setIsMobileView] = useState(isMobile());
   const [route, setRoute] = useState(window.location.hash);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(isMobile());
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -55,6 +67,10 @@ export const App: React.FC = () => {
       Notification.requestPermission();
     }
   }, []);
+
+  if (isMobileView) {
+    return <MobileApp />;
+  }
   
   if (route.startsWith('#/terms')) {
     return <TermsPage />;

@@ -286,16 +286,16 @@ The code you generate MUST be complete and implement all requested features. Do 
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
+First, you MUST output a 'summary' object.
 Example: {"type": "summary", "summary": "- A social media app for sharing photos.\\n- Features a bottom navigation bar and a profile page."}
 
-Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
-Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
+Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
+Example: {"type": "plan", "files": ["package.json", "vite.config.ts", "tailwind.config.js", "postcss.config.js", "index.html", "src/App.tsx", "src/index.tsx", "src/index.css"]}
 
-Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
+Then, for each file, output a 'file' object.
 Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
-Finally, you will output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
+Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
 Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
@@ -307,38 +307,30 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       }
 
       instruction += `\n
---- PWA & CUSTOMIZATION INSTRUCTIONS ---
-All applications you generate for the 'multiFileCode' part MUST be Progressive Web Apps (PWAs).
-This requires the following file structure and content:
-1. A 'manifest.json' file in the root directory.
-2. A service worker file, 'public/sw.js'.
-3. In 'index.html' (for multiFileCode), add the manifest link and service worker registration script.
-   - It MUST use ES modules and import maps to load React from the provided CDN.
+--- MULTI-FILE CODE INSTRUCTIONS (FOR STACKBLITZ) ---
+All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), structured for a Vite + React + TypeScript environment. This is required for the StackBlitz preview.
+This requires the following files:
+1.  **\`package.json\`**: MUST include these dependencies: "react", "react-dom". It must also include these devDependencies: "@vitejs/plugin-react", "vite", "typescript", "tailwindcss", "postcss", "autoprefixer". The scripts section must have "dev": "vite", "build": "vite build".
+2.  **\`vite.config.ts\`**: A standard Vite config file with the React plugin enabled.
+3.  **\`tailwind.config.js\`** and **\`postcss.config.js\`**: Standard configuration files for Tailwind CSS. The tailwind config's 'content' array must be set to watch files in "./src/**/*.{js,ts,jsx,tsx}".
+4.  **\`src/index.css\`**: Must contain the Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
+5.  **\`index.html\`**: The main entry point in the root directory. It must have a gray background (\`bg-gray-200\`) and link to \`src/index.tsx\` as a module.
+6.  A 'manifest.json' file and a service worker 'public/sw.js' for PWA functionality.
 
---- PREVIEW FILE INSTRUCTIONS (React) ---
-The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' compatible with React 19.
+--- PREVIEW FILE INSTRUCTIONS (FOR IFRAME) ---
+The 'previewFile' is CRITICAL for a quick look inside the builder. It MUST be a single, self-contained 'index.html' compatible with React 19.
 Follow these steps precisely:
 1.  Start with a standard HTML5 boilerplate.
 2.  In the <head>, include Tailwind CSS via CDN.
 3.  In the <head>, you MUST add an import map script tag for React 19.
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@19.0.0-rc.0",
-        "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client"
-      }
-    }
-    </script>
-4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>. The body should have a gray background (\`bg-gray-200\`) to contrast with the white app container.
-5.  At the end of the <body>, add the Babel Standalone script.
-6.  Immediately after, add the main application script tag: \`<script type="text/babel" data-type="module">\`.
-7.  Inside this script:
+4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>. The body should have a gray background (\`bg-gray-200\`).
+5.  At the end of the <body>, add the Babel Standalone script, then the main application script tag: \`<script type="text/babel" data-type="module">\`.
+6.  Inside this script:
     a.  Import React and ReactDOM.
-    b.  Combine all '.tsx' file logic into this one script.
-    c.  Define all React components. Remove 'export' statements.
-    d.  **IMPORTANT**: The root component should render the app inside a centered container that looks like a phone. This decorative phone frame is for the preview ONLY and MUST NOT be included in the \`multiFileCode\`. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
-    e.  Conclude with the React 19 rendering code: \`ReactDOM.createRoot(document.getElementById('root')).render(<AppFrame />);\`.
-8.  Do NOT include service worker registration or manifest link in the previewFile.
+    b.  Combine all '.tsx' file logic.
+    c.  **IMPORTANT**: The root component should render the app inside a centered container that looks like a phone. This decorative phone frame is for the preview ONLY. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
+    d.  Conclude with the React 19 rendering code: \`ReactDOM.createRoot(document.getElementById('root')).render(<AppFrame />);\`.
+7.  Do NOT include service worker registration or manifest link in the previewFile.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;

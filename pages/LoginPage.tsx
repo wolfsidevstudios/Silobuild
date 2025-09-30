@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon, NetlifyIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, VercelIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon } from '../components/icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
@@ -8,6 +8,7 @@ import { Spinner } from '../components/Spinner';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -667,7 +668,6 @@ export const LoginPage: React.FC = () => {
                         <SupabaseLogo className="h-8" />
                         <StripeLogo className="h-8 text-gray-700" />
                         <VercelIcon className="h-7 text-black" />
-                        <NetlifyIcon className="h-7" />
                     </div>
                 </div>
             </section>
@@ -758,4 +758,108 @@ export const LoginPage: React.FC = () => {
                     <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-8">
                         <div className="text-center">
                             <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
-                                <p
+                                <p className="text-2xl font-bold text-gray-600">1</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Sign In</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Create an account or sign in with Google. It's free and takes just a moment.
+                            </p>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+                                <p className="text-2xl font-bold text-gray-600">2</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Add API Key</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Add your Google Gemini API key in the settings. Your key is stored securely in your browser.
+                            </p>
+                        </div>
+                        <div className="text-center">
+                            <div className="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+                                <p className="text-2xl font-bold text-gray-600">3</p>
+                            </div>
+                            <h4 className="font-bold text-lg">Start Building</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Describe your app in the prompt bar and let the AI handle the rest.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="faq" className="py-20 bg-transparent border-t border-gray-200">
+                <div className="container mx-auto px-6 max-w-3xl">
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
+                    </div>
+                    <div className="space-y-4">
+                        <FaqItem
+                            question="Who owns the code that's generated?"
+                            answer="You do. All generated code is yours to use, modify, and distribute as you see fit, for both personal and commercial projects. We claim no ownership over the output."
+                        />
+                        <FaqItem
+                            question="Are my API keys and project data secure?"
+                            answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It never touches our servers, ensuring your information remains private and under your control."
+                        />
+                        <FaqItem
+                            question="How much does it cost to use?"
+                            answer="Silo Build itself is free to use. However, you are responsible for the costs associated with the API services you use, such as the Google Gemini API, which is accessed via your own API key."
+                        />
+                        <FaqItem
+                            question="What technology stack does it use?"
+                            answer="The AI generates standard, production-ready React applications using TypeScript. For styling, it utilizes Tailwind CSS. The generated code is clean, un-opinionated, and easy to extend."
+                        />
+                    </div>
+                </div>
+            </section>
+            
+            <section id="cta" className="py-20">
+                <div className="container mx-auto px-6">
+                    <div className="relative isolate overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-100 px-6 py-24 text-center shadow-2xl rounded-2xl sm:px-16 border border-gray-200">
+                        <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                            Ready to build your next idea?
+                        </h2>
+                        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-600">
+                            Stop wiring boilerplate and start creating. Your next project is just a prompt away.
+                        </p>
+                        <div className="mt-10 flex items-center justify-center gap-x-6">
+                            {user ? (
+                                <a href="#/builder" className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                                    Go to Builder
+                                </a>
+                            ) : (
+                                <button onClick={handleSignInClick} className="bg-blue-600 text-white px-6 py-3 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors">
+                                    Sign In & Get Started
+                                </button>
+                            )}
+                        </div>
+                        <div className="absolute -top-24 right-0 -z-10 transform-gpu blur-3xl" aria-hidden="true">
+                            <div className="aspect-[1404/767] w-[87.75rem] bg-gradient-to-r from-[#80caff] to-[#4f46e5] opacity-10" style={{clipPath: 'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 37.9%, 73.6% 51.7%)'}}></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer className="py-8 text-center text-gray-500 border-t border-gray-200">
+            <div className="container mx-auto px-6">
+                <p>&copy; {new Date().getFullYear()} Silo Build. All rights reserved.</p>
+                <div className="flex justify-center gap-6 mt-4">
+                  <a href="#/terms" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Terms of Service</a>
+                  <a href="#/privacy" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Privacy Policy</a>
+                </div>
+            </div>
+        </footer>
+
+        {isBotOpen && <HelpBot onClose={() => setIsBotOpen(false)} />}
+        <button
+            onClick={() => setIsBotOpen(prev => !prev)}
+            className="fixed bottom-5 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 z-40"
+            aria-label="Toggle Help Bot"
+        >
+            {isBotOpen ? <CloseIcon className="w-7 h-7"/> : <HelpCircleIcon className="w-7 h-7" />}
+        </button>
+    </div>
+  );
+};

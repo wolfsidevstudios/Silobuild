@@ -1,40 +1,40 @@
 import React, { useState } from 'react';
-import { GeneratedFile, Deployment } from '../types';
+import { GeneratedFile, Deployment, TechStack } from '../types';
 import { DeployModal } from './DeployModal';
 import { DesktopIcon, UploadIcon, DatabaseIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
-import { deployToNetlify } from '../services/netlifyService';
+import { StackBlitzPreview } from './StackBlitzPreview';
 
 interface PreviewViewProps {
   file: GeneratedFile | null;
   vercelToken: string;
-  netlifyToken: string;
   multiFileCode: GeneratedFile[];
   projectName?: string;
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   onNewDeployment: (deployment: Deployment) => void;
   onAddSupabase: () => void;
+  techStack: TechStack | null;
 }
 
 export const PreviewView: React.FC<PreviewViewProps> = ({ 
   file, 
   vercelToken, 
-  netlifyToken,
   multiFileCode, 
   projectName, 
   onToggleMacPreview,
   deployments,
   onNewDeployment,
-  onAddSupabase
+  onAddSupabase,
+  techStack,
 }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
 
-  const handleDeploy = async (provider: 'vercel' | 'netlify', token: string, newProjectName: string) => {
+  const handleDeploy = async (token: string, newProjectName: string) => {
     if (!token || multiFileCode.length === 0) {
-      setDeploymentError(`${provider === 'vercel' ? 'Vercel' : 'Netlify'} token is missing or there are no files to deploy.`);
+      setDeploymentError("Vercel token is missing or there are no files to deploy.");
       return;
     }
 
@@ -42,61 +42,53 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     setDeploymentError(null);
 
     try {
-      let deploymentUrl: string;
+      const filesForApi = multiFileCode.map(({ path, content }) => ({
+        file: path,
+        data: content,
+      }));
 
-      if (provider === 'netlify') {
-          const result = await deployToNetlify(token, newProjectName, multiFileCode);
-          deploymentUrl = result.url;
-      } else { // Vercel
-          const filesForApi = multiFileCode.map(({ path, content }) => ({
-            file: path,
-            data: content,
-          }));
+      const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
 
-          const sanitizedProjectName = (newProjectName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
+      filesForApi.push({
+        file: 'package.json',
+        data: JSON.stringify({
+          name: sanitizedProjectName,
+          version: '0.1.0',
+          private: true,
+        }),
+      });
 
-          filesForApi.push({
-            file: 'package.json',
-            data: JSON.stringify({
-              name: sanitizedProjectName,
-              version: '0.1.0',
-              private: true,
-            }),
-          });
+      const response = await fetch('https://api.vercel.com/v13/deployments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: sanitizedProjectName,
+          files: filesForApi,
+          projectSettings: {
+            framework: null, // Let Vercel auto-detect
+          },
+          target: 'production',
+        }),
+      });
 
-          const response = await fetch('https://api.vercel.com/v13/deployments', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              name: sanitizedProjectName,
-              files: filesForApi,
-              projectSettings: {
-                framework: null, // Let Vercel auto-detect
-              },
-              target: 'production',
-            }),
-          });
+      const result = await response.json();
 
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
-          }
-          deploymentUrl = `https://${result.url}`;
+      if (!response.ok) {
+        throw new Error(result.error?.message || 'Failed to deploy to Vercel.');
       }
-      
+
       const newDeployment: Deployment = {
-        url: deploymentUrl,
+        url: `https://${result.url}`,
         timestamp: new Date().toISOString(),
       };
       onNewDeployment(newDeployment);
       setIsDeployModalOpen(false);
 
     } catch (error) {
-      console.error(`${provider} deployment failed:`, error);
+      console.error("Vercel deployment failed:", error);
       const message = error instanceof Error ? error.message : "An unknown error occurred during deployment.";
       setDeploymentError(`Deployment failed: ${message}`);
     } finally {
@@ -105,6 +97,38 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   };
 
   const latestDeployment = deployments.length > 0 ? deployments[0] : null;
+  
+  const renderPreviewContent = () => {
+    if (techStack === 'mobile') {
+      if (multiFileCode.length > 0) {
+        return <StackBlitzPreview files={multiFileCode} projectName={projectName || 'Mobile App'} />;
+      }
+      return (
+        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
+            <p>Generate a mobile app to see the StackBlitz preview.</p>
+        </div>
+      )
+    }
+    
+    if (file) {
+      return (
+        <iframe
+          key={file.content} // Re-mount iframe on content change
+          srcDoc={file.content}
+          title="Live App Preview"
+          className="w-full h-full border-0 bg-white"
+          sandbox="allow-scripts allow-same-origin"
+        />
+      );
+    }
+    
+    return (
+       <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
+            <p>No preview available yet. Generate an app first.</p>
+        </div>
+    );
+  };
+
 
   return (
     <div className="w-full h-full flex flex-col overflow-y-auto p-4 gap-4">
@@ -140,19 +164,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                 </button>
             </div>
         </div>
-        {file ? (
-          <iframe
-            key={file.content} // Re-mount iframe on content change
-            srcDoc={file.content}
-            title="Live App Preview"
-            className="w-full h-full border-0 bg-white"
-            sandbox="allow-scripts allow-same-origin"
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
-            <p>No preview available yet. Generate an app first.</p>
-          </div>
-        )}
+        {renderPreviewContent()}
         {file && (
           <button
             onClick={onToggleMacPreview}
@@ -206,7 +218,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         isDeploying={isDeploying}
         initialProjectName={projectName}
         initialToken={vercelToken}
-        initialNetlifyToken={netlifyToken}
         deploymentError={deploymentError}
       />
     </div>

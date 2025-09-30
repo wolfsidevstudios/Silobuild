@@ -19,7 +19,6 @@ interface ChatViewProps {
   generationSummary: string | null;
   isIdeaMode: boolean;
   vercelToken: string;
-  netlifyToken: string;
   onFileUpdate: (path: string, content: string) => void;
   onFileDelete: (path: string) => void;
   onFileAdd: (path: string) => boolean;
@@ -30,6 +29,7 @@ interface ChatViewProps {
   deployments: Deployment[];
   onNewDeployment: (deployment: Deployment) => void;
   onAddSupabase: () => void;
+  techStack: TechStack | null;
 }
 
 const ViewModeToggle: React.FC<{
@@ -140,7 +140,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   generationSummary,
   isIdeaMode,
   vercelToken,
-  netlifyToken,
   onFileUpdate,
   onFileDelete,
   onFileAdd,
@@ -151,6 +150,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   deployments,
   onNewDeployment,
   onAddSupabase,
+  techStack,
 }) => {
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-2'} gap-4 p-4 overflow-hidden`}>
@@ -222,13 +222,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <PreviewView 
                   file={previewFile} 
                   vercelToken={vercelToken}
-                  netlifyToken={netlifyToken}
                   multiFileCode={multiFileCode}
                   projectName={projectName}
                   onToggleMacPreview={onToggleMacPreview}
                   deployments={deployments}
                   onNewDeployment={onNewDeployment}
                   onAddSupabase={onAddSupabase}
+                  techStack={techStack}
                 />
             )}
             </div>

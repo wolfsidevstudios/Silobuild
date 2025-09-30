@@ -14,6 +14,7 @@ import { MacPreview } from './MacPreview';
 import { showLocalNotification } from '../utils/projectUtils';
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 
+// FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
   vercelApiKey: '',
@@ -391,7 +392,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             generationSummary={generationSummary}
             isIdeaMode={isIdeaMode}
             vercelToken={settings.vercelApiKey}
-            netlifyToken={settings.netlifyPat}
             onFileUpdate={handleFileUpdate}
             onFileDelete={handleFileDelete}
             onFileAdd={handleFileAdd}
@@ -402,6 +402,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             deployments={deployments}
             onNewDeployment={handleNewDeployment}
             onAddSupabase={handleAddSupabase}
+            techStack={techStack}
           />
         );
       case 'CODE':
@@ -417,13 +418,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return <PreviewView 
           file={previewFile} 
           vercelToken={settings.vercelApiKey}
-          netlifyToken={settings.netlifyPat}
           multiFileCode={multiFileCode}
           projectName={currentProject?.name}
           onToggleMacPreview={() => setIsMacPreviewVisible(true)}
           deployments={deployments}
           onNewDeployment={handleNewDeployment}
           onAddSupabase={handleAddSupabase}
+          techStack={techStack}
         />;
       case 'WORKFLOW':
         return workflow ? <WorkflowBuilderPage workflow={workflow} /> : 

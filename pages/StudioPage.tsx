@@ -129,8 +129,8 @@ export const StudioPage: React.FC<{ projectId: string }> = ({ projectId }) => {
                 onToggleMacPreview={() => setIsMacPreviewVisible(true)}
                 deployments={projectData.deployments}
                 onNewDeployment={() => { /* Not implemented in studio */ }}
-                // FIX: Add missing 'onAddSupabase' prop to satisfy PreviewViewProps type.
                 onAddSupabase={() => { /* Not implemented in studio */ }}
+                techStack={projectData.stack}
             />
         </div>
       </main>
