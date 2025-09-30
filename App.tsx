@@ -61,13 +61,6 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // Request notification permission on app load for PWA notifications
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
-
   if (isMobileView) {
     return <MobileApp />;
   }

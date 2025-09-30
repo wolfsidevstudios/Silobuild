@@ -97,11 +97,5 @@ export const showLocalNotification = (title: string, options: NotificationOption
                 reg.showNotification(title, options);
             }
         });
-    } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission(permission => {
-            if (permission === 'granted') {
-                showLocalNotification(title, options);
-            }
-        });
     }
 }

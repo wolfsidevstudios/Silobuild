@@ -1,5 +1,5 @@
 // FIX: Replaced API key management with application-level settings for notifications and data management.
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SettingsIcon, TrashIcon } from '../components/icons';
 
@@ -17,18 +17,19 @@ const initialPreferences: UserPreferences = {
   }
 };
 
-const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void; description: string; }> = ({ label, enabled, onChange, description }) => (
-    <div className="flex items-center justify-between py-4 border-b border-gray-200">
+const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void; description: string; disabled?: boolean; }> = ({ label, enabled, onChange, description, disabled = false }) => (
+    <div className={`flex items-center justify-between py-4 border-b border-gray-200 last:border-b-0 ${disabled ? 'opacity-50' : ''}`}>
         <div>
-            <label className="font-medium text-gray-800">{label}</label>
+            <label className={`font-medium ${disabled ? 'text-gray-500' : 'text-gray-800'}`}>{label}</label>
             <p className="text-sm text-gray-500">{description}</p>
         </div>
         <button
             type="button"
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 enabled ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
-            onClick={() => onChange(!enabled)}
+            } ${disabled ? 'cursor-not-allowed' : ''}`}
+            onClick={() => !disabled && onChange(!enabled)}
+            disabled={disabled}
         >
             <span
                 className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -44,6 +45,28 @@ export const SettingsPage: React.FC = () => {
   const [preferences, setPreferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
   const [, setProjects] = useLocalStorage('ai-app-builder-projects', []);
   const [, setSettings] = useLocalStorage('ai-app-builder-settings', {});
+  const [notificationPermission, setNotificationPermission] = useState('Notification' in window ? Notification.permission : 'unsupported');
+
+  useEffect(() => {
+    // For modern browsers that support the Permissions API and onchange event
+    if ('permissions' in navigator && typeof navigator.permissions.query === 'function') {
+        navigator.permissions.query({ name: 'notifications' }).then((permissionStatus) => {
+            setNotificationPermission(permissionStatus.state);
+            permissionStatus.onchange = () => {
+                setNotificationPermission(permissionStatus.state);
+            };
+        }).catch(() => {
+            // Fallback for browsers that might have the API but error (e.g., Firefox in some contexts)
+            setNotificationPermission('Notification' in window ? Notification.permission : 'unsupported');
+        });
+    } else if (!('Notification' in window)) {
+        setNotificationPermission('unsupported');
+    } else {
+        // Fallback for older browsers like Safari on iOS pre-Permissions API for notifications
+        setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
 
   const handleToggle = (key: keyof UserPreferences['notifications']) => {
       setPreferences(prev => ({
@@ -69,6 +92,19 @@ export const SettingsPage: React.FC = () => {
     }
   }
 
+   const handleEnableNotifications = async () => {
+    if (!('Notification' in window)) {
+        alert('This browser does not support desktop notifications.');
+        return;
+    }
+
+    if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+    }
+  };
+
+
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-6">
@@ -82,18 +118,45 @@ export const SettingsPage: React.FC = () => {
       <div className="max-w-2xl mx-auto space-y-10">
         <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
             <h2 className="text-xl font-semibold mb-2 text-gray-800">Notifications</h2>
-            <p className="text-gray-500 mb-4 text-sm">Configure which notifications you want to receive.</p>
+            <p className="text-gray-500 mb-4 text-sm">Enable browser notifications and choose what you want to be notified about.</p>
+
+            <div className="flex items-center justify-between py-4 border-b border-gray-200">
+                <div>
+                    <label className="font-medium text-gray-800">Browser Push Notifications</label>
+                    <p className="text-sm text-gray-500">
+                        Status: <span className={`font-semibold capitalize ${
+                            notificationPermission === 'granted' ? 'text-green-600' :
+                            notificationPermission === 'denied' ? 'text-red-600' : 'text-gray-600'
+                        }`}>{notificationPermission}</span>
+                    </p>
+                    {notificationPermission === 'denied' && (
+                        <p className="text-xs text-red-500 mt-1">
+                            Notifications are blocked. You'll need to enable them in your browser or OS settings.
+                        </p>
+                    )}
+                </div>
+                <button
+                    onClick={handleEnableNotifications}
+                    disabled={notificationPermission !== 'default'}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    Enable
+                </button>
+            </div>
+
             <ToggleSwitch 
                 label="Product Updates"
                 description="Receive notifications about new features and improvements."
                 enabled={preferences.notifications.updates}
                 onChange={() => handleToggle('updates')}
+                disabled={notificationPermission !== 'granted'}
             />
              <ToggleSwitch 
                 label="Deployment Status"
                 description="Get notified when your deployments succeed or fail."
                 enabled={preferences.notifications.deployments}
                 onChange={() => handleToggle('deployments')}
+                disabled={notificationPermission !== 'granted'}
             />
         </div>
 

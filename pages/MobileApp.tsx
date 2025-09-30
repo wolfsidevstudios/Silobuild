@@ -332,8 +332,26 @@ const MobileSettingsPage: React.FC<{ onInstallClick: () => void; canInstall: boo
     const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
     const [isSaved, setIsSaved] = useState(false);
+    const [notificationPermission, setNotificationPermission] = useState('Notification' in window ? Notification.permission : 'unsupported');
 
-    useEffect(() => { setLocalSettings(settings); }, [settings]);
+
+    useEffect(() => {
+        setLocalSettings(settings);
+        if ('permissions' in navigator && typeof navigator.permissions.query === 'function') {
+            navigator.permissions.query({ name: 'notifications' }).then((permissionStatus) => {
+                setNotificationPermission(permissionStatus.state);
+                permissionStatus.onchange = () => {
+                    setNotificationPermission(permissionStatus.state);
+                };
+            }).catch(() => {
+                setNotificationPermission('Notification' in window ? Notification.permission : 'unsupported');
+            });
+        } else if (!('Notification' in window)) {
+            setNotificationPermission('unsupported');
+        } else {
+            setNotificationPermission(Notification.permission);
+        }
+    }, [settings]);
 
     const handleChange = (key: keyof Settings, value: string) => {
         setLocalSettings(prev => ({ ...prev, [key]: value }));
@@ -344,6 +362,18 @@ const MobileSettingsPage: React.FC<{ onInstallClick: () => void; canInstall: boo
         setSettings(localSettings);
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 2000);
+    };
+    
+    const handleEnableNotifications = async () => {
+        if (!('Notification' in window)) {
+            alert('This browser does not support notifications.');
+            return;
+        }
+    
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            setNotificationPermission(permission);
+        }
     };
 
     return (
@@ -376,6 +406,38 @@ const MobileSettingsPage: React.FC<{ onInstallClick: () => void; canInstall: boo
                             To install manually, use the "Add to Home Screen" option in your browser's menu. This may not be available if the app is already installed.
                         </p>
                     )}
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                        <ChatIcon className="w-6 h-6 text-blue-500" />
+                        <h3 className="text-lg font-bold">Notifications</h3>
+                    </div>
+                    <div className="pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <label className="font-medium text-sm text-gray-800">Browser Push Notifications</label>
+                                <p className="text-xs text-gray-500">
+                                    Status: <span className={`font-semibold capitalize ${
+                                        notificationPermission === 'granted' ? 'text-green-600' :
+                                        notificationPermission === 'denied' ? 'text-red-600' : 'text-gray-600'
+                                    }`}>{notificationPermission}</span>
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleEnableNotifications}
+                                disabled={notificationPermission !== 'default'}
+                                className="px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                Enable
+                            </button>
+                        </div>
+                        {notificationPermission === 'denied' && (
+                            <p className="text-xs text-red-500 mt-2">
+                                Notifications are blocked. You'll need to enable them in your browser or OS settings.
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <IntegrationCard icon={<GeminiLogo className="h-7"/>} title="Google Gemini">
