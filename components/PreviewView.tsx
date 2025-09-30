@@ -3,7 +3,7 @@ import { GeneratedFile, Deployment, TechStack } from '../types';
 import { DeployModal } from './DeployModal';
 import { DesktopIcon, UploadIcon, DatabaseIcon } from './icons';
 import { timeAgo } from '../utils/projectUtils';
-import { StackBlitzPreview } from './StackBlitzPreview';
+import { PowerfulPreview } from './PowerfulPreview';
 
 interface PreviewViewProps {
   file: GeneratedFile | null;
@@ -99,15 +99,15 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   const latestDeployment = deployments.length > 0 ? deployments[0] : null;
   
   const renderPreviewContent = () => {
-    if (techStack === 'mobile') {
-      if (multiFileCode.length > 0) {
-        return <StackBlitzPreview files={multiFileCode} projectName={projectName || 'Mobile App'} />;
-      }
-      return (
-        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
-            <p>Generate a mobile app to see the StackBlitz preview.</p>
-        </div>
-      )
+    if (techStack === 'react' || techStack === 'mobile') {
+        if (multiFileCode.length > 0) {
+            return <PowerfulPreview files={multiFileCode} />;
+        }
+        return (
+            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50 p-4 text-center">
+                <p>Generate a React app to see the live preview.</p>
+            </div>
+        );
     }
     
     if (file) {

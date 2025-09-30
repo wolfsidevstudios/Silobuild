@@ -276,82 +276,56 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
   } else if (techStack === 'mobile') {
       instruction = `You are an expert mobile app developer specializing in generating fully functional, production-ready mobile applications using React and Tailwind CSS. The apps you create are web-based but MUST perfectly mimic the look and feel of a native mobile app.
 
---- MANDATORY DESIGN REQUIREMENTS ---
-1.  **Layout:** The application's main root component (e.g., in \`App.tsx\`) MUST render its content within a main container that has a fixed maximum width (e.g., \`max-w-sm\`) and is centered horizontally. This creates the mobile screen layout. Do NOT add a decorative phone-like frame, border, or shadow around this container in the \`multiFileCode\`. The phone frame is ONLY for the \`previewFile\`.
-2.  **Background:** The body of the app inside the container MUST be white (\`bg-white\`). The page background outside the app container should be gray (\`bg-gray-200\`) in the main \`index.html\`.
-3.  **Navigation:** There MUST be a fixed bottom navigation bar with at least 3 icon-based links. This should be the primary navigation method.
-4.  **Buttons:** ALL buttons in the application MUST be pill-shaped (using \`rounded-full\` in Tailwind CSS).
-
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
-
 You must stream your response as a sequence of JSON objects, each on a new line.
 
 First, you MUST output a 'summary' object.
 Example: {"type": "summary", "summary": "- A social media app for sharing photos.\\n- Features a bottom navigation bar and a profile page."}
 
-Second, you MUST output a 'plan' object listing all file paths for the 'multiFileCode' part.
-Example: {"type": "plan", "files": ["package.json", "vite.config.ts", "tailwind.config.js", "postcss.config.js", "index.html", "src/App.tsx", "src/index.tsx", "src/index.css"]}
+Second, you MUST output a 'plan' object listing all file paths for the application.
+Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.tsx", "src/index.css"]}
 
 Then, for each file, output a 'file' object.
 Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
-Finally, output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
-Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+You are NOT required to output a 'previewFile' object. The preview is handled automatically.
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
       if (isEditing) {
-        instruction += `\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files, adhering to all mandatory design requirements.`;
+        instruction += `\nYour task is to update the provided application files based on the user's request. You will receive the current application files as a JSON array, followed by the user's modification request. You MUST output the complete, updated set of files.`;
       } else {
         instruction += `\nYour task is to generate a complete, multi-file mobile-style React TypeScript application based on the user's prompt.`;
       }
 
       instruction += `\n
---- MULTI-FILE CODE INSTRUCTIONS (FOR STACKBLITZ) ---
-All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), structured for a Vite + React + TypeScript environment. This is required for the StackBlitz preview.
+--- MULTI-FILE CODE INSTRUCTIONS ---
+All applications you generate MUST be Progressive Web Apps (PWAs), structured for a modern Vite-like environment.
 This requires the following files:
-1.  **\`package.json\`**: MUST include these dependencies: "react", "react-dom". It must also include these devDependencies: "@vitejs/plugin-react", "vite", "typescript", "tailwindcss", "postcss", "autoprefixer". The scripts section must have "dev": "vite", "build": "vite build".
-2.  **\`vite.config.ts\`**: A standard Vite config file with the React plugin enabled.
-3.  **\`tailwind.config.js\`** and **\`postcss.config.js\`**: Standard configuration files for Tailwind CSS. The tailwind config's 'content' array must be set to watch files in "./src/**/*.{js,ts,jsx,tsx}".
-4.  **\`src/index.css\`**: Must contain the Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
-5.  **\`index.html\`**: The main entry point in the root directory. It must have a gray background (\`bg-gray-200\`) and link to \`src/index.tsx\` as a module.
-6.  A 'manifest.json' file and a service worker 'public/sw.js' for PWA functionality.
-
---- PREVIEW FILE INSTRUCTIONS (FOR IFRAME) ---
-The 'previewFile' is CRITICAL for a quick look inside the builder. It MUST be a single, self-contained 'index.html' compatible with React 19.
-Follow these steps precisely:
-1.  Start with a standard HTML5 boilerplate.
-2.  In the <head>, include Tailwind CSS via CDN.
-3.  In the <head>, you MUST add an import map script tag for React 19.
-4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>. The body should have a gray background (\`bg-gray-200\`).
-5.  At the end of the <body>, add the Babel Standalone script, then the main application script tag: \`<script type="text/babel" data-type="module">\`.
-6.  Inside this script:
-    a.  Import React and ReactDOM.
-    b.  Combine all '.tsx' file logic.
-    c.  **IMPORTANT**: The root component should render the app inside a centered container that looks like a phone. This decorative phone frame is for the preview ONLY. Example: \`const AppFrame = () => <div className="mx-auto mt-8 max-w-sm h-[80vh] bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-black"><App /></div>;\`.
-    d.  Conclude with the React 19 rendering code: \`ReactDOM.createRoot(document.getElementById('root')).render(<AppFrame />);\`.
-7.  Do NOT include service worker registration or manifest link in the previewFile.
+1.  **\`src/index.css\`**: Must contain the Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
+2.  **\`index.html\`**: The main entry point. It must have a gray background (\`bg-gray-200\`), a \`<div id="root"></div>\`, and link to \`src/index.tsx\` as a module.
+3.  **\`src/index.tsx\`**: Mounts the main React application into the root div. It MUST import 'src/index.css'.
+4.  **\`src/App.tsx\`**: The root component. The main container inside this component MUST have a fixed maximum width (e.g., \`max-w-sm\`), be centered horizontally, and have a white background to create the mobile screen illusion.
+5.  A 'manifest.json' file and a service worker 'public/sw.js' for PWA functionality.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
   } else { // 'react'
       instruction = `You are an expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications.
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. The final application must be fully interactive and usable.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
-Example: {"type": "summary", "summary": "- Pomodoro Timer with 25-minute work and 5-minute break cycles.\\n- Start, Pause, and Reset controls."}
+First, you MUST output a 'summary' object.
+Example: {"type": "summary", "summary": "- Pomodoro Timer with 25-minute work and 5-minute break cycles."}
 
-Second, you MUST output a 'plan' object that lists all the file paths for the 'multiFileCode' part.
-Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx"]}
+Second, you MUST output a 'plan' object that lists all the file paths for the application.
+Example: {"type": "plan", "files": ["index.html", "public/sw.js", "manifest.json", "src/App.tsx", "src/index.tsx", "src/index.css"]}
 
-Then, for each file intended for 'multiFileCode', you will output a 'file' object containing its path and content.
+Then, for each file, you will output a 'file' object containing its path and content.
 Example: {"type": "file", "file": {"path": "src/App.tsx", "content": "import React from 'react';"}}
 
-Finally, you will output a 'previewFile' object for the single, self-contained 'index.html' file for live browser preview.
-Example: {"type": "previewFile", "file": {"path": "index.html", "content": "<!DOCTYPE html>..."}}
+You are NOT required to output a 'previewFile' object. The preview is handled automatically from the files you generate.
 
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
@@ -362,47 +336,16 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       }
 
       instruction += `\n
---- PWA & CUSTOMIZATION INSTRUCTIONS ---
-All applications you generate for the 'multiFileCode' part MUST be Progressive Web Apps (PWAs).
+--- PWA & FILE STRUCTURE INSTRUCTIONS ---
+All applications you generate MUST be Progressive Web Apps (PWAs).
 This requires the following file structure and content:
-1. A 'manifest.json' file in the root directory.
-   - It must include 'name', 'short_name', 'icons', 'start_url', 'display', 'background_color', and 'theme_color'.
-   - For the 'icons' array, you MUST reference an icon at the path "/icon-192x192.png" (size 192x192) and "/icon-512x512.png" (size 512x512). The user will provide the actual image file.
-2. A service worker file, 'public/sw.js'. This should implement a basic cache-first or network-first strategy for assets to enable offline functionality.
-3. In 'index.html' (for multiFileCode):
-   - Add '<link rel="manifest" href="/manifest.json">' in the <head>.
-   - Add a script block to register the 'public/sw.js' service worker.
-   - It MUST use ES modules and import maps to load React from the provided CDN.
-
---- PREVIEW FILE INSTRUCTIONS (React) ---
-The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' compatible with React 19, which is ESM-only.
-To achieve this, you MUST follow these steps precisely:
-1.  Start with a standard HTML5 boilerplate.
-2.  In the <head>, include Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>.
-3.  In the <head>, you MUST add an import map script tag to handle ESM imports for React 19. Use these exact contents:
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@19.0.0-rc.0",
-        "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client"
-      }
-    }
-    </script>
-4.  The <body> MUST contain a single root element, e.g., <div id="root"></div>.
-5.  At the end of the <body>, add the Babel Standalone script: <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>.
-6.  Immediately after the Babel script, add the main application script tag. It MUST be \`<script type="text/babel" data-type="module">\`. The 'data-type="module"' attribute is ESSENTIAL.
-7.  Inside this script tag:
-    a.  Start with the necessary imports:
-        import React from 'react';
-        import ReactDOM from 'react-dom/client';
-    b.  Combine the logic from all your generated '.tsx' files into this one script block.
-    c.  Define all React components using TSX syntax. Ensure components are defined before they are used.
-    d.  You MUST remove any 'export' statements and any 'import' statements between your components, as they are all in the same script scope.
-    e.  The script MUST conclude with the standard React 19 rendering code:
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<App />);
-8.  Do NOT include service worker registration or a link to manifest.json in the previewFile.
+1.  **\`src/index.css\`**: MUST contain the three standard Tailwind directives: \`@tailwind base;\`, \`@tailwind components;\`, \`@tailwind utilities;\`.
+2.  **\`index.html\`**: The main entry point. It must contain a \`<div id="root"></div>\` and a module script tag pointing to the entry point: \`<script type="module" src="/src/index.tsx"></script>\`. It also needs a link to the manifest file.
+3.  **\`src/index.tsx\`**: This file renders the \`<App />\` component into the root div. It MUST import './index.css'.
+4.  **\`src/App.tsx\`**: This is the main application component.
+5.  A **\`manifest.json\`** file.
+6.  A service worker file, **\`public/sw.js\`**.
+7.  The service worker MUST be registered in a script inside **\`index.html\`**.
 `;
     instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
     instruction += DATABASE_INSTRUCTION;
