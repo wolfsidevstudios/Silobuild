@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SettingsIcon, TrashIcon } from '../components/icons';
+import { showLocalNotification } from '../utils/projectUtils';
 
 interface UserPreferences {
   notifications: {
@@ -69,19 +70,26 @@ export const SettingsPage: React.FC = () => {
 
 
   const handleToggle = (key: keyof UserPreferences['notifications']) => {
+      const newPreference = !preferences.notifications[key];
       setPreferences(prev => ({
           ...prev,
           notifications: {
               ...prev.notifications,
-              [key]: !prev.notifications[key]
+              [key]: newPreference
           }
       }));
+      showLocalNotification('Warning: Settings Changed', {
+          body: `Notifications for "${key}" have been ${newPreference ? 'enabled' : 'disabled'}.`
+      });
   };
   
   const handleClearProjects = () => {
     if(window.confirm('Are you sure you want to delete all your projects? This action cannot be undone.')) {
         setProjects([]);
         alert('All projects have been deleted.');
+        showLocalNotification('Warning: Data Cleared', {
+            body: 'All project data has been permanently deleted.'
+        });
     }
   };
 
@@ -89,6 +97,9 @@ export const SettingsPage: React.FC = () => {
       if(window.confirm('Are you sure you want to delete all your API keys and settings? This action cannot be undone.')) {
         setSettings({});
         alert('All settings have been deleted.');
+        showLocalNotification('Warning: Data Cleared', {
+            body: 'All integration settings have been permanently deleted.'
+        });
     }
   }
 

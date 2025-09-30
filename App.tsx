@@ -9,6 +9,8 @@ import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { StudioPage } from './pages/StudioPage';
 import { AgentBuilderPage } from './pages/AgentBuilderPage';
 import { MobileApp } from './pages/MobileApp';
+import { prompts } from './data/prompts';
+import { showLocalNotification } from './utils/projectUtils';
 
 const isMobile = () => window.innerWidth < 768;
 
@@ -41,6 +43,31 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const App: React.FC = () => {
   const [isMobileView, setIsMobileView] = useState(isMobile());
   const [route, setRoute] = useState(window.location.hash);
+
+  useEffect(() => {
+    let intervalId: number | undefined;
+
+    const showPromptSuggestion = () => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+        // FIX: Removed deprecated 'renotify' property from NotificationOptions. The 'tag' property ensures notifications replace each other, which is the desired behavior.
+        showLocalNotification('Silo Build Prompt Idea ✨', {
+          body: `Try building: "${randomPrompt.title}". Tap to start building!`,
+          tag: 'prompt-suggestion',
+        });
+      }
+    };
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+      intervalId = window.setInterval(showPromptSuggestion, 60000); // Every minute
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {

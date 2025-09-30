@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon } from '../components/icons';
+import { showLocalNotification } from '../utils/projectUtils';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -70,6 +71,9 @@ export const IntegrationsPage: React.FC = () => {
         setSettings(localSettings);
         setIsSaved(true);
         setTimeout(() => setIsSaved(false), 2000);
+        showLocalNotification('Warning: Settings Changed', {
+            body: 'Your integration settings have been updated.',
+        });
     };
 
   return (
