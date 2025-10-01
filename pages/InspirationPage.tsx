@@ -199,35 +199,21 @@ export const InspirationPage: React.FC = () => {
         sendMessage(newHistory);
     };
     
-    if (!hasStarted) {
-        return (
-            <div className="h-full w-full p-8 flex flex-col justify-center items-center text-center">
-                <AgentIcon className="w-16 h-16 text-blue-500 mb-4" />
-                <h1 className="text-4xl font-bold text-gray-900">Silo Build Assist</h1>
-                <p className="text-gray-600 mt-4 max-w-2xl">
-                    I'm your AI assistant for Silo Build. Ask me to create a database table, add a new secret, or brainstorm a new app idea. How can I help you today?
-                </p>
-                <div className="w-full max-w-3xl mt-8">
-                    <PromptInput
-                        onSend={handleSend}
-                        isLoading={isLoading}
-                        isAppGenerated={false}
-                        isIdeaMode={true}
-                        onToggleIdeaMode={() => {}}
-                        isReadyToPrompt={true}
-                        layoutStyle="inline"
-                    />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="h-full w-full flex flex-col bg-gray-50">
             <header className="p-4 border-b border-gray-200 bg-white">
                 <h1 className="text-xl font-bold text-center">Silo Build Assist</h1>
             </header>
             <main className="flex-1 p-4 overflow-y-auto space-y-4">
+                {!hasStarted && (
+                    <div className="flex flex-col items-center text-center pt-16">
+                        <AgentIcon className="w-16 h-16 text-blue-500 mb-4" />
+                        <h1 className="text-4xl font-bold text-gray-900">Silo Build Assist</h1>
+                        <p className="text-gray-600 mt-4 max-w-2xl">
+                            I'm your AI assistant for Silo Build. Ask me to create a database table, add a new secret, or brainstorm a new app idea. How can I help you today?
+                        </p>
+                    </div>
+                )}
                 {history.map((msg, index) => {
                     const isUser = msg.role === 'user';
                     const textPart = msg.parts.find((p: any) => p.text);
@@ -252,6 +238,8 @@ export const InspirationPage: React.FC = () => {
                     onToggleIdeaMode={() => {}}
                     isReadyToPrompt={true}
                     layoutStyle="inline"
+                    simple={true}
+                    placeholder="Ask me anything..."
                 />
             </footer>
         </div>

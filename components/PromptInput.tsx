@@ -9,6 +9,8 @@ interface PromptInputProps {
   onToggleIdeaMode: () => void;
   isReadyToPrompt: boolean;
   layoutStyle?: 'floating' | 'inline';
+  simple?: boolean;
+  placeholder?: string;
 }
 
 const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
@@ -18,7 +20,7 @@ const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick:
     </button>
 );
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt, layoutStyle = 'floating' }) => {
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt, layoutStyle = 'floating', simple = false, placeholder }) => {
   const [prompt, setPrompt] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
@@ -95,11 +97,14 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
     if (!isReadyToPrompt && !isAppGenerated) {
       return "Select a technology stack to begin...";
     }
+    if (isAppGenerated) { // Check this first
+        if(isIdeaMode) {
+            return "Ask a follow-up question, or describe a new idea...";
+        }
+        return "Describe a change or upload a new mockup...";
+    }
     if (isIdeaMode) {
       return "Brainstorm app ideas with the AI...";
-    }
-    if (isAppGenerated) {
-      return "Describe a change or upload a new mockup...";
     }
     return "Ask Codepilot, or upload an image...";
   };
@@ -132,43 +137,47 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
                     handleSubmit(e as any);
                 }
             }}
-            placeholder={placeholderText()}
+            placeholder={placeholder || placeholderText()}
             disabled={isLoading || (!isReadyToPrompt && !isAppGenerated)}
             className="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none disabled:opacity-50 resize-none overflow-y-auto text-base p-2 max-h-48"
             rows={1}
         />
-        <div className="flex justify-between items-center mt-1">
-          <div className="flex items-center gap-1">
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600" aria-label="Upload image">
-                <PlusIcon />
-            </button>
-            <div className="relative" ref={toolsMenuRef}>
-                 <button type="button" onClick={() => setIsToolsMenuOpen(p => !p)} className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600" aria-label="Open tools menu">
-                    <DotsHorizontalIcon />
-                </button>
-                {isToolsMenuOpen && (
-                    <div className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20">
-                        <p className="text-xs font-semibold text-gray-500 px-3 py-1">Power Tools</p>
-                        <PowerToolButton icon={<UploadIcon />} label="Clone App" onClick={() => { setIsCloneModalOpen(true); setIsToolsMenuOpen(false); }}/>
-                        <PowerToolButton icon={<BugIcon />} label="AI Code Fixer" onClick={handleFixerSubmit}/>
-                    </div>
-                )}
+        <div className={`flex items-center mt-1 ${simple ? 'justify-end' : 'justify-between'}`}>
+          {!simple && (
+            <div className="flex items-center gap-1">
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600" aria-label="Upload image">
+                  <PlusIcon />
+              </button>
+              <div className="relative" ref={toolsMenuRef}>
+                   <button type="button" onClick={() => setIsToolsMenuOpen(p => !p)} className="p-2 rounded-full hover:bg-stone-200 transition-colors text-gray-600" aria-label="Open tools menu">
+                      <DotsHorizontalIcon />
+                  </button>
+                  {isToolsMenuOpen && (
+                      <div className="absolute bottom-full left-0 mb-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20">
+                          <p className="text-xs font-semibold text-gray-500 px-3 py-1">Power Tools</p>
+                          <PowerToolButton icon={<UploadIcon />} label="Clone App" onClick={() => { setIsCloneModalOpen(true); setIsToolsMenuOpen(false); }}/>
+                          <PowerToolButton icon={<BugIcon />} label="AI Code Fixer" onClick={handleFixerSubmit}/>
+                      </div>
+                  )}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onToggleIdeaMode}
-              className={`rounded-full px-3 py-1.5 flex items-center gap-2 text-sm font-semibold transition-colors ${
-                isIdeaMode
-                  ? 'bg-stone-800 text-white'
-                  : 'bg-stone-200 text-gray-900 hover:bg-stone-300'
-              }`}
-            >
-              <LightbulbIcon className="w-4 h-4" />
-              <span>Chat</span>
-            </button>
+            {!simple && (
+              <button
+                type="button"
+                onClick={onToggleIdeaMode}
+                className={`rounded-full px-3 py-1.5 flex items-center gap-2 text-sm font-semibold transition-colors ${
+                  isIdeaMode
+                    ? 'bg-stone-800 text-white'
+                    : 'bg-stone-200 text-gray-900 hover:bg-stone-300'
+                }`}
+              >
+                <LightbulbIcon className="w-4 h-4" />
+                <span>Chat</span>
+              </button>
+            )}
             <button
               type="submit"
               disabled={isLoading || (!prompt.trim() && !imagePreview) || (!isReadyToPrompt && !isAppGenerated)}
