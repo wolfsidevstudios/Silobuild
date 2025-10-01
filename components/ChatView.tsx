@@ -4,7 +4,6 @@ import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, Dow
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
-import { StackSelection } from './StackSelection';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 import { CredentialRequestForm } from './CredentialRequestForm';
 import { ThoughtsModal } from './ThoughtsModal';
@@ -24,8 +23,6 @@ interface ChatViewProps {
   onFileUpdate: (path: string, content: string) => void;
   onFileDelete: (path: string) => void;
   onFileAdd: (path: string) => boolean;
-  showStackSelector: boolean;
-  onSelectStack: (stack: TechStack) => void;
   onToggleMacPreview: () => void;
   deployments: Deployment[];
   techStack: TechStack | null;
@@ -142,8 +139,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onFileUpdate,
   onFileDelete,
   onFileAdd,
-  showStackSelector,
-  onSelectStack,
   onToggleMacPreview,
   deployments,
   techStack,
@@ -157,67 +152,59 @@ export const ChatView: React.FC<ChatViewProps> = ({
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
       <div className={`flex flex-col overflow-hidden ${mainContentSpan}`}>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          {showStackSelector ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <StackSelection onSelect={onSelectStack} />
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+            >
+              <div
+                className={`max-w-xl w-full p-3 rounded-2xl shadow-md ${
+                  msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-none'
+                    : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+                }`}
+              >
+                <p className="text-sm">{msg.content}</p>
+                {msg.thoughts && (
+                  <div className="mt-3 border-t border-gray-200 pt-3">
+                    <button
+                      onClick={() => setModalThoughts(msg.thoughts ?? null)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full transition-colors"
+                    >
+                      <SparklesIcon className="w-4 h-4" />
+                      View Plan
+                    </button>
+                  </div>
+                )}
+                {msg.schema && <DatabaseSchemaView schema={msg.schema} />}
+                {msg.credentialRequest && (
+                  <CredentialRequestForm 
+                    request={msg.credentialRequest}
+                    onSubmit={onCredentialSubmit}
+                  />
+                )}
+              </div>
             </div>
-          ) : (
-            <>
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <div
-                    className={`max-w-xl w-full p-3 rounded-2xl shadow-md ${
-                      msg.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-br-none'
-                        : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
-                    }`}
-                  >
-                    <p className="text-sm">{msg.content}</p>
-                    {msg.thoughts && (
-                      <div className="mt-3 border-t border-gray-200 pt-3">
-                        <button
-                          onClick={() => setModalThoughts(msg.thoughts ?? null)}
-                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full transition-colors"
-                        >
-                          <SparklesIcon className="w-4 h-4" />
-                          View Plan
-                        </button>
-                      </div>
-                    )}
-                    {msg.schema && <DatabaseSchemaView schema={msg.schema} />}
-                    {msg.credentialRequest && (
-                      <CredentialRequestForm 
-                        request={msg.credentialRequest}
-                        onSubmit={onCredentialSubmit}
-                      />
-                    )}
-                  </div>
+          ))}
+          {isLoading && (
+            <div className="flex items-start">
+              <div className="max-w-md w-full p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none border border-gray-200 shadow-md">
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
                 </div>
-              ))}
-              {isLoading && (
-                <div className="flex items-start">
-                  <div className="max-w-md w-full p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none border border-gray-200 shadow-md">
-                    <div className="flex items-center gap-2">
-                      <Spinner />
-                      <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
-                    </div>
-                    { !isIdeaMode && generationSummary && <GenerationSummary summary={generationSummary} />}
-                    { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
-                  </div>
-                </div>
-              )}
-              {error && (
-                <div className="flex items-start">
-                  <div className="max-w-md p-3 rounded-2xl bg-red-100 text-red-800 rounded-bl-none border border-red-200 shadow-md">
-                    <p className="text-sm font-semibold">Error</p>
-                    <p className="text-sm">{error}</p>
-                  </div>
-                </div>
-              )}
-            </>
+                { !isIdeaMode && generationSummary && <GenerationSummary summary={generationSummary} />}
+                { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
+              </div>
+            </div>
+          )}
+          {error && (
+            <div className="flex items-start">
+              <div className="max-w-md p-3 rounded-2xl bg-red-100 text-red-800 rounded-bl-none border border-red-200 shadow-md">
+                <p className="text-sm font-semibold">Error</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
           )}
         </div>
       </div>

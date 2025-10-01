@@ -4,7 +4,7 @@ import { PromptInput } from './PromptInput';
 import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
-import { generateAppStream, generateIdeaStream } from '../services/geminiService';
+import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
 import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition } from '../types';
 import { Spinner } from './Spinner';
@@ -29,7 +29,7 @@ const initialSettings: Settings = {
 };
 
 interface BuilderProps {
-  projectId?: string;
+  projectId: string;
 }
 
 export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
@@ -44,7 +44,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [generationPlan, setGenerationPlan] = useState<string[]>([]);
   const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
   const [generationSummary, setGenerationSummary] = useState<string | null>(null);
-  const [isGenerated, setIsGenerated] = useState(false);
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
@@ -55,7 +54,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isIdeaMode, setIsIdeaMode] = useState(false);
   const [techStack, setTechStack] = useState<TechStack | null>(null);
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
-  const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
 
@@ -67,7 +65,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>, imageData?: string | null) => {
       const stackToUse = stackOverride || techStack;
       if (!stackToUse) {
-          setError("Please select a technology stack before generating an app.");
+          setError("Tech stack is not defined for this project.");
           setIsLoading(false);
           return;
       }
@@ -79,12 +77,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       setGeneratedFilesProgress([]);
       setGenerationSummary(null);
 
-      if (!isGenerated) {
-        setDeployments([]);
-      }
-
-      const isEdit = isGenerated;
-      const filesForContext = isEdit ? multiFileCode : undefined;
+      const filesForContext = multiFileCode;
       let appName = currentProject?.name;
       const appIcon = currentProject?.appIcon;
 
@@ -97,7 +90,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           if (update.type === 'summary' && typeof update.summary === 'string') {
             setGenerationSummary(update.summary);
           } else if (update.type === 'thoughts' && update.thoughts) {
-            const thoughtsMessage: ChatMessage = { role: 'model', content: "I've drafted a plan to build your app.", thoughts: update.thoughts };
+            const thoughtsMessage: ChatMessage = { role: 'model', content: "I've drafted a plan to apply your changes.", thoughts: update.thoughts };
             setMessages(prev => [...prev, thoughtsMessage]);
           } else if (update.type === 'plan' && Array.isArray(update.files)) {
               if(!planReceived) {
@@ -112,12 +105,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setGeneratedFilesProgress(prev => [...prev, update.file.path]);
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
-            if (!appName) {
-                const titleMatch = update.file.content.match(/<title>(.*?)<\/title>/);
-                if (titleMatch && titleMatch[1]) {
-                    appName = titleMatch[1];
-                }
-            }
           } else if (update.type === 'database_schema' && update.schema) {
               const newTable: Table = {
                 id: crypto.randomUUID(),
@@ -164,14 +151,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
         const modelMessage: ChatMessage = {
           role: 'model',
-          content: isEdit 
-            ? 'I have applied the changes to the application.' 
-            : 'I have generated the application code. You can save it as a new project.'
+          content: 'I have applied the changes to the application.'
         };
         setMessages(prev => [...prev, modelMessage]);
         setAppMode('CHAT');
         setChatModeView('PREVIEW');
-        setIsGenerated(true);
 
         showLocalNotification(
             'Build Complete!',
@@ -196,44 +180,20 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setIsLoading(false);
         }
       }
-  }, [settings, isGenerated, multiFileCode, currentProject, techStack, setSchema]);
+  }, [settings, multiFileCode, currentProject, techStack, setSchema]);
 
 
   const handleSend = useCallback(async (prompt: string, imageData?: string | null) => {
     if (!prompt.trim() && !imageData) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: prompt || "Generating app from image..." };
+    const userMessage: ChatMessage = { role: 'user', content: prompt || "Updating app from image..." };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
     
-    if (isIdeaMode) {
-      setMessages(prev => [...prev, { role: 'model', content: '' }]);
-      try {
-        await generateIdeaStream(prompt, settings, (chunk) => {
-          setMessages(prev => prev.map((msg, index) => 
-            index === prev.length - 1 
-              ? { ...msg, content: msg.content + chunk } 
-              : msg
-          ));
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(`Failed to get response: ${errorMessage}`);
-        const errorContent = `Sorry, I ran into an error: ${errorMessage}`;
-        setMessages(prev => prev.map((msg, index) => 
-            index === prev.length - 1 
-              ? { ...msg, content: errorContent } 
-              : msg
-        ));
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-        // Handle new app generation or edit requests
-        executeBuild(prompt, undefined, undefined, imageData);
-    }
-  }, [settings, isGenerated, isIdeaMode, techStack, executeBuild]);
+    executeBuild(prompt, undefined, undefined, imageData);
+    
+  }, [settings, techStack, executeBuild]);
 
   const handleCredentialSubmit = (credentials: Record<string, string>) => {
     if (!promptForCredentials) return;
@@ -258,61 +218,29 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
 
   useEffect(() => {
-    if (projectId) {
-      const project = projects.find(p => p.id === projectId);
-      if (project) {
-        setCurrentProject(project);
-        setMultiFileCode(project.files);
-        setPreviewFile(project.previewFile);
-        const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
-        if (project.thoughts) {
-          initialMessages.push({ role: 'model', content: "I've loaded my previous plan for this project.", thoughts: project.thoughts });
-        }
-        setMessages(initialMessages);
-        setIsGenerated(true);
-        setAppMode('CHAT');
-        setChatModeView('PREVIEW');
-        setTechStack(project.stack || 'react'); // Default old projects to react
-        setDeployments(project.deployments || []);
-        setWorkflow(project.workflow || null);
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setCurrentProject(project);
+      setMultiFileCode(project.files);
+      setPreviewFile(project.previewFile);
+      const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
+      if (project.thoughts) {
+        initialMessages.push({ role: 'model', content: "I've loaded my previous plan for this project.", thoughts: project.thoughts });
       }
+      setMessages(initialMessages);
+      setAppMode('CHAT');
+      setChatModeView('PREVIEW');
+      setTechStack(project.stack || 'react'); // Default old projects to react
+      setDeployments(project.deployments || []);
+      setWorkflow(project.workflow || null);
     } else {
-        // This is a new project. Reset everything.
-        setCurrentProject(null);
-        setMultiFileCode([]);
-        setPreviewFile(null);
-        setMessages([]);
-        setIsGenerated(false);
-        
-        const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
-        const stackFromUrl = urlParams.get('stack') as TechStack;
-
-        if (stackFromUrl === 'infinity') {
-          setTechStack('infinity');
-        } else {
-          setTechStack(null);
-          const promptFromStorage = sessionStorage.getItem('initialPrompt');
-          if (promptFromStorage) {
-              setInitialPrompt(promptFromStorage);
-              sessionStorage.removeItem('initialPrompt');
-          }
-        }
+        // Project not found, redirect to dashboard
+        window.location.hash = '#/dashboard/projects';
     }
   }, [projectId, projects]);
 
-  const handleSelectStack = (stack: TechStack) => {
-    setTechStack(stack);
-    if (initialPrompt) {
-        handleSend(initialPrompt);
-        setInitialPrompt(null);
-    }
-  };
-
-  const toggleIdeaMode = () => setIsIdeaMode(prev => !prev);
-
-
   const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
-    if (!name.trim() || multiFileCode.length === 0 || !techStack) {
+    if (!name.trim() || multiFileCode.length === 0 || !techStack || !currentProject) {
       alert("Cannot save: project name, code, or tech stack is missing.");
       return;
     }
@@ -320,12 +248,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setIsSaveModalOpen(false);
     
     const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
-
     const now = new Date().toISOString();
-    const projectStub: Omit<Project, 'id'> = {
+    
+    const projectToSave: Project = {
+        ...currentProject,
         name: name,
         appIcon: icon || undefined,
-        createdAt: currentProject?.createdAt || now,
         updatedAt: now,
         files: multiFileCode,
         previewFile: previewFile,
@@ -337,16 +265,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         thoughts: lastThoughts || currentProject?.thoughts,
     };
 
-    let projectToSave: Project;
-    let isNewProject = !currentProject;
-
-    if (isNewProject) {
-        projectToSave = { ...projectStub, id: Date.now().toString() };
-        setProjects(prev => [...prev, projectToSave]);
-    } else {
-        projectToSave = { ...projectStub, id: currentProject.id };
-        setProjects(prev => prev.map(p => p.id === projectToSave.id ? projectToSave : p));
-    }
+    setProjects(prev => prev.map(p => p.id === projectToSave.id ? projectToSave : p));
     setCurrentProject(projectToSave);
     
     if (createRepo && !projectToSave.githubUrl) {
@@ -369,10 +288,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       }
     } else {
        alert(`Project "${name}" saved!`);
-    }
-
-    if(isNewProject) {
-        window.location.hash = `#/project/${projectToSave.id}`;
     }
   };
 
@@ -403,7 +318,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   
   const handleFileUpdate = (path: string, content: string) => {
     setMultiFileCode(prev => prev.map(f => f.path === path ? { ...f, content } : f));
-    setIsGenerated(true); // Mark as having content to save
   };
 
   const handleFileDelete = (path: string) => {
@@ -416,14 +330,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return false;
     }
     setMultiFileCode(prev => [...prev, { path, content: '' }]);
-    setIsGenerated(true);
     return true;
   };
 
   const handleNewDeployment = (deployment: Deployment) => {
     // Add new deployment to the front, replacing any previous one with the same URL
     setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
-    setIsGenerated(true); // Enable save button if a deployment is made
   };
   
   const handleDeploy = async (token: string, newSiteName: string) => {
@@ -510,9 +422,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     downloadProjectAsZip(projectToDownload);
   };
 
-
-  const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
-
   const renderContent = () => {
     switch (appMode) {
       case 'CHAT':
@@ -532,8 +441,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             onFileUpdate={handleFileUpdate}
             onFileDelete={handleFileDelete}
             onFileAdd={handleFileAdd}
-            showStackSelector={showStackSelector}
-            onSelectStack={handleSelectStack}
             onToggleMacPreview={() => setIsMacPreviewVisible(true)}
             deployments={deployments}
             techStack={techStack}
@@ -606,10 +513,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       <PromptInput
         onSend={handleSend}
         isLoading={isBusy}
-        isAppGenerated={isGenerated}
+        isAppGenerated={true}
         isIdeaMode={isIdeaMode}
-        onToggleIdeaMode={toggleIdeaMode}
-        isReadyToPrompt={!!techStack || isGenerated}
+        onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
+        isReadyToPrompt={true}
       />
        {isMacPreviewVisible && previewFile && (
         <MacPreview
