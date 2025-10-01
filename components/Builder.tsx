@@ -256,8 +256,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       setDeployments(project.deployments || []);
       setWorkflow(project.workflow || null);
     } else {
-        // Project not found, redirect to dashboard
-        window.location.hash = '#/dashboard/projects';
+        // Project not found. It's possible the 'projects' state from useLocalStorage hasn't hydrated yet.
+        // We only redirect if we have a populated projects array and the project is still not found.
+        if (projects.length > 0) {
+            window.location.hash = '#/dashboard/projects';
+        }
     }
   }, [projectId, projects]);
 
