@@ -66,15 +66,30 @@ export const CreationFlowPage: React.FC = () => {
     const handleStream = useCallback(async (isPlanOnly: boolean) => {
         setIsLoading(true);
         setError(null);
-        if (isPlanOnly) {
+        if (isPlanOnly && techStack) {
             setPlan(null);
             setStage('generating_plan');
             
+            const planSystemInstruction = `You are an AI planning agent for a code generation tool. Your task is to take a user's app idea and generate a plan for building it as a ${techStack} application.
+You must stream your response as a sequence of three specific JSON objects, each on a new line.
+
+First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate, outlining the key features in a bulleted list.
+Example: {"type": "summary", "summary": "- A simple landing page\\n- Includes a header, feature section, and footer."}
+
+Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan for how you will build the application.
+Example: {"type": "thoughts", "thoughts": "1. I'll start with a standard HTML5 boilerplate... 2. The main content will be in a <main> tag..."}
+
+Third, you MUST output a 'plan' object that lists all the file paths that will be created for a standard ${techStack} project structure.
+Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.css"]}
+
+After outputting the 'plan' object, you MUST STOP your response. Do not generate any other output or code files.
+Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
+
             const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey || process.env.API_KEY });
             const responseStream = await ai.models.generateContentStream({
                 model: settings.model || "gemini-2.5-flash",
                 contents: `User request: "${prompt}"`,
-                config: { systemInstruction: 'First, generate a summary, thoughts, and plan for the app. Do not generate any code files yet. Wait for approval.' }
+                config: { systemInstruction: planSystemInstruction }
             });
             streamIteratorRef.current = responseStream[Symbol.asyncIterator]();
         }
@@ -122,7 +137,7 @@ export const CreationFlowPage: React.FC = () => {
                 }
             }
         }
-    }, [prompt, settings]);
+    }, [prompt, settings, techStack]);
 
     const handlePromptSubmit = (currentPrompt: string) => {
         setPrompt(currentPrompt);
@@ -134,9 +149,34 @@ export const CreationFlowPage: React.FC = () => {
         streamIteratorRef.current = null; // Discard old stream
     };
     
-    const handleApprove = () => {
+    const handleApprove = async () => {
         setStage('generating_app');
-        handleStream(false);
+        // This is a bit of a workaround. The current Gemini API for streaming doesn't seem to support continuing a stream.
+        // So we have to re-initiate the entire generation process. The main `generateAppStream` in `geminiService` handles this.
+        
+        if (!prompt || !techStack) {
+            setError("Missing prompt or tech stack.");
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            await generateAppStream(prompt, settings, (update) => {
+                if (update.type === 'file' && update.file) {
+                    setGeneratedFiles(prev => [...prev.filter(f => f.path !== update.file.path), update.file]);
+                    setCurrentFile(update.file.path);
+                } else if (update.type === 'previewFile' && update.file) {
+                    setPreviewFile(update.file);
+                }
+            }, techStack);
+            setStage('complete');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An unknown error occurred.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -200,6 +240,7 @@ export const CreationFlowPage: React.FC = () => {
                     <div className="text-center">
                         <Spinner className="w-10 h-10 mx-auto" />
                         <h2 className="text-2xl font-bold mt-4">Drafting a plan...</h2>
+                        {error && <p className="text-red-500 mt-2">{error}</p>}
                     </div>
                 );
             case 'approval':

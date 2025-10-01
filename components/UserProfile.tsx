@@ -3,12 +3,33 @@ import { useAuth } from '../context/AuthContext';
 import { LogoutIcon } from './icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-export const UserProfile: React.FC = () => {
+export const UserProfile: React.FC<{ isCollapsed?: boolean }> = ({ isCollapsed = false }) => {
   const { user, logout } = useAuth();
   const [isPro] = useLocalStorage<boolean>('silo-build-is-pro', false);
 
   if (!user) {
     return null;
+  }
+  
+  if (isCollapsed) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+         <img
+          src={user.picture}
+          alt={user.name}
+          className="w-9 h-9 rounded-full"
+          title={`${user.name} (${user.email})`}
+        />
+        <button
+          onClick={logout}
+          className="p-2 text-gray-500 rounded-full hover:bg-gray-200 hover:text-gray-800 transition-colors"
+          aria-label="Log out"
+          title="Log out"
+        >
+          <LogoutIcon />
+        </button>
+      </div>
+    )
   }
 
   return (
