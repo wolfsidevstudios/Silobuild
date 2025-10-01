@@ -83,12 +83,12 @@ const App = () => {
 `;
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>, authConfig?: AuthConfig): string => {
-  const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo Build 2.0</div>`;
+  const WATERMARK_BADGE_HTML = `<a href="https://silobuild.dev" target="_blank" rel="noopener noreferrer" style="position: fixed; bottom: 16px; right: 16px; z-index: 1000; text-decoration: none;"><div style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1);">Built with ⚡️ Silo Build 2.0</div></a>`;
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
 --- WATERMARK REQUIREMENT ---
 ALL generated visual applications (React, Vue, Svelte, HTML, React Native Web Preview) MUST include a "Built with Silo Build 2.0" watermark badge.
-- The badge MUST be a \`div\` tag.
+- The badge MUST be an \`a\` tag wrapping a \`div\` tag.
 - It must be positioned in the bottom-right corner of the viewport.
 - You MUST use this exact HTML for the badge. It is self-contained and works with Tailwind CSS.
 - For multi-file apps, add it to the main layout component (e.g., App.tsx, App.vue, App.svelte) so it's visible on all pages.
@@ -103,7 +103,7 @@ ${WATERMARK_BADGE_HTML}
 The generated README.md file MUST end with the following line, separated by a horizontal rule:
 
 ---
-*Built with Silo Build 2.0*
+[*Built with Silo Build 2.0*](https://silobuild.dev)
 `;
 
   const DATABASE_INSTRUCTION = `
@@ -843,7 +843,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 The generated README.md file MUST end with the following line, separated by a horizontal rule:
 
 ---
-*Built with Silo Build 2.0*
+[*Built with Silo Build 2.0*](https://silobuild.dev)
 `;
 
       instruction += `\n
