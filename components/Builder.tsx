@@ -415,24 +415,97 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   };
   const handleNewDeployment = (deployment: Deployment) => setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
   const handleDeploy = async (token: string, newSiteName: string) => {
-    if (!token || !previewFile) { setDeploymentError("Netlify token or preview file missing."); return; }
-    setIsDeploying(true); setDeploymentError(null);
+    if (!token) {
+        setDeploymentError("Netlify token is missing.");
+        return;
+    }
+    if (!currentProject) {
+        setDeploymentError("Project data is not available.");
+        return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentError(null);
+
     try {
         const JSZip = (await import('jszip')).default;
-        const zip = new JSZip(); zip.file('index.html', previewFile.content);
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        let siteName = (newSiteName || currentProject?.name || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-');
-        let response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, { method: 'POST', headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` }, body: zipBlob });
-        if (response.status === 409) {
-            siteName = `${siteName}-${Math.random().toString(36).substring(2, 8)}`;
-            response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, { method: 'POST', headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` }, body: zipBlob });
+        const zip = new JSZip();
+        const { stack } = currentProject;
+
+        // Step 1: Prepare the zip file with correct content
+        if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
+            if (multiFileCode.length === 0) throw new Error("Project has no source files to build and deploy.");
+            
+            multiFileCode.forEach(file => zip.file(file.path, file.content));
+            
+            const netlifyTomlContent = `[build]
+  command = "npm install && npm run build"
+  publish = "dist"
+`;
+            zip.file('netlify.toml', netlifyTomlContent);
+        } else if (stack === 'html' || stack === 'react-native') {
+            if (!previewFile) throw new Error("Preview file is missing for this project type.");
+            zip.file('index.html', previewFile.content);
+        } else {
+            throw new Error(`Deployment for the "${stack}" tech stack is not currently supported.`);
         }
-        if (!response.ok) { const err = await response.json(); throw new Error(err.message); }
-        const siteData = await response.json();
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        // Step 2: Create a new site on Netlify
+        let siteName = (newSiteName || currentProject.name || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        
+        let createSiteResponse = await fetch(`https://api.netlify.com/api/v1/sites`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ name: siteName }),
+        });
+
+        // If name is taken (422), try a randomized name
+        if (createSiteResponse.status === 422) {
+            const errorData = await createSiteResponse.json();
+            if (errorData.message?.includes('must be unique')) {
+                siteName = `${siteName}-${Math.random().toString(36).substring(2, 8)}`;
+                createSiteResponse = await fetch(`https://api.netlify.com/api/v1/sites`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ name: siteName }),
+                });
+            }
+        }
+
+        if (!createSiteResponse.ok) {
+            const err = await createSiteResponse.json();
+            throw new Error(`Failed to create Netlify site: ${err.message || createSiteResponse.statusText}`);
+        }
+        const siteData = await createSiteResponse.json();
+
+        // Step 3: Deploy the zip file to the new site
+        const deployResponse = await fetch(`https://api.netlify.com/api/v1/sites/${siteData.id}/deploys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` },
+            body: zipBlob,
+        });
+
+        if (!deployResponse.ok) {
+            const err = await deployResponse.json();
+            // Attempt to delete the created site if deploy fails
+            try {
+                await fetch(`https://api.netlify.com/api/v1/sites/${siteData.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+            } catch (deleteError) {
+                console.error("Failed to clean up created Netlify site after deploy failure.", deleteError);
+            }
+            throw new Error(`Failed to deploy to new Netlify site: ${err.message || deployResponse.statusText}`);
+        }
+        
+        // Success
         handleNewDeployment({ url: siteData.ssl_url || siteData.url, timestamp: new Date().toISOString() });
         setIsDeployModalOpen(false);
-    } catch (error) { setDeploymentError(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`); }
-    finally { setIsDeploying(false); }
+
+    } catch (error) {
+        setDeploymentError(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+        setIsDeploying(false);
+    }
   };
   const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
   const handleSkipToBuilder = () => {
