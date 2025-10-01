@@ -83,6 +83,383 @@ const DESIGN_SPEC_ADHERENCE_INSTRUCTION = `
 If the user's prompt includes a "---DESIGN SPECIFICATION---" section, you MUST adhere to it strictly when generating the code. The design spec is the source of truth for layout, features, and user flow. It overrides any conflicting interpretation of the initial user prompt.
 `;
 
+const DEPRECATION_WARNING = `
+**CRITICAL: You MUST use the latest Google GenAI SDK syntax. Older patterns are deprecated and will fail.**
+
+**CORRECT Usage:**
+- Import: \`import { GoogleGenAI } from "@google/genai";\`
+- Initialization: \`const ai = new GoogleGenAI({ apiKey: '...' });\`
+- API Call: \`const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: '...' });\`
+- Get Text: \`const text = response.text;\`
+
+**INCORRECT (DEPRECATED) Usage - DO NOT USE:**
+- DO NOT use the class \`GoogleGenerativeAI\`.
+- DO NOT initialize with \`new GoogleGenerativeAI(API_KEY)\`.
+- DO NOT use \`.getGenerativeModel({ model: "gemini-pro" })\`. The model "gemini-pro" is deprecated.
+- DO NOT call \`model.generateContent(...)\`.
+- DO NOT get the response with \`result.response\` or \`response.text()\`.
+`;
+
+const SILO_AI_INSTRUCTION_SHARED_LOGIC = `
+${DEPRECATION_WARNING}
+
+If the user asks for an AI-powered feature (like a chatbot, summarizer, etc.) and you have requested and received a 'geminiApiKey', you MUST generate functional code that uses the '@google/genai' library by following the **CORRECT** usage pattern described above.
+
+**Core Logic (for all frameworks):**
+1.  **Import**: Use \`import { GoogleGenAI } from "@google/genai";\`
+2.  **API Key**: Use the API key provided by the user. It will be available in the 'USER-PROVIDED CREDENTIALS' section of your instructions.
+3.  **Client Initialization**: \`const ai = new GoogleGenAI({ apiKey: 'THE_USER_PROVIDED_API_KEY' });\`
+4.  **API Call**: Use the modern API: \`const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: userPrompt });\`
+5.  **Get Response**: Access the text response via \`response.text\`.
+6.  **State Management**: Your UI should have state for the user's input, a loading indicator, any potential errors, and the final AI response.
+`;
+
+
+const SILO_AI_INSTRUCTION_REACT = `
+--- SILO AI FEATURE IMPLEMENTATION (REACT & REACT NATIVE) ---
+${SILO_AI_INSTRUCTION_SHARED_LOGIC}
+
+**React Implementation Example (\`src/components/AiFeature.tsx\`):**
+You MUST follow this structure for generating AI-powered components in React. For React Native, use equivalent components like \`View\`, \`Text\`, \`TextInput\`.
+
+\`\`\`tsx
+import React, { useState } from 'react';
+import { GoogleGenAI } from "@google/genai";
+
+// IMPORTANT: Replace with the actual key provided by the user from your instructions.
+const API_KEY = 'THE_USER_PROVIDED_API_KEY';
+
+const AiFeature = () => {
+  const [prompt, setPrompt] = useState('');
+  const [response, setResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleGenerate = async () => {
+    if (!API_KEY) {
+      setError('Error: Gemini API Key is not set.');
+      return;
+    }
+    setIsLoading(true);
+    setResponse('');
+    setError('');
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: API_KEY });
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      setResponse(result.text);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      setError(errorMessage);
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4 my-4 bg-gray-50 border border-gray-200 rounded-lg">
+      <h3 className="text-xl font-semibold mb-2">Silo AI Feature</h3>
+      <textarea
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Enter a prompt for the AI..."
+        className="w-full p-2 border rounded-md"
+        rows={4}
+      />
+      <button
+        onClick={handleGenerate}
+        disabled={isLoading}
+        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-gray-400"
+      >
+        {isLoading ? 'Thinking...' : 'Generate with AI'}
+      </button>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+      {response && (
+        <div className="mt-4 p-4 bg-white border rounded-md">
+          <h4 className="font-semibold">AI Response:</h4>
+          <p className="text-sm mt-1 whitespace-pre-wrap">{response}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AiFeature;
+\`\`\`
+
+**Integration**:
+You MUST import and render this component in \`src/App.tsx\` (for React) or \`App.tsx\` (for React Native).
+
+**Preview File Limitation (React & React Native)**:
+The current \`previewFile\` for these frameworks DOES NOT support the ES module imports needed for \`@google/genai\`.
+- The AI feature will NOT be functional in the live preview.
+- You MUST generate the fully working code in the \`multiFileCode\` as shown above.
+- For the \`previewFile\`, you MUST include the UI for the AI feature (textarea, button, response area), but it should be non-functional.
+- Add a small text note in the preview UI, like \`<p className="text-xs text-gray-500">Note: AI functionality is enabled in the downloaded project.</p>\`.
+- **DO NOT** attempt to make the AI work in the preview file. The downloadable project is the source of truth.
+`;
+
+const SILO_AI_INSTRUCTION_VUE = `
+--- SILO AI FEATURE IMPLEMENTATION (VUE) ---
+${SILO_AI_INSTRUCTION_SHARED_LOGIC}
+
+**Vue Implementation Example (\`src/components/AiFeature.vue\`):**
+You MUST follow this structure for generating AI-powered components in Vue.
+
+\`\`\`vue
+<template>
+  <div class="p-4 my-4 bg-gray-50 border border-gray-200 rounded-lg">
+    <h3 class="text-xl font-semibold mb-2">Silo AI Feature</h3>
+    <textarea
+      v-model="prompt"
+      placeholder="Enter a prompt for the AI..."
+      class="w-full p-2 border rounded-md"
+      rows="4"
+    ></textarea>
+    <button
+      @click="handleGenerate"
+      :disabled="isLoading"
+      class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-gray-400"
+    >
+      {{ isLoading ? 'Thinking...' : 'Generate with AI' }}
+    </button>
+    <p v-if="error" class="text-red-500 mt-2">{{ error }}</p>
+    <div v-if="response" class="mt-4 p-4 bg-white border rounded-md">
+      <h4 class="font-semibold">AI Response:</h4>
+      <p class="text-sm mt-1 whitespace-pre-wrap">{{ response }}</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { GoogleGenAI } from "@google/genai";
+
+// IMPORTANT: Replace with the actual key provided by the user from your instructions.
+const API_KEY = 'THE_USER_PROVIDED_API_KEY';
+
+const prompt = ref('');
+const response = ref('');
+const isLoading = ref(false);
+const error = ref('');
+
+const handleGenerate = async () => {
+  if (!API_KEY) {
+    error.value = 'Error: Gemini API Key is not set.';
+    return;
+  }
+  isLoading.value = true;
+  response.value = '';
+  error.value = '';
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt.value,
+    });
+    response.value = result.text;
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+    error.value = errorMessage;
+    console.error(e);
+  } finally {
+    isLoading.value = false;
+  }
+};
+</script>
+\`\`\`
+
+**Integration**:
+You MUST import and render this component in \`src/App.vue\`.
+
+**Preview File**:
+The Vue \`previewFile\` uses a loader that supports module imports. Therefore, the AI feature **SHOULD** be functional in the live preview. Ensure your preview file code correctly imports and uses the '@google/genai' library within the \`<script setup>\` block of the components defined in the sfc-loader options.
+`;
+
+const SILO_AI_INSTRUCTION_SVELTE = `
+--- SILO AI FEATURE IMPLEMENTATION (SVELTE) ---
+${SILO_AI_INSTRUCTION_SHARED_LOGIC}
+
+**Svelte Implementation Example (\`src/lib/AiFeature.svelte\`):**
+You MUST follow this structure for generating AI-powered components in Svelte.
+
+\`\`\`svelte
+<script lang="ts">
+  import { GoogleGenAI } from "@google/genai";
+
+  // IMPORTANT: Replace with the actual key provided by the user from your instructions.
+  const API_KEY = 'THE_USER_PROVIDED_API_KEY';
+
+  let prompt: string = '';
+  let response: string = '';
+  let isLoading: boolean = false;
+  let error: string = '';
+
+  const handleGenerate = async () => {
+    if (!API_KEY) {
+      error = 'Error: Gemini API Key is not set.';
+      return;
+    }
+    isLoading = true;
+    response = '';
+    error = '';
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: API_KEY });
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      response = result.text;
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      error = errorMessage;
+      console.error(e);
+    } finally {
+      isLoading = false;
+    }
+  };
+</script>
+
+<div class="p-4 my-4 bg-gray-50 border border-gray-200 rounded-lg">
+  <h3 class="text-xl font-semibold mb-2">Silo AI Feature</h3>
+  <textarea
+    bind:value={prompt}
+    placeholder="Enter a prompt for the AI..."
+    class="w-full p-2 border rounded-md"
+    rows="4"
+  ></textarea>
+  <button
+    on:click={handleGenerate}
+    disabled={isLoading}
+    class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-gray-400"
+  >
+    {#if isLoading}Thinking...{:else}Generate with AI{/if}
+  </button>
+  {#if error}
+    <p class="text-red-500 mt-2">{error}</p>
+  {/if}
+  {#if response}
+    <div class="mt-4 p-4 bg-white border rounded-md">
+      <h4 class="font-semibold">AI Response:</h4>
+      <p class="text-sm mt-1 whitespace-pre-wrap">{response}</p>
+    </div>
+  {/if}
+</div>
+\`\`\`
+
+**Integration**:
+You MUST import and render this component in \`src/App.svelte\`.
+
+**Preview File Limitation (Svelte)**:
+The current Svelte \`previewFile\` compiles to plain JavaScript and DOES NOT support ES module imports.
+- The AI feature will NOT be functional in the live preview.
+- You MUST generate the fully working code in the \`multiFileCode\` as shown above.
+- For the \`previewFile\`, you MUST include the UI for the AI feature, but it should be non-functional.
+- Add a small text note in the preview UI.
+- **DO NOT** attempt to make the AI work in the preview file.
+`;
+
+const SILO_AI_INSTRUCTION_HTML = `
+--- SILO AI FEATURE IMPLEMENTATION (HTML) ---
+${SILO_AI_INSTRUCTION_SHARED_LOGIC}
+
+**HTML/JS Implementation Example:**
+You MUST follow this structure for generating AI-powered features in a single HTML file.
+
+1.  **Import Map**: Ensure the import map for '@google/genai' is in the \`<head>\`.
+    \`\`\`html
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+        }
+      }
+    </script>
+    \`\`\`
+2.  **HTML Structure**: Create the UI elements (input, button, response area).
+3.  **Module Script**: Use \`<script type="module">\` to write your JavaScript logic. This allows you to use \`import\`.
+
+**Full Example (\`index.html\`):**
+\`\`\`html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+      { "imports": { "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0" } }
+    </script>
+</head>
+<body class="bg-gray-100 p-8">
+
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-4">Silo AI Feature</h1>
+    <textarea id="prompt-input" class="w-full p-2 border rounded-md" rows="4" placeholder="Enter a prompt..."></textarea>
+    <button id="generate-btn" class="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-gray-400">
+      Generate with AI
+    </button>
+    <div id="error-output" class="text-red-500 mt-2 text-sm"></div>
+    <div id="response-output" class="mt-4 p-4 border rounded-md bg-gray-50 hidden">
+      <h4 class="font-semibold">AI Response:</h4>
+      <pre id="response-text" class="text-sm mt-1 whitespace-pre-wrap font-sans"></pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import { GoogleGenAI } from "@google/genai";
+
+    // IMPORTANT: Replace with the actual key provided by the user from your instructions.
+    const API_KEY = 'THE_USER_PROVIDED_API_KEY';
+
+    const promptInput = document.getElementById('prompt-input');
+    const generateBtn = document.getElementById('generate-btn');
+    const errorOutput = document.getElementById('error-output');
+    const responseOutput = document.getElementById('response-output');
+    const responseText = document.getElementById('response-text');
+
+    generateBtn.addEventListener('click', async () => {
+      if (!API_KEY) {
+        errorOutput.textContent = 'Error: Gemini API Key is not set.';
+        return;
+      }
+      
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Thinking...';
+      errorOutput.textContent = '';
+      responseOutput.classList.add('hidden');
+      
+      try {
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+        const result = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: promptInput.value,
+        });
+        
+        responseText.textContent = result.text;
+        responseOutput.classList.remove('hidden');
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+        errorOutput.textContent = errorMessage;
+        console.error(e);
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate with AI';
+      }
+    });
+  </script>
+
+</body>
+</html>
+\`\`\`
+`;
 
   let instruction;
   
@@ -118,6 +495,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
       instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
+      instruction += SILO_AI_INSTRUCTION_HTML;
   } else if (techStack === 'vue') {
     instruction = `You are Codepilot v1, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -194,6 +572,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
+    instruction += SILO_AI_INSTRUCTION_VUE;
 
   } else if (techStack === 'svelte') {
     instruction = `You are Codepilot v1, a world-class AI agent and expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
@@ -261,6 +640,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
+    instruction += SILO_AI_INSTRUCTION_SVELTE;
 
   } else if (techStack === 'nodejs') {
       instruction = `You are Codepilot v1, a world-class AI agent and expert backend developer specializing in generating simple and functional Node.js + Express.js applications. Your code MUST be of the highest quality: production-ready and complete.
@@ -402,6 +782,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
+    instruction += SILO_AI_INSTRUCTION_REACT;
   } else if (techStack === 'react') {
       instruction = `You are Codepilot v1, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -476,6 +857,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
+    instruction += SILO_AI_INSTRUCTION_REACT;
   }
 
   const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
