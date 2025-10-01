@@ -163,8 +163,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     let credentialRequestReceived = false;
 
     try {
-        let tempFiles: GeneratedFile[] = [];
-        let tempPreviewFile: GeneratedFile | null = null;
+        let tempFiles: GeneratedFile[] = filesForContext ? [...filesForContext] : [];
+        let tempPreviewFile: GeneratedFile | null = currentProject ? previewFile : null;
         let thoughts = '';
 
         await generateAppStream(buildPrompt, settings, (update) => {
@@ -172,8 +172,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
           if (update.type === 'thoughts') thoughts = update.thoughts;
           if (update.type === 'plan') setGenerationPlan(update.files);
           if (update.type === 'file') {
-            tempFiles.push(update.file);
-            setGeneratedFilesProgress(prev => [...prev, update.file.path]);
+            const existingFileIndex = tempFiles.findIndex(f => f.path === update.file.path);
+            if (existingFileIndex !== -1) {
+              tempFiles[existingFileIndex] = update.file;
+            } else {
+              tempFiles.push(update.file);
+            }
+            setGeneratedFilesProgress(prev => [...new Set([...prev, update.file.path])]);
           }
           if (update.type === 'previewFile') tempPreviewFile = update.file;
           if (update.type === 'database_schema') {
@@ -250,7 +255,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setIsLoading(false);
         }
     }
-  }, [techStack, settings, currentProject, multiFileCode, setProjects, setSchema]);
+  }, [techStack, settings, currentProject, multiFileCode, previewFile, setProjects, setSchema]);
 
   useEffect(() => {
     if (projectId) {
