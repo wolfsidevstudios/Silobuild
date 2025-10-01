@@ -71,18 +71,18 @@ export const CreationFlowPage: React.FC = () => {
             setStage('generating_plan');
             
             const planSystemInstruction = `You are an AI planning agent for a code generation tool. Your task is to take a user's app idea and generate a plan for building it as a ${techStack} application.
-You must stream your response as a sequence of three specific JSON objects, each on a new line.
+You must stream your response as a sequence of three specific JSON objects, each on a new line, in this exact order: 'summary', 'thoughts', 'plan'.
 
-First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate, outlining the key features in a bulleted list.
+First, output a 'summary' object with a brief, user-friendly description of the app you are about to generate, outlining the key features in a bulleted list.
 Example: {"type": "summary", "summary": "- A simple landing page\\n- Includes a header, feature section, and footer."}
 
-Second, you MUST output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan for how you will build the application.
+Second, output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan for how you will build the application.
 Example: {"type": "thoughts", "thoughts": "1. I'll start with a standard HTML5 boilerplate... 2. The main content will be in a <main> tag..."}
 
-Third, you MUST output a 'plan' object that lists all the file paths that will be created for a standard ${techStack} project structure.
+Third, output a 'plan' object that lists all the file paths that will be created for a standard ${techStack} project structure.
 Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.css"]}
 
-After outputting the 'plan' object, you MUST STOP your response. Do not generate any other output or code files.
+Do not generate any file content or code. Only output the three planning JSON objects.
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
             const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey || process.env.API_KEY });
