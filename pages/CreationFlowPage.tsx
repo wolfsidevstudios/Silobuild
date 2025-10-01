@@ -3,7 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project, Settings, TechStack, GeneratedFile } from '../types';
 import { generateAppStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
-import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon } from '../components/icons';
+import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon } from '../components/icons';
 import { prompts } from '../data/prompts';
 
 const initialSettings: Settings = {
@@ -181,18 +181,26 @@ export const CreationFlowPage: React.FC = () => {
                      <div className="w-full max-w-2xl text-center transition-opacity duration-500">
                         <h2 className="text-3xl font-bold mb-4">What should we build?</h2>
                         <p className="text-gray-600 mb-8">Describe the application you want to create. Be as specific as you can.</p>
-                        <textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePromptSubmit(prompt); } }}
-                            placeholder="e.g., A pomodoro timer with start, stop, and reset buttons"
-                            className="w-full h-32 bg-white border border-gray-300 rounded-lg p-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                        />
-                        <div className="flex items-center justify-between mt-4">
-                            <button onClick={resetFlow} className="text-sm text-gray-600 hover:underline">Back</button>
-                             <button onClick={() => handlePromptSubmit(prompt)} disabled={!prompt.trim()} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
-                                Generate App
-                            </button>
+                        <div className="w-full bg-stone-100/80 backdrop-blur-xl border border-stone-200 rounded-3xl shadow-2xl flex flex-col p-3 gap-2 transition-all duration-300 focus-within:border-stone-400">
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePromptSubmit(prompt); } }}
+                                placeholder="e.g., A pomodoro timer with start, stop, and reset buttons"
+                                className="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none resize-none overflow-y-auto text-base p-2 min-h-[8rem]"
+                                rows={4}
+                            />
+                            <div className="flex items-center justify-between mt-1">
+                                <button onClick={resetFlow} className="px-4 py-2 text-sm text-gray-600 hover:bg-stone-200 rounded-full transition-colors">Back</button>
+                                <button
+                                    onClick={() => handlePromptSubmit(prompt)}
+                                    disabled={!prompt.trim()}
+                                    className="bg-gray-800 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
+                                    aria-label="Generate App"
+                                >
+                                    <UpArrowIcon className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                         <div className="text-left mt-6">
                             <p className="text-xs text-gray-500 mb-2">Or try an example:</p>
@@ -234,9 +242,15 @@ export const CreationFlowPage: React.FC = () => {
 
 
     return (
-        <div className="h-screen w-screen bg-gray-50 text-gray-900 flex flex-col justify-center items-center p-4">
-            <a href="#/dashboard" className="absolute top-4 left-4 text-sm text-gray-600 hover:underline">&larr; Back to Dashboard</a>
-            {renderContent()}
+        <div className="relative h-screen w-screen bg-gray-50 text-gray-900 flex flex-col justify-center items-center p-4 overflow-hidden">
+            <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+            <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+            
+            <a href="#/dashboard" className="absolute top-4 left-4 text-sm text-gray-600 hover:underline z-10">&larr; Back to Dashboard</a>
+
+            <div className="relative z-10 w-full flex flex-col justify-center items-center">
+                {renderContent()}
+            </div>
         </div>
     );
 };
