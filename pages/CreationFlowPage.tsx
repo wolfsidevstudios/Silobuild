@@ -115,6 +115,8 @@ export const CreationFlowPage: React.FC = () => {
         if (stage === 'builder') {
              const userMessage: ChatMessage = { role: 'user', content: buildPrompt || "Updating app from image..." };
              setMessages(prev => [...prev, userMessage]);
+        } else {
+             setStage('generating_app');
         }
 
         setIsLoading(true);
@@ -193,6 +195,7 @@ export const CreationFlowPage: React.FC = () => {
 
         } catch (err) {
             if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
+                setIsLoading(false);
                 return; // Stop execution, wait for user input
             }
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
@@ -245,7 +248,6 @@ export const CreationFlowPage: React.FC = () => {
         }
     };
     
-    // All other builder handlers copied from Builder.tsx
     const handleCredentialSubmit = (credentials: Record<string, string>) => {
       if (!promptForCredentials) return;
       setMessages(prev => [...prev, { role: 'user', content: "Okay, I've provided the credentials." }]);
@@ -299,7 +301,7 @@ export const CreationFlowPage: React.FC = () => {
             const siteData = await response.json();
             handleNewDeployment({ url: siteData.ssl_url || siteData.url, timestamp: new Date().toISOString() });
             setIsDeployModalOpen(false);
-        } catch (error) { setDeploymentError(`Deployment failed: ${error}`); }
+        } catch (error) { setDeploymentError(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`); }
         finally { setIsDeploying(false); }
     };
     const handleDownload = () => {
@@ -314,140 +316,165 @@ export const CreationFlowPage: React.FC = () => {
             setPrompt(initialPrompt);
             sessionStorage.removeItem('initialPrompt');
         }
-        const urlParams = new URLSearchParams(window.location.search);
+        
+        // FIX: The URL parameter parsing was incorrect for hash-based routing and contained a typo.
+        // It should parse the query string from the hash, not the full location.
+        const hash = window.location.hash;
+        const queryString = hash.split('?')[1] || '';
+        const urlParams = new URLSearchParams(queryString);
         const stackParam = urlParams.get('stack');
+
         if (stackParam && ['react', 'html', 'svelte', 'react-native', 'infinity'].includes(stackParam)) {
-            handleStackSelect(stackParam as TechStack);
+            setTechStack(stackParam as TechStack);
+            setStage('prompt');
         }
+        
+        // FIX: Removed buggy auto-execution of build. The `executeBuild` function call
+        // within this `useEffect` would capture a stale `techStack` value (null)
+        // causing a silent failure. The user can now reliably trigger the build manually after
+        // the UI loads with the pre-filled data.
+
     }, []);
 
-    const handleStackSelect = (stack: TechStack) => {
-        if (stack === 'infinity') {
-             const now = new Date().toISOString();
-             const newProject: Project = { id: crypto.randomUUID(), name: 'New Infinity App', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: 'infinity', deployments: [] };
-             setProjects(prev => [newProject, ...prev]);
-             window.location.hash = `#/project/${newProject.id}`;
-             return;
-        }
-        setTechStack(stack);
-        setStage('prompt');
+    if (techStack === 'infinity') {
+        return <InfinityView settings={settings} />;
     }
 
-    const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
-    
-    // --- RENDER LOGIC ---
-
     if (stage === 'builder') {
+        const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
         const isBusy = isLoading || isPushing;
+
         return (
             <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">
                 <Header 
-                    activeMode={appMode} setAppMode={setAppMode} project={currentProject} onAddSupabase={handleAddSupabase}
-                    onConnectGitHub={() => setIsSaveModalOpen(true)} onDownload={handleDownload} isGithubConnected={!!currentProject?.githubUrl}
+                    activeMode={appMode} 
+                    setAppMode={setAppMode}
+                    project={currentProject}
+                    onAddSupabase={handleAddSupabase}
+                    onConnectGitHub={() => setIsSaveModalOpen(true)}
+                    onDownload={handleDownload}
+                    isGithubConnected={!!currentProject?.githubUrl}
                 />
                 <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
-                    {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /></div>}
-                    
-                    {(() => {
-                        switch (appMode) {
-                            case 'CHAT':
-                                return <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView}
-                                    isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary}
-                                    isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd}
-                                    onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit}
-                                    promptInputLayout={promptInputLayout} onSend={(p, i) => executeBuild(p, i)} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} />;
-                            case 'CODE':
-                                return <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />;
-                            case 'PREVIEW':
-                                return <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />;
-                            case 'PUBLISH':
-                                return <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployClick={() => setIsDeployModalOpen(true)}
-                                    onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />;
-                            case 'WORKFLOW':
-                                return workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full">No workflow defined.</div>;
-                            default: return null;
-                        }
-                    })()}
-
+                    {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /><span className="ml-2">Pushing...</span></div>}
+                    {appMode === 'CHAT' && (
+                        <ChatView
+                            messages={messages} multiFileCode={multiFileCode} previewFile={previewFile}
+                            viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error}
+                            generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary}
+                            isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd}
+                            onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack}
+                            onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild}
+                            isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true}
+                        />
+                    )}
+                    {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
+                    {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
+                    {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployClick={() => setIsDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />}
+                    {appMode === 'WORKFLOW' && (workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full text-gray-500">No workflow defined.</div>)}
                 </main>
-                {promptInputLayout === 'floating' && (
-                    <PromptInput onSend={(p, i) => executeBuild(p, i)} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode}
-                        onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />
+                 {promptInputLayout === 'floating' && (
+                    <PromptInput onSend={executeBuild} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />
                 )}
                 {isMacPreviewVisible && previewFile && <MacPreview previewFile={previewFile} projectName={currentProject?.name || 'My App'} appIcon={currentProject?.appIcon || null} onClose={() => setIsMacPreviewVisible(false)} />}
-                <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon}
-                    title={"Save New Project"} isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
-                <DeployModal isOpen={isDeployModalOpen} onClose={() => setIsDeployModalOpen(false)} onDeploy={handleDeploy} isDeploying={isDeploying}
-                    initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
+                <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon} title="Save New Project" isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
+                <DeployModal isOpen={isDeployModalOpen} onClose={() => { setIsDeployModalOpen(false); setDeploymentError(null); }} onDeploy={handleDeploy} isDeploying={isDeploying} initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
+            </div>
+        );
+    }
+
+    if (stage === 'generating_app') {
+        return (
+             <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+                <Spinner className="w-12 h-12 mb-6" />
+                <h2 className="text-2xl font-bold mb-2">Building your app...</h2>
+                <p className="text-gray-600 mb-6 max-w-md">{generationSummary || "The AI is analyzing your prompt and creating a plan."}</p>
+                {generationPlan.length > 0 && (
+                    <div className="text-left w-full max-w-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h3 className="font-semibold text-sm mb-2">Generating files:</h3>
+                        <ul className="space-y-1.5 text-sm">
+                            {generationPlan.map(file => (
+                                <li key={file} className={`flex items-center gap-2 ${generatedFilesProgress.includes(file) ? 'text-gray-400' : 'text-gray-700'}`}>
+                                    {generatedFilesProgress.includes(file) ? <div className="w-4 h-4 text-green-500">✓</div> : <Spinner className="w-4 h-4"/>}
+                                    <span className={generatedFilesProgress.includes(file) ? 'line-through' : ''}>{file}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+             </div>
+        )
+    }
+
+    if (stage === 'prompt') {
+        return (
+            <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+                <h2 className="text-3xl font-bold mb-2">What do you want to build?</h2>
+                <p className="text-gray-600 mb-8 max-w-xl text-center">
+                    Describe your application in detail. The more specific you are, the better the result. You can also start with an idea from our prompt library.
+                </p>
+                <div className="w-full max-w-2xl">
+                    {error && (
+                        <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg mb-4 text-sm" role="alert">
+                            <strong>Error:</strong> {error}
+                        </div>
+                    )}
+                     <div className="relative bg-white border border-gray-200 rounded-2xl shadow-xl p-4">
+                        <textarea
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    executeBuild(prompt);
+                                }
+                            }}
+                            placeholder="e.g., a modern SaaS dashboard with charts and a data table"
+                            className="w-full h-32 bg-transparent resize-none text-gray-900 text-lg placeholder-gray-500 focus:outline-none p-2"
+                        />
+                        <button
+                            onClick={() => executeBuild(prompt)}
+                            disabled={!prompt.trim() || isLoading}
+                            className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                            <UpArrowIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+                     <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
+                        <span className="text-gray-500">or try an example:</span>
+                        <button onClick={() => setPrompt(prompts[0].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
+                        <button onClick={() => setPrompt(prompts[2].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
+                        <a href="#/dashboard/prompt-library" className="text-blue-600 hover:underline">More ideas...</a>
+                    </div>
+                </div>
             </div>
         );
     }
     
-    // --- CREATION FLOW UI ---
-
-    const renderCreationContent = () => {
-        switch (stage) {
-            case 'stack':
-                return (
-                    <div className="text-center transition-opacity duration-500">
-                        <h2 className="text-3xl font-bold mb-4">Choose your technology</h2>
-                        <p className="text-gray-600 mb-8">Select a stack to generate code, or try the Infinity App for a simulated experience.</p>
-                        <div className="flex flex-wrap items-center justify-center gap-3">
-                            <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => handleStackSelect('react')} />
-                            <StackCard icon={<MobileIcon />} title="React Native" onClick={() => handleStackSelect('react-native')} />
-                            <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => handleStackSelect('svelte')} />
-                            <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => handleStackSelect('html')} />
-                        </div>
-                    </div>
-                );
-            case 'prompt':
-                return (
-                     <div className="w-full max-w-2xl text-center transition-opacity duration-500">
-                        <h2 className="text-3xl font-bold mb-4">What should we build?</h2>
-                        <p className="text-gray-600 mb-8">Describe the application you want to create. Be as specific as you can.</p>
-                        <div className="w-full bg-stone-100/80 backdrop-blur-xl border border-stone-200 rounded-3xl shadow-2xl flex flex-col p-3 gap-2 transition-all duration-300 focus-within:border-stone-400">
-                            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); executeBuild(prompt); } }}
-                                placeholder="e.g., A pomodoro timer with start, stop, and reset buttons"
-                                className="w-full bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none resize-none overflow-y-auto text-base p-2 min-h-[8rem]" rows={4} />
-                            <div className="flex items-center justify-between mt-1">
-                                <button onClick={() => setStage('stack')} className="px-4 py-2 text-sm text-gray-600 hover:bg-stone-200 rounded-full transition-colors">Back</button>
-                                <button onClick={() => executeBuild(prompt)} disabled={!prompt.trim()} className="bg-gray-800 text-white rounded-full p-2.5 flex items-center justify-center hover:bg-gray-900 disabled:bg-gray-400">
-                                    <UpArrowIcon className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="text-left mt-6">
-                            <p className="text-xs text-gray-500 mb-2">Or try an example:</p>
-                            <div className="flex flex-wrap gap-2">
-                                {prompts.slice(0, 3).map(p => (<button key={p.title} onClick={() => setPrompt(p.prompt)} className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300">{p.title}</button>))}
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'generating_app':
-                const progress = generationPlan.length ? Math.round((generatedFilesProgress.length / generationPlan.length) * 100) : 0;
-                return (
-                    <div className="w-full max-w-lg text-center transition-opacity duration-500">
-                        <h2 className="text-3xl font-bold mb-4">Codepilot is building...</h2>
-                        {generationSummary && <p className="text-gray-600 mb-2">{generationSummary.replace(/[\n-]/g, ' ')}</p>}
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 my-4">
-                           <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s' }}></div>
-                        </div>
-                        {currentFile && <p className="text-sm text-gray-500 font-mono animate-pulse">{currentFile}</p>}
-                        {error && <p className="text-red-500 mt-4">{error}</p>}
-                    </div>
-                );
-        }
-    };
-
-
+    // Default stage: 'stack'
     return (
-        <div className="relative h-screen w-screen bg-gray-50 text-gray-900 flex flex-col justify-center items-center p-4 overflow-hidden">
-            <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
-            <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
-            <a href="#/dashboard" className="absolute top-4 left-4 text-sm text-gray-600 hover:underline z-10">&larr; Back to Dashboard</a>
-            <div className="relative z-10 w-full flex flex-col justify-center items-center">
-                {renderCreationContent()}
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+             <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold">Choose your tech stack</h2>
+                <p className="text-gray-600">Select a technology to generate code for.</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+                <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => { setTechStack('react'); setStage('prompt'); }} />
+                <StackCard icon={<MobileIcon />} title="React Native" onClick={() => { setTechStack('react-native'); setStage('prompt'); }} />
+                <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => { setTechStack('svelte'); setStage('prompt'); }} />
+                <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => { setTechStack('html'); setStage('prompt'); }} />
+            </div>
+             <div className="relative flex py-8 items-center w-full max-w-xs">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                <div className="flex-grow border-t border-gray-300"></div>
+            </div>
+             <div className="text-center">
+                 <h2 className="text-2xl font-bold">Try the Infinity App</h2>
+                <p className="text-gray-600 max-w-md mt-1 mb-4">A new experimental way to interact with AI. No code, just conversation.</p>
+                <button onClick={() => setTechStack('infinity')} className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-colors">
+                    Launch Infinity App
+                </button>
             </div>
         </div>
     );
