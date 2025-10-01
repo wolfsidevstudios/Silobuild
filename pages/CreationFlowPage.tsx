@@ -162,32 +162,33 @@ export const CreationFlowPage: React.FC = () => {
                 throw new Error('CREDENTIAL_REQUEST_PENDING');
               }
             }, techStack, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData);
-
-            setMultiFileCode(tempFiles);
-            setPreviewFile(tempPreviewFile);
             
             if (stage !== 'builder') {
                 const now = new Date().toISOString();
                 const newProject: Project = {
                     id: crypto.randomUUID(),
-                    name: buildPrompt.substring(0, 50) || 'New Project',
+                    name: buildPrompt.substring(0, 50).trim() || 'New Project',
                     createdAt: now,
                     updatedAt: now,
                     files: tempFiles,
                     previewFile: tempPreviewFile,
-                    stack: techStack,
+                    stack: techStack!,
                     deployments: [],
                     thoughts: thoughts,
                     workflow: workflow || undefined,
                 };
-                setCurrentProject(newProject);
-                setMessages([
-                    { role: 'model', content: `I've generated the first version of your app: "${newProject.name}".\n\n${generationSummary || ''}` },
-                    { role: 'model', content: "Check out the preview, or ask me to make any changes!", thoughts: thoughts }
-                ]);
-                setStage('builder');
+                // Save the new project to local storage
+                setProjects(prev => [newProject, ...prev]);
+                // Redirect to the main builder for this new project
+                window.location.hash = `#/project/${newProject.id}`;
+                return; // Stop further state updates as we are redirecting
             } else {
-                 setMessages(prev => [...prev, { role: 'model', content: 'I have applied the changes to the application.', thoughts: thoughts }]);
+                // This handles subsequent edits while still on the #/builder page.
+                setMultiFileCode(tempFiles);
+                setPreviewFile(tempPreviewFile);
+                const updatedProject = { ...currentProject!, files: tempFiles, previewFile: tempPreviewFile, thoughts: thoughts };
+                setCurrentProject(updatedProject);
+                setMessages(prev => [...prev, { role: 'model', content: 'I have applied the changes to the application.', thoughts: thoughts }]);
             }
 
             setAppMode('CHAT');
@@ -208,7 +209,7 @@ export const CreationFlowPage: React.FC = () => {
         } finally {
              if (!wasCredentialRequestHandled) setIsLoading(false);
         }
-    }, [techStack, stage, settings, currentProject, multiFileCode, setSchema]);
+    }, [techStack, stage, settings, currentProject, multiFileCode, setProjects, setSchema]);
     
     // --- BUILDER HANDLERS ---
     const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
