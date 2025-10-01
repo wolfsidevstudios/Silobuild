@@ -11,7 +11,6 @@ import { AgentBuilderPage } from './pages/AgentBuilderPage';
 import { MobileApp } from './pages/MobileApp';
 import { prompts } from './data/prompts';
 import { showLocalNotification } from './utils/projectUtils';
-import { CreationFlowPage } from './pages/CreationFlowPage';
 
 const isMobile = () => window.innerWidth < 768;
 
@@ -121,7 +120,7 @@ export const App: React.FC = () => {
   }
   
   if (route.startsWith('#/builder')) {
-    return <ProtectedRoute><CreationFlowPage /></ProtectedRoute>;
+    return <ProtectedRoute><Builder /></ProtectedRoute>;
   }
 
   if (route.startsWith('#/agent-builder/')) {

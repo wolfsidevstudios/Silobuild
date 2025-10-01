@@ -6,7 +6,7 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, AuthConfig } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, CredentialRequest, AuthConfig } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -17,6 +17,8 @@ import { DeployModal } from './DeployModal';
 import { PublishView } from './PublishView';
 import { InfinityView } from './InfinityView';
 import { AddAuthModal } from './AddAuthModal';
+import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon } from './icons';
+import { prompts } from '../data/prompts';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -29,7 +31,6 @@ const initialSettings: Settings = {
   model: 'gemini-2.5-flash',
 };
 
-// This type is also defined in SettingsPage.tsx. We define it here to use with useLocalStorage.
 interface UserPreferences {
   notifications: {
     updates: boolean;
@@ -60,11 +61,47 @@ const initialAuthConfig: AuthConfig = {
   },
 };
 
+const StackCard: React.FC<{ icon: React.ReactNode; title: string; onClick: () => void; }> = ({ icon, title, onClick }) => (
+    <button onClick={onClick} className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div className="w-5 h-5 flex items-center justify-center [&_svg]:w-full [&_svg]:h-full">{icon}</div>
+        <span>{title}</span>
+    </button>
+);
+
+const CreationCredentialForm: React.FC<{ request: CredentialRequest; onSubmit: (credentials: Record<string, string>) => void; }> = ({ request, onSubmit }) => {
+  const [credentials, setCredentials] = useState<Record<string, string>>(() => 
+    request.fields.reduce((acc, field) => ({ ...acc, [field.key]: '' }), {})
+  );
+
+  const handleChange = (key: string, value: string) => setCredentials(prev => ({ ...prev, [key]: value }));
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(credentials); };
+  const isFormValid = request.fields.every(field => credentials[field.key]?.trim() !== '');
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 text-left">
+      {request.fields.map(field => (
+        <div key={field.key}>
+          <label htmlFor={field.key} className="block text-xs font-medium text-gray-700">{field.label}</label>
+          <div className="mt-1 relative rounded-md shadow-sm">
+             <input type="password" id={field.key} value={credentials[field.key]} onChange={(e) => handleChange(field.key, e.target.value)} className="block w-full rounded-md border-gray-300 bg-gray-50 p-2 text-sm focus:border-blue-500 focus:ring-blue-500" required />
+          </div>
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <button type="submit" disabled={!isFormValid} className="bg-blue-600 text-white px-3 py-1.5 text-xs rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
+          Add API Key & Continue
+        </button>
+      </div>
+    </form>
+  );
+};
+
 interface BuilderProps {
-  projectId: string;
+  projectId?: string;
 }
 
 export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
+  // --- STATE ---
   const [appMode, setAppMode] = useState<AppMode>('CHAT');
   const [chatModeView, setChatModeView] = useState<ViewMode>('PREVIEW');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -73,16 +110,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generationPlan, setGenerationPlan] = useState<string[]>([]);
-  const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
-  const [generationSummary, setGenerationSummary] = useState<string | null>(null);
-  
+
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
   const [authConfig] = useLocalStorage<AuthConfig>('silo-build-auth-config', initialAuthConfig);
   const [preferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
+
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
@@ -90,526 +125,407 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
-
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  // --- CREATION FLOW STATE ---
+  const [creationStage, setCreationStage] = useState<'stack' | 'prompt'>('stack');
+  const [creationPrompt, setCreationPrompt] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [generationPlan, setGenerationPlan] = useState<string[]>([]);
+  const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
+  const [generationSummary, setGenerationSummary] = useState<string | null>(null);
+  const [pendingCredentialRequest, setPendingCredentialRequest] = useState<CredentialRequest | null>(null);
 
 
-  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>, imageData?: string | null, authConfigToUse?: AuthConfig) => {
-      const stackToUse = stackOverride || techStack;
-      if (!stackToUse) {
-          setError("Tech stack is not defined for this project.");
-          setIsLoading(false);
-          return;
-      }
+  const executeBuild = useCallback(async (buildPrompt: string, imageData?: string | null, customCredentials?: Record<string, string>, authConfigToUse?: AuthConfig) => {
+    const stackToUse = techStack;
+    if (!stackToUse) {
+        setError("Tech stack is not defined.");
+        return;
+    }
       
-      setAppMode('CHAT');
-      setIsLoading(true);
-      setError(null);
-      setGenerationPlan([]);
-      setGeneratedFilesProgress([]);
-      setGenerationSummary(null);
+    if (currentProject) { // This is an update in the builder
+        const userMessage: ChatMessage = { role: 'user', content: buildPrompt || "Updating app from image..." };
+        setMessages(prev => [...prev, userMessage]);
+    }
 
-      const filesForContext = multiFileCode;
-      let appName = currentProject?.name;
-      const appIcon = currentProject?.appIcon;
+    setIsLoading(true);
+    setError(null);
+    setGenerationPlan([]);
+    setGeneratedFilesProgress([]);
+    setGenerationSummary(null);
 
-      let wasCredentialRequestHandled = false;
-      try {
-        let planReceived = false;
+    const filesForContext = currentProject ? multiFileCode : undefined;
+    let credentialRequestReceived = false;
+
+    try {
         let tempFiles: GeneratedFile[] = [];
+        let tempPreviewFile: GeneratedFile | null = null;
+        let thoughts = '';
 
-        await generateAppStream(prompt, settings, (update) => {
-          if (update.type === 'summary' && typeof update.summary === 'string') {
-            setGenerationSummary(update.summary);
-          } else if (update.type === 'thoughts' && update.thoughts) {
-            const thoughtsMessage: ChatMessage = { role: 'model', content: "I've drafted a plan to apply your changes.", thoughts: update.thoughts };
-            setMessages(prev => [...prev, thoughtsMessage]);
-          } else if (update.type === 'plan' && Array.isArray(update.files)) {
-              if(!planReceived) {
-                  tempFiles = [];
-                  setPreviewFile(null);
-                  planReceived = true;
-              }
-              setGenerationPlan(update.files);
-          } else if (update.type === 'file' && update.file) {
+        await generateAppStream(buildPrompt, settings, (update) => {
+          if (update.type === 'summary') setGenerationSummary(update.summary);
+          if (update.type === 'thoughts') thoughts = update.thoughts;
+          if (update.type === 'plan') setGenerationPlan(update.files);
+          if (update.type === 'file') {
             tempFiles.push(update.file);
-            setMultiFileCode([...tempFiles]);
             setGeneratedFilesProgress(prev => [...prev, update.file.path]);
-          } else if (update.type === 'previewFile' && update.file) {
-            setPreviewFile(update.file);
-          } else if (update.type === 'database_schema' && update.schema) {
-              const newTable: Table = {
-                id: crypto.randomUUID(),
-                name: update.schema.name,
-                columns: update.schema.columns.map((col: any) => ({ ...col, id: crypto.randomUUID() }))
-              };
-
-              setSchema(prevSchema => {
-                  const existingTableIndex = prevSchema.findIndex(t => t.name === newTable.name);
-                  if (existingTableIndex > -1) {
-                      const updatedSchema = [...prevSchema];
-                      updatedSchema[existingTableIndex] = newTable;
-                      return updatedSchema;
-                  } else {
-                      return [...prevSchema, newTable];
-                  }
-              });
-
-              const schemaMessage: ChatMessage = {
-                  role: 'model',
-                  content: `I've created/updated the database schema for the '${update.schema.name}' table. I will now generate code that uses this structure.`,
-                  schema: update.schema
-              };
-              setMessages(prev => [...prev, schemaMessage]);
-          } else if (update.type === 'workflow_definition' && update.workflow) {
-            setWorkflow(update.workflow);
-            const workflowMessage: ChatMessage = {
-                role: 'model',
-                content: "I've created or updated the workflow for your application. You can view it in the 'Workflow' tab."
-            };
-            setMessages(prev => [...prev, workflowMessage]);
-          } else if (update.type === 'credential_request' && update.request) {
-              const credentialMessage: ChatMessage = {
-                  role: 'model',
-                  content: `To continue, I need some information for ${update.request.toolName}.`,
-                  credentialRequest: update.request,
-              };
-              setMessages(prev => [...prev, credentialMessage]);
-              setPromptForCredentials(prompt);
-              wasCredentialRequestHandled = true;
-              throw new Error('CREDENTIAL_REQUEST_PENDING');
           }
-        }, stackToUse, filesForContext, appName, appIcon, customCredentials, imageData, authConfigToUse);
-
-        const modelMessage: ChatMessage = {
-          role: 'model',
-          content: 'I have applied the changes to the application.'
-        };
-        setMessages(prev => [...prev, modelMessage]);
-        setAppMode('CHAT');
-        setChatModeView('PREVIEW');
-
-        showLocalNotification(
-            'Build Complete!',
-            {
-                body: `Your project "${appName || 'New App'}" has finished generating.`,
-                icon: 'https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png',
-                tag: `build-${currentProject?.id || Date.now()}`
+          if (update.type === 'previewFile') tempPreviewFile = update.file;
+          if (update.type === 'database_schema') {
+              const newTable: Table = { id: crypto.randomUUID(), name: update.schema.name, columns: update.schema.columns.map((col: any) => ({ ...col, id: crypto.randomUUID() })) };
+              setSchema(prev => prev.find(t => t.name === newTable.name) ? prev.map(t => t.name === newTable.name ? newTable : t) : [...prev, newTable]);
+              const schemaMessage: ChatMessage = { role: 'model', content: `I've created/updated the schema for the '${update.schema.name}' table.`, schema: update.schema };
+              setMessages(prev => [...prev, schemaMessage]);
+          }
+          if (update.type === 'workflow_definition') {
+            setWorkflow(update.workflow);
+            setMessages(prev => [...prev, { role: 'model', content: "I've created/updated the workflow." }]);
+          }
+          if (update.type === 'credential_request' && update.request) {
+            setPendingCredentialRequest(update.request);
+            setPromptForCredentials(buildPrompt);
+            credentialRequestReceived = true;
+            if (currentProject) {
+                // For the builder, we throw to let the catch block handle pausing.
+                throw new Error('CREDENTIAL_REQUEST_PENDING');
             }
-        );
-
-      } catch (err) {
-        if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
+          }
+        }, stackToUse, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData, authConfigToUse);
+        
+        if (credentialRequestReceived) {
             setIsLoading(false);
             return;
         }
+
+        if (!currentProject) { // This was a new project creation
+            const now = new Date().toISOString();
+            const newProject: Project = {
+                id: crypto.randomUUID(),
+                name: buildPrompt.substring(0, 50).trim() || 'New Project',
+                createdAt: now,
+                updatedAt: now,
+                files: tempFiles,
+                previewFile: tempPreviewFile,
+                stack: techStack!,
+                deployments: [],
+                thoughts: thoughts,
+                workflow: workflow || undefined,
+            };
+            setCurrentProject(newProject);
+            setMultiFileCode(newProject.files);
+            setPreviewFile(newProject.previewFile);
+            setDeployments(newProject.deployments);
+            setWorkflow(newProject.workflow);
+            setMessages([{ role: 'model', content: `Generated project: ${newProject.name}`, thoughts: thoughts }]);
+        } else { // This was an update
+            setMultiFileCode(tempFiles);
+            setPreviewFile(tempPreviewFile);
+            const updatedProject = { ...currentProject, files: tempFiles, previewFile: tempPreviewFile, thoughts: thoughts };
+            setCurrentProject(updatedProject);
+            setMessages(prev => [...prev, { role: 'model', content: 'I have applied the changes to the application.', thoughts: thoughts }]);
+        }
+
+        setAppMode('CHAT');
+        setChatModeView('PREVIEW');
+
+    } catch (err) {
+        if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
+            const credentialMessage: ChatMessage = { role: 'model', content: `I need some info to continue.`, credentialRequest: pendingCredentialRequest! };
+            setMessages(prev => [...prev, credentialMessage]);
+            setIsLoading(false); // Pause loading, form is now visible in chat
+            return;
+        }
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(`Failed to generate app: ${errorMessage}`);
-        const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
-        setMessages(prev => [...prev, modelErrorMessage]);
-      } finally {
-        if (!wasCredentialRequestHandled) {
+        setError(errorMessage);
+        if (currentProject) {
+            setMessages(prev => [...prev, { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` }]);
+        }
+    } finally {
+        if (!credentialRequestReceived) {
             setIsLoading(false);
         }
+    }
+  }, [techStack, settings, currentProject, multiFileCode, setProjects, setSchema]);
+
+  useEffect(() => {
+    if (projectId) {
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setCurrentProject(project);
+        setMultiFileCode(project.files);
+        setPreviewFile(project.previewFile);
+        const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
+        if (project.thoughts) {
+          initialMessages.push({ role: 'model', content: "I've loaded my previous plan for this project.", thoughts: project.thoughts });
+        }
+        setMessages(initialMessages);
+        setTechStack(project.stack || 'react');
+        setDeployments(project.deployments || []);
+        setWorkflow(project.workflow || null);
+      } else if (projects.length > 0) {
+        window.location.hash = '#/dashboard/projects';
       }
-  }, [settings, multiFileCode, currentProject, techStack, setSchema]);
-
-
-  const handleSend = useCallback(async (prompt: string, imageData?: string | null) => {
-    if (!prompt.trim() && !imageData) return;
-
-    const userMessage: ChatMessage = { role: 'user', content: prompt || "Updating app from image..." };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setError(null);
+    } else {
+        const initialPromptFromSession = sessionStorage.getItem('initialPrompt');
+        if (initialPromptFromSession) {
+            setCreationPrompt(initialPromptFromSession);
+            sessionStorage.removeItem('initialPrompt');
+        }
+        
+        const hash = window.location.hash;
+        const stackParam = new URLSearchParams(hash.split('?')[1] || '').get('stack');
+        if (stackParam && ['react', 'html', 'svelte', 'react-native', 'infinity'].includes(stackParam)) {
+            const validStack = stackParam as TechStack;
+            setTechStack(validStack);
+            if (validStack === 'infinity') {
+                // Infinity App has its own view, handle it separately.
+            } else {
+                setCreationStage('prompt');
+            }
+        }
+    }
+    setIsInitialized(true);
+  }, [projectId, projects]);
+  
+  const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
+    if (!name.trim() || !techStack || !currentProject) {
+      alert("Cannot save: project name, code, or tech stack is missing.");
+      return;
+    }
+    setIsSaveModalOpen(false);
     
-    executeBuild(prompt, undefined, undefined, imageData);
+    const isNewProjectSave = !projects.some(p => p.id === currentProject.id);
+    const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
+    const now = new Date().toISOString();
     
-  }, [settings, techStack, executeBuild]);
+    const projectToSave: Project = { ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode, previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl, teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts };
+
+    let finalProjectUrl = `#/project/${projectToSave.id}`;
+
+    if (createRepo && !projectToSave.githubUrl) {
+      if (!settings.githubPat) { alert("Please set your GitHub Personal Access Token in Settings."); return; }
+      setIsPushing(true);
+      try {
+        const repoUrl = await createAndPushToRepo(settings.githubPat, name, multiFileCode);
+        projectToSave.githubUrl = repoUrl;
+        alert(`Successfully created and pushed to ${repoUrl}`);
+      } catch (error) { 
+        alert(`GitHub repo creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } finally { 
+        setIsPushing(false);
+      }
+    }
+    
+    setProjects(prev => isNewProjectSave ? [projectToSave, ...prev] : prev.map(p => p.id === projectToSave.id ? projectToSave : p));
+    setCurrentProject(projectToSave);
+
+    if (isNewProjectSave) {
+        window.location.hash = finalProjectUrl;
+    } else {
+        alert(`Project "${name}" saved!`);
+    }
+  };
 
   const handleCredentialSubmit = (credentials: Record<string, string>) => {
     if (!promptForCredentials) return;
-
-    const userMessage: ChatMessage = { role: 'user', content: "Okay, I've provided the credentials." };
-    setMessages(prev => [...prev, userMessage]);
-    
-    executeBuild(promptForCredentials, techStack, credentials);
-
+    setMessages(prev => [...prev, { role: 'user', content: "Okay, I've provided the credentials." }]);
+    executeBuild(promptForCredentials, null, credentials);
     setPromptForCredentials(null);
   };
   
+  const handleCreationCredentialSubmit = (credentials: Record<string, string>) => {
+      if (promptForCredentials) {
+          setPendingCredentialRequest(null);
+          executeBuild(promptForCredentials, null, credentials);
+          setPromptForCredentials(null);
+      }
+  };
+
   const handleAddSupabase = () => {
     if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
-        setError("Supabase credentials are not configured. Please add them in the Settings page.");
         setMessages(prev => [...prev, {role: 'model', content: "Supabase credentials are not configured. Please add them in the Settings page."}]);
         return;
     }
-    const supabasePrompt = "Please integrate Supabase into this project. Create a `src/supabaseClient.ts` file that exports a configured Supabase client. Use the Supabase URL and Anon Key provided in the system instructions. Also, make sure to import and use this client in the main App component to demonstrate its usage, for example, by fetching a list of items from a 'todos' table and displaying them.";
-    handleSend(supabasePrompt);
+    executeBuild("Please integrate Supabase into this project. Create a `src/supabaseClient.ts` file that exports a configured Supabase client. Use the Supabase URL and Anon Key provided in the system instructions. Also, make sure to import and use this client in the main App component to demonstrate its usage, for example, by fetching a list of items from a 'todos' table and displaying them.");
   };
   
   const handleAddAuth = () => {
     setIsAuthModalOpen(false);
-    const authPrompt = "Please generate a complete authentication system for this application using the configuration provided in the system instructions. This should include a main login/signup page, buttons and logic for each enabled provider, user state management, a protected profile page, and a logout button.";
-    handleSend(authPrompt);
-  };
-
-
-  useEffect(() => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setCurrentProject(project);
-      setMultiFileCode(project.files);
-      setPreviewFile(project.previewFile);
-      const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
-      if (project.thoughts) {
-        initialMessages.push({ role: 'model', content: "I've loaded my previous plan for this project.", thoughts: project.thoughts });
-      }
-      setMessages(initialMessages);
-      setAppMode('CHAT');
-      setChatModeView('PREVIEW');
-      setTechStack(project.stack || 'react'); // Default old projects to react
-      setDeployments(project.deployments || []);
-      setWorkflow(project.workflow || null);
-    } else {
-        // Project not found. It's possible the 'projects' state from useLocalStorage hasn't hydrated yet.
-        // We only redirect if we have a populated projects array and the project is still not found.
-        if (projects.length > 0) {
-            window.location.hash = '#/dashboard/projects';
-        }
-    }
-  }, [projectId, projects]);
-
-  const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
-    if (!name.trim() || multiFileCode.length === 0 || !techStack || !currentProject) {
-      alert("Cannot save: project name, code, or tech stack is missing.");
-      return;
-    }
-    
-    setIsSaveModalOpen(false);
-    
-    const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
-    const now = new Date().toISOString();
-    
-    const projectToSave: Project = {
-        ...currentProject,
-        name: name,
-        appIcon: icon || undefined,
-        updatedAt: now,
-        files: multiFileCode,
-        previewFile: previewFile,
-        stack: techStack,
-        deployments: deployments,
-        githubUrl: currentProject?.githubUrl,
-        teamId: teamId || undefined,
-        workflow: workflow || undefined,
-        thoughts: lastThoughts || currentProject?.thoughts,
-    };
-
-    setProjects(prev => prev.map(p => p.id === projectToSave.id ? projectToSave : p));
-    setCurrentProject(projectToSave);
-    
-    if (createRepo && !projectToSave.githubUrl) {
-      if (!settings.githubPat) {
-        alert("Please set your GitHub Personal Access Token in the Settings page to create a repository.");
-        return;
-      }
-      setIsPushing(true);
-      try {
-        const repoUrl = await createAndPushToRepo(settings.githubPat, name, multiFileCode);
-        const updatedProjectWithRepo = { ...projectToSave, githubUrl: repoUrl };
-        setProjects(prev => prev.map(p => p.id === updatedProjectWithRepo.id ? updatedProjectWithRepo : p));
-        setCurrentProject(updatedProjectWithRepo);
-        alert(`Successfully created and pushed to ${repoUrl}`);
-      } catch (error) {
-        console.error("GitHub repo creation failed:", error);
-        alert(`Failed to create GitHub repository: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      } finally {
-        setIsPushing(false);
-      }
-    } else {
-       alert(`Project "${name}" saved!`);
-    }
+    executeBuild("Please generate a complete authentication system for this application using the configuration provided in the system instructions. This should include a main login/signup page, buttons and logic for each enabled provider, user state management, a protected profile page, and a logout button.", null, undefined, authConfig);
   };
 
   const handleCommitAndPush = async () => {
-    if (!currentProject?.githubUrl) {
-      alert("This project is not linked to a GitHub repository.");
-      return;
-    }
-     if (!settings.githubPat) {
-        alert("Please set your GitHub Personal Access Token in the Settings page.");
-        return;
-      }
-
-    const commitMessage = prompt("Enter a commit message:", "feat: Update project from Silo Build");
+    if (!currentProject?.githubUrl || !settings.githubPat) { alert("GitHub not configured."); return; }
+    const commitMessage = prompt("Enter commit message:", "feat: Update project from Silo Build");
     if (!commitMessage) return;
-    
     setIsPushing(true);
     try {
         await pushToRepo(settings.githubPat, currentProject.githubUrl, multiFileCode, commitMessage);
-        alert("Successfully pushed changes to GitHub!");
-    } catch (error) {
-        console.error("GitHub push failed:", error);
-        alert(`Failed to push to GitHub: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-        setIsPushing(false);
-    }
+        alert("Successfully pushed to GitHub!");
+    } catch (error) { alert(`Failed to push: ${error instanceof Error ? error.message : 'Unknown error'}`); } 
+    finally { setIsPushing(false); }
   };
   
-  const handleFileUpdate = (path: string, content: string) => {
-    setMultiFileCode(prev => prev.map(f => f.path === path ? { ...f, content } : f));
-  };
-
-  const handleFileDelete = (path: string) => {
-    setMultiFileCode(prev => prev.filter(f => f.path !== path));
-  };
-
+  const handleFileUpdate = (path: string, content: string) => setMultiFileCode(prev => prev.map(f => f.path === path ? { ...f, content } : f));
+  const handleFileDelete = (path: string) => setMultiFileCode(prev => prev.filter(f => f.path !== path));
   const handleFileAdd = (path: string): boolean => {
-    if (multiFileCode.some(f => f.path === path)) {
-        alert(`File "${path}" already exists.`);
-        return false;
-    }
+    if (multiFileCode.some(f => f.path === path)) { alert("File already exists."); return false; }
     setMultiFileCode(prev => [...prev, { path, content: '' }]);
     return true;
   };
-
-  const handleNewDeployment = (deployment: Deployment) => {
-    // Add new deployment to the front, replacing any previous one with the same URL
-    setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
-  };
-  
+  const handleNewDeployment = (deployment: Deployment) => setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
   const handleDeploy = async (token: string, newSiteName: string) => {
-    if (!token || !previewFile) {
-      setDeploymentError("Netlify token is missing or there is no preview file to deploy.");
-      return;
-    }
-
-    setIsDeploying(true);
-    setDeploymentError(null);
-
-    const createAndDeploy = async (siteName: string): Promise<any> => {
-        const JSZip = (await import('jszip')).default;
-        const zip = new JSZip();
-        zip.file('index.html', previewFile.content);
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-        const response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/zip',
-                Authorization: `Bearer ${token}`,
-            },
-            body: zipBlob,
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            if (response.status === 409) {
-                // Specific error for site name conflict
-                throw new Error('SITE_NAME_TAKEN');
-            }
-            throw new Error(errorData.message || 'Failed to create and deploy site.');
-        }
-        return response.json();
-    };
-
+    if (!token || !previewFile) { setDeploymentError("Netlify token or preview file missing."); return; }
+    setIsDeploying(true); setDeploymentError(null);
     try {
-        let sanitizedSiteName = (newSiteName || currentProject?.name || 'silo-build-app')
-            .toLowerCase()
-            .replace(/[^a-z0-9-]/g, '-')
-            .substring(0, 50);
-
-        let siteData;
-        try {
-            siteData = await createAndDeploy(sanitizedSiteName);
-        } catch (error) {
-            if (error instanceof Error && error.message === 'SITE_NAME_TAKEN') {
-                console.warn(`Site name "${sanitizedSiteName}" is taken. Retrying with a random suffix.`);
-                const randomSuffix = Math.random().toString(36).substring(2, 8);
-                sanitizedSiteName = `${sanitizedSiteName}-${randomSuffix}`;
-                siteData = await createAndDeploy(sanitizedSiteName);
-            } else {
-                throw error; // Re-throw other errors
-            }
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip(); zip.file('index.html', previewFile.content);
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        let siteName = (newSiteName || currentProject?.name || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        let response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, { method: 'POST', headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` }, body: zipBlob });
+        if (response.status === 409) {
+            siteName = `${siteName}-${Math.random().toString(36).substring(2, 8)}`;
+            response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, { method: 'POST', headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` }, body: zipBlob });
         }
-      
-      const newDeployment: Deployment = {
-        url: siteData.ssl_url || siteData.url,
-        timestamp: new Date().toISOString(),
-      };
-      handleNewDeployment(newDeployment);
-      setIsDeployModalOpen(false);
-
-    } catch (error) {
-      console.error("Netlify deployment failed:", error);
-      const message = error instanceof Error ? error.message : "An unknown error occurred during deployment.";
-      setDeploymentError(`Deployment failed: ${message}`);
-    } finally {
-      setIsDeploying(false);
-    }
+        if (!response.ok) { const err = await response.json(); throw new Error(err.message); }
+        const siteData = await response.json();
+        handleNewDeployment({ url: siteData.ssl_url || siteData.url, timestamp: new Date().toISOString() });
+        setIsDeployModalOpen(false);
+    } catch (error) { setDeploymentError(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`); }
+    finally { setIsDeploying(false); }
+  };
+  const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
+  const handleSkipToBuilder = () => {
+    if (!techStack) return;
+    const now = new Date().toISOString();
+    const newProject: Project = { id: crypto.randomUUID(), name: 'New Blank Project', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: techStack, deployments: [] };
+    setCurrentProject(newProject);
+    setMessages([{ role: 'model', content: `Started a new blank ${techStack} project. What would you like to build first?` }]);
   };
 
-  const handleDownload = () => {
-    if (!currentProject) {
-        alert("Please save the project first to give it a name.");
-        return;
-    }
-    const projectToDownload: Project = {
-        ...currentProject,
-        files: multiFileCode,
-        previewFile: previewFile,
-    };
-    downloadProjectAsZip(projectToDownload);
-  };
-
-  const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
-
-  const renderContent = () => {
-    switch (appMode) {
-      case 'CHAT':
-        return (
-          <ChatView
-            messages={messages}
-            multiFileCode={multiFileCode}
-            previewFile={previewFile}
-            viewMode={chatModeView}
-            setViewMode={setChatModeView}
-            isLoading={isLoading}
-            error={error}
-            generationPlan={generationPlan}
-            generatedFilesProgress={generatedFilesProgress}
-            generationSummary={generationSummary}
-            isIdeaMode={isIdeaMode}
-            onFileUpdate={handleFileUpdate}
-            onFileDelete={handleFileDelete}
-            onFileAdd={handleFileAdd}
-            onToggleMacPreview={() => setIsMacPreviewVisible(true)}
-            deployments={deployments}
-            techStack={techStack}
-            onCredentialSubmit={handleCredentialSubmit}
-            promptInputLayout={promptInputLayout}
-            onSend={handleSend}
-            isAppGenerated={true}
-            onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
-            isReadyToPrompt={true}
-          />
-        );
-      case 'CODE':
-        return (
-          <WorkspaceView 
-            files={multiFileCode} 
-            onFileUpdate={handleFileUpdate}
-            onFileDelete={handleFileDelete}
-            onFileAdd={handleFileAdd}
-          />
-        );
-      case 'PREVIEW':
-        return <PreviewView 
-          file={previewFile}
-          onToggleMacPreview={() => setIsMacPreviewVisible(true)}
-          deployments={deployments}
-          techStack={techStack}
-        />;
-      case 'PUBLISH':
-        return <PublishView 
-            project={currentProject}
-            deployments={deployments}
-            onCommitAndPush={handleCommitAndPush}
-            onDeployClick={() => setIsDeployModalOpen(true)}
-            onConnectGitHub={() => setIsSaveModalOpen(true)}
-            isPushing={isPushing}
-        />;
-      case 'WORKFLOW':
-        return workflow ? <WorkflowBuilderPage workflow={workflow} /> : 
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No workflow defined for this project.
-          </div>;
-      default:
-        return null;
-    }
-  };
+  if (!isInitialized) {
+    return <div className="h-screen w-screen flex items-center justify-center"><Spinner className="w-10 h-10" /></div>;
+  }
   
-  const isBusy = isLoading || isPushing;
-
   if (techStack === 'infinity') {
       return <InfinityView settings={settings} />;
   }
+  
+  if (!currentProject) {
+    // --- CREATION FLOW UI ---
+    if (creationStage === 'stack') {
+        return (
+            <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 overflow-hidden">
+                <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+                <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+                 <div className="relative text-center mb-8">
+                    <h2 className="text-3xl font-bold">Choose your tech stack</h2>
+                    <p className="text-gray-600">Select a technology to generate code for.</p>
+                </div>
+                <div className="relative flex flex-wrap items-center justify-center gap-3">
+                    <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => { setTechStack('react'); setCreationStage('prompt'); }} />
+                    <StackCard icon={<MobileIcon />} title="React Native" onClick={() => { setTechStack('react-native'); setCreationStage('prompt'); }} />
+                    <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => { setTechStack('svelte'); setCreationStage('prompt'); }} />
+                    <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => { setTechStack('html'); setCreationStage('prompt'); }} />
+                </div>
+                 <div className="relative flex py-8 items-center w-full max-w-xs">
+                    <div className="flex-grow border-t border-gray-300"></div><span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span><div className="flex-grow border-t border-gray-300"></div>
+                </div>
+                 <div className="relative text-center">
+                     <h2 className="text-2xl font-bold">Try the Infinity App</h2>
+                    <p className="text-gray-600 max-w-md mt-1 mb-4">A new experimental way to interact with AI. No code, just conversation.</p>
+                    <button onClick={() => setTechStack('infinity')} className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-colors">Launch Infinity App</button>
+                </div>
+            </div>
+        );
+    }
+    if (creationStage === 'prompt') {
+        if (isLoading) {
+             return (
+                 <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center overflow-hidden">
+                    <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+                    <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+                    <Spinner className="relative w-12 h-12 mb-6" />
+                    <h2 className="relative text-2xl font-bold mb-2">{pendingCredentialRequest ? "Action Required" : "Building your app..."}</h2>
+                    <p className="relative text-gray-600 mb-6 max-w-md">{pendingCredentialRequest ? "Please provide the required API keys to continue." : (generationSummary || "The AI is analyzing your prompt...")}</p>
+                    {generationPlan.length > 0 && !pendingCredentialRequest && (
+                        <div className="relative text-left w-full max-w-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                            <h3 className="font-semibold text-sm mb-2">Generating files:</h3>
+                            <ul className="space-y-1.5 text-sm">
+                                {generationPlan.map(file => (
+                                    <li key={file} className={`flex items-center gap-2 ${generatedFilesProgress.includes(file) ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                                        {generatedFilesProgress.includes(file) ? <div className="w-4 h-4 text-green-500">✓</div> : <Spinner className="w-4 h-4"/>}
+                                        <span>{file}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {pendingCredentialRequest && (
+                      <div className="relative bg-white p-4 rounded-lg shadow-xl border border-gray-200 w-full max-w-sm z-10">
+                        <div className="flex items-center gap-2 mb-2"><KeyIcon className="w-5 h-5 text-yellow-500"/><h3 className="font-bold text-sm text-left">Add API Key</h3></div>
+                        <p className="text-xs text-gray-600 text-left mb-3">The AI needs the following keys to build your app:</p>
+                        <CreationCredentialForm request={pendingCredentialRequest} onSubmit={handleCreationCredentialSubmit} />
+                      </div>
+                    )}
+                 </div>
+            );
+        }
+        return (
+            <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 overflow-hidden">
+                <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+                <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+                <h2 className="relative text-3xl font-bold mb-2">What do you want to build?</h2>
+                <p className="relative text-gray-600 mb-8 max-w-xl text-center">Describe your application in detail. The more specific you are, the better the result.</p>
+                <div className="relative w-full max-w-2xl">
+                    {error && <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg mb-4 text-sm" role="alert"><strong>Error:</strong> {error}</div>}
+                     <div className="relative bg-white border border-gray-200 rounded-2xl shadow-xl p-4">
+                        <textarea value={creationPrompt} onChange={(e) => setCreationPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if(creationPrompt.trim() && !isLoading) executeBuild(creationPrompt); } }} placeholder="e.g., a modern SaaS dashboard with charts and a data table" className="w-full h-32 bg-transparent resize-none text-gray-900 text-lg placeholder-gray-500 focus:outline-none p-2"/>
+                        <button onClick={() => executeBuild(creationPrompt)} disabled={!creationPrompt.trim() || isLoading} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"><UpArrowIcon className="w-6 h-6" /></button>
+                    </div>
+                     <div className="relative flex flex-col items-center justify-center gap-2 mt-6 text-sm">
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                            <span className="text-gray-500">or try an example:</span>
+                            <button onClick={() => setCreationPrompt(prompts[0].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
+                            <button onClick={() => setCreationPrompt(prompts[2].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
+                            <a href="#/dashboard/prompt-library" className="text-blue-600 hover:underline">More ideas...</a>
+                        </div>
+                        <button onClick={handleSkipToBuilder} className="relative text-sm text-gray-600 hover:text-black mt-4 hover:underline">or skip and start with a blank project</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+  }
 
+  // --- FULL BUILDER UI ---
+  const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
+  const isBusy = isLoading || isPushing;
   return (
     <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">
       <Header 
-        activeMode={appMode} 
-        setAppMode={setAppMode}
-        project={currentProject}
-        onAddSupabase={handleAddSupabase}
-        onAddAuth={() => setIsAuthModalOpen(true)}
-        onConnectGitHub={() => setIsSaveModalOpen(true)}
-        onDownload={handleDownload}
-        isGithubConnected={!!currentProject?.githubUrl}
+        activeMode={appMode} setAppMode={setAppMode} project={currentProject}
+        onAddSupabase={handleAddSupabase} onAddAuth={() => setIsAuthModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)}
+        onDownload={handleDownload} isGithubConnected={!!currentProject?.githubUrl}
       />
       <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
-        {isPushing && (
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="flex flex-col items-center gap-2">
-                <Spinner className="h-10 w-10" />
-                <span className="text-sm text-gray-600">Pushing to GitHub...</span>
-            </div>
-          </div>
-        )}
-        {renderContent()}
+        {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /><span className="ml-2">Pushing...</span></div>}
+        {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} />}
+        {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
+        {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
+        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployClick={() => setIsDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />}
+        {appMode === 'WORKFLOW' && (workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full text-gray-500">No workflow defined.</div>)}
       </main>
-      {promptInputLayout === 'floating' && (
-        <PromptInput
-          onSend={handleSend}
-          isLoading={isBusy}
-          isAppGenerated={true}
-          isIdeaMode={isIdeaMode}
-          onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
-          isReadyToPrompt={true}
-          layoutStyle="floating"
-        />
-      )}
-       {isMacPreviewVisible && previewFile && (
-        <MacPreview
-            previewFile={previewFile}
-            projectName={currentProject?.name || 'My App'}
-            appIcon={currentProject?.appIcon || null}
-            onClose={() => setIsMacPreviewVisible(false)}
-        />
-      )}
-      <ProjectMetadataModal
-        isOpen={isSaveModalOpen}
-        onClose={() => setIsSaveModalOpen(false)}
-        onSave={handleSaveProject}
-        initialName={currentProject?.name}
-        initialIcon={currentProject?.appIcon}
-        title={currentProject ? "Save Project Details" : "Save New Project"}
-        isGithubLinked={!!currentProject?.githubUrl}
-        teams={teams}
-        initialTeamId={currentProject?.teamId}
-      />
-       <DeployModal 
-        isOpen={isDeployModalOpen}
-        onClose={() => {
-            setIsDeployModalOpen(false);
-            setDeploymentError(null);
-        }}
-        onDeploy={handleDeploy}
-        isDeploying={isDeploying}
-        initialProjectName={currentProject?.name}
-        initialToken={settings.netlifyPat}
-        deploymentError={deploymentError}
-      />
-      <AddAuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onConfirm={handleAddAuth}
-      />
+      {promptInputLayout === 'floating' && <PromptInput onSend={executeBuild} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />}
+      {isMacPreviewVisible && previewFile && <MacPreview previewFile={previewFile} projectName={currentProject?.name || 'My App'} appIcon={currentProject?.appIcon || null} onClose={() => setIsMacPreviewVisible(false)} />}
+      <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon} title="Save Project Details" isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
+      <DeployModal isOpen={isDeployModalOpen} onClose={() => { setIsDeployModalOpen(false); setDeploymentError(null); }} onDeploy={handleDeploy} isDeploying={isDeploying} initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
+      <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
     </div>
   );
 };
