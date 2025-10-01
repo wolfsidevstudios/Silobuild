@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project, Deployment } from '../types';
-import { GithubIcon, CloudUploadIcon, UploadIcon, PaintBrushIcon } from './icons';
+import { GithubIcon, CloudUploadIcon, UploadIcon } from './icons';
 import { Spinner } from './Spinner';
 import { timeAgo } from '../utils/projectUtils';
 
@@ -60,19 +60,6 @@ export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, 
     return (
         <div className="p-8 h-full overflow-y-auto bg-gray-50">
             <div className="max-w-4xl mx-auto space-y-10">
-                 {project.pilot === 'design' && (
-                     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <PaintBrushIcon className="w-6 h-6 text-purple-500"/>
-                            <h2 className="text-xl font-bold">Design Hand-off</h2>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">This project was created with Designpilot. You can share the design with your team or open it in Figma to continue working on it.</p>
-                        <a href="https://figma.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                            Open in Figma
-                        </a>
-                     </div>
-                 )}
-
                 {/* GitHub Section */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-4">
