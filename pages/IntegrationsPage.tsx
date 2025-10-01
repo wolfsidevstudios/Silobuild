@@ -3,7 +3,6 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings, GeminiModel, Secret } from '../types';
 import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
-import { GitHubDeviceFlowModal } from '../components/GitHubDeviceFlowModal';
 import { getGitHubUser } from '../services/githubService';
 import { Spinner } from '../components/Spinner';
 
@@ -64,7 +63,6 @@ export const IntegrationsPage: React.FC = () => {
     const [isSaved, setIsSaved] = useState(false);
     const [newSecretName, setNewSecretName] = useState('');
     const [newSecretValue, setNewSecretValue] = useState('');
-    const [isDeviceFlowModalOpen, setIsDeviceFlowModalOpen] = useState(false);
     const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string; } | null>(null);
     const [isLoadingGitHubUser, setIsLoadingGitHubUser] = useState(false);
 
@@ -128,10 +126,6 @@ export const IntegrationsPage: React.FC = () => {
     const handleDeleteSecret = (id: string) => {
         const updatedSecrets = (localSettings.secrets || []).filter(s => s.id !== id);
         handleChange('secrets', updatedSecrets);
-    };
-
-    const handleGitHubConnectSuccess = (token: string) => {
-        handleChange('githubPat', token);
     };
     
     const handleGitHubDisconnect = () => {
@@ -233,14 +227,23 @@ export const IntegrationsPage: React.FC = () => {
                 </div>
             ) : (
                 <div>
-                     <p className="text-sm text-gray-500 mb-2">Authorize Silo Build to access your repositories.</p>
-                     <button 
-                        onClick={() => setIsDeviceFlowModalOpen(true)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
-                    >
-                        <GithubIcon />
-                        <span>Connect with GitHub</span>
-                    </button>
+                    <SettingsInput
+                        label="GitHub Personal Access Token"
+                        value={localSettings.githubPat}
+                        onChange={(e) => handleChange('githubPat', e.target.value)}
+                        placeholder="ghp_..."
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                        Generate a token with the <code className="text-xs bg-gray-200 p-1 rounded font-mono">repo</code> scope.
+                        <a
+                            href="https://github.com/settings/tokens/new?scopes=repo&description=Silo%20Build%20Integration"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline ml-1"
+                        >
+                            Create one here.
+                        </a>
+                    </p>
                 </div>
             )}
         </IntegrationCard>
@@ -347,11 +350,6 @@ export const IntegrationsPage: React.FC = () => {
             </div>
         </IntegrationCard>
       </div>
-      <GitHubDeviceFlowModal
-        isOpen={isDeviceFlowModalOpen}
-        onClose={() => setIsDeviceFlowModalOpen(false)}
-        onSuccess={handleGitHubConnectSuccess}
-      />
     </div>
   );
 };
