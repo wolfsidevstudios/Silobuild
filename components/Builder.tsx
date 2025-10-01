@@ -4,9 +4,9 @@ import { PromptInput } from './PromptInput';
 import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
-import { generateAppStream, generateIdeaStream, generateDesignStream } from '../services/geminiService';
+import { generateAppStream, generateIdeaStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, AppDesign } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -62,10 +62,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
-
-  const [designPrompt, setDesignPrompt] = useState<string | null>(null);
-  const [currentDesign, setCurrentDesign] = useState<AppDesign | null>(null);
-
 
   const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>) => {
       const stackToUse = stackOverride || techStack;
@@ -232,71 +228,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       } finally {
         setIsLoading(false);
       }
-    } else if (isGenerated) {
-        // Handle edit requests
-        executeBuild(prompt);
     } else {
-        // New project: Start design phase
-        const stackToUse = techStack;
-         if (!stackToUse) {
-          setError("Please select a technology stack before generating an app.");
-          setIsLoading(false);
-          setMessages(prev => prev.slice(0, prev.length -1)); // remove user message
-          return;
-        }
-        setAppMode('DESIGN');
-        setDesignPrompt(prompt);
-        setCurrentDesign(null);
-
-        const thinkingMessage: ChatMessage = { role: 'model', content: "Let's design your application first..." };
-        setMessages(prev => [...prev, thinkingMessage]);
-
-        let aggregatedDesign: AppDesign = { spec: '', mockups: [] };
-        
-        try {
-            await generateDesignStream(prompt, settings, (update) => {
-                 if (update.type === 'design_spec') {
-                    aggregatedDesign.spec = update.spec;
-                    const designMessage: ChatMessage = { role: 'model', content: "Here's the design plan for your application.", design: { ...aggregatedDesign } };
-                    setMessages(prev => [...prev.slice(0, -1), designMessage]); // Replace thinking message
-                } else if (update.type === 'design_mockup') {
-                    aggregatedDesign.mockups.push(update.mockup);
-                    const designMessage: ChatMessage = { role: 'model', content: "Here's the design plan for your application.", design: { ...aggregatedDesign, mockups: [...aggregatedDesign.mockups] } };
-                     setMessages(prev => [...prev.slice(0, -1), designMessage]);
-                } else if (update.type === 'design_complete') {
-                     setCurrentDesign(aggregatedDesign);
-                     const reviewMessage: ChatMessage = { role: 'model', content: "What do you think of the design?", isDesignReview: true };
-                     setMessages(prev => [...prev, reviewMessage]);
-                }
-            });
-        } catch(err) {
-            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-            setError(`Failed to generate design: ${errorMessage}`);
-            const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
-            setMessages(prev => [...prev, modelErrorMessage]);
-        } finally {
-            setIsLoading(false);
-        }
+        // Handle new app generation or edit requests
+        executeBuild(prompt);
     }
   }, [settings, isGenerated, isIdeaMode, techStack, executeBuild]);
-
-
-  const handleBuildFunctionality = useCallback(() => {
-    if (!designPrompt || !currentDesign) return;
-    const buildPrompt = `The user wants to build an app with this initial prompt: "${designPrompt}". I have already created the following UI/UX specification. Now, generate the full, functional application code based on this design.\n\n---DESIGN SPECIFICATION---\n${currentDesign.spec}`;
-    
-    const originalUserMessage = messages.find(m => m.role === 'user');
-    setMessages(originalUserMessage ? [originalUserMessage] : []);
-    
-    executeBuild(buildPrompt);
-  }, [designPrompt, currentDesign, messages, executeBuild]);
-
-  const handleRegenerateDesign = useCallback(() => {
-     if (!designPrompt) return;
-     const originalUserMessage = messages.find(m => m.role === 'user');
-     setMessages(originalUserMessage ? [originalUserMessage] : []);
-     handleSend(designPrompt);
-  }, [designPrompt, messages, handleSend]);
 
   const handleCredentialSubmit = (credentials: Record<string, string>) => {
     if (!promptForCredentials) return;
@@ -349,8 +285,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setTechStack(null);
         setDeployments([]);
         setWorkflow(null);
-        setDesignPrompt(null);
-        setCurrentDesign(null);
 
         const promptFromStorage = sessionStorage.getItem('initialPrompt');
         if (promptFromStorage) {
@@ -571,13 +505,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   };
 
 
-  const showStackSelector = !isGenerated && !techStack && !isIdeaMode && appMode !== 'DESIGN';
+  const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
 
   const renderContent = () => {
-    const currentAppMode = (appMode === 'DESIGN' && multiFileCode.length > 0) ? 'CHAT' : appMode;
-
-    switch (currentAppMode) {
-      case 'DESIGN':
+    switch (appMode) {
       case 'CHAT':
         return (
           <ChatView
@@ -601,8 +532,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             deployments={deployments}
             techStack={techStack}
             onCredentialSubmit={handleCredentialSubmit}
-            onBuildFunctionality={handleBuildFunctionality}
-            onRegenerateDesign={handleRegenerateDesign}
           />
         );
       case 'CODE':

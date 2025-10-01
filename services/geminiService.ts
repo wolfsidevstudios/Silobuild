@@ -78,11 +78,6 @@ Example for an AI-powered app (Silo AI):
 IMPORTANT: After outputting the 'credential_request' object, you MUST STOP your response. Do not output any other JSON objects like 'summary', 'plan', or 'file'. Wait for the user to provide the credentials in their next message. The user will provide the values, and you must then use them in the generated code. When generating code that uses these keys, embed them directly into the client-side application code.
 `;
 
-const DESIGN_SPEC_ADHERENCE_INSTRUCTION = `
---- DESIGN SPECIFICATION ADHERENCE ---
-If the user's prompt includes a "---DESIGN SPECIFICATION---" section, you MUST adhere to it strictly when generating the code. The design spec is the source of truth for layout, features, and user flow. It overrides any conflicting interpretation of the initial user prompt.
-`;
-
 const DEPRECATION_WARNING = `
 **CRITICAL: You MUST use the latest Google GenAI SDK syntax. Older patterns are deprecated and will fail.**
 
@@ -494,7 +489,6 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += DATABASE_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-      instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
       instruction += SILO_AI_INSTRUCTION_HTML;
   } else if (techStack === 'vue') {
     instruction = `You are Codepilot v1, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
@@ -571,7 +565,6 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-    instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_VUE;
 
   } else if (techStack === 'svelte') {
@@ -639,7 +632,6 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-    instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_SVELTE;
 
   } else if (techStack === 'nodejs') {
@@ -697,7 +689,6 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += NODEJS_WATERMARK_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-      instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
   } else if (techStack === 'react-native') {
       instruction = `You are Codepilot v1, a world-class AI agent and expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo). Your code MUST be of the highest quality: production-ready, performant, and complete.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
@@ -781,7 +772,6 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-    instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_REACT;
   } else if (techStack === 'react') {
       instruction = `You are Codepilot v1, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
@@ -856,7 +846,6 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += DATABASE_INSTRUCTION;
     instruction += WORKFLOW_INSTRUCTION;
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
-    instruction += DESIGN_SPEC_ADHERENCE_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_REACT;
   }
 
@@ -999,76 +988,6 @@ export const generateAppStream = (
     }
   });
 };
-
-export const generateDesignStream = (
-  prompt: string,
-  settings: Settings,
-  onUpdate: (update: any) => void
-): Promise<void> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const apiKey = settings.geminiApiKey || process.env.API_KEY;
-      if (!apiKey) {
-        reject(new Error("Gemini API key is not configured."));
-        return;
-      }
-      const ai = new GoogleGenAI({ apiKey });
-
-      const systemInstruction = `--- UI/UX DESIGN GENERATION ---
-You are Codepilot Designer, a world-class UI/UX designer and product manager AI. Your primary task is to take a user's app idea and generate a comprehensive design specification and visual wireframes before any code is written. You MUST stream your response as a sequence of JSON objects, each on a new line.
-
-1.  **Design Specification First**: You MUST start by outputting a single 'design_spec' JSON object. The 'spec' property should be a detailed string describing the app's purpose, user flow, layout strategy, color palette recommendations, typography, and key components.
-    Example: {"type": "design_spec", "spec": "App Purpose: A Pomodoro timer to help users focus...\\nUser Flow: User opens app, sees timer...\\nLayout: A single-column, centered layout...\\nColor Palette: Primary: #FF6347 (Tomato), Background: #F0F0F0..."}
-
-2.  **Page-by-Page Mockups**: After the spec, for EACH distinct page or view required by the application, you MUST output one 'design_mockup' JSON object.
-    -   The 'mockup' property must be an object with 'page' (a string like "Home Page" or "Settings Page") and 'html' (a string).
-    -   The 'html' MUST be a self-contained block of HTML using only Tailwind CSS classes for styling.
-    -   The purpose is to create a LOW-FIDELITY WIREFRAME. Use simple shapes, placeholders, and neutral colors (grays). Use placeholder text like "Lorem ipsum...".
-    -   DO NOT include \`<script>\`, \`<style>\`, \`<head>\`, or \`<body>\` tags. Only provide the HTML for the page content itself.
-    -   Use \`https://placehold.co/\` for placeholder images, e.g., \`<img src="https://placehold.co/600x400/e2e8f0/94a3b8?text=Hero+Image" alt="placeholder">\`.
-    -   Example: {"type": "design_mockup", "mockup": {"page": "Login Page", "html": "<div class='p-8 max-w-sm mx-auto bg-gray-100 rounded-xl shadow-md space-y-4'><h2 class='text-2xl font-bold'>Login</h2>...</div>"}}
-
-3.  **Final Signal**: After ALL mockups have been generated, you MUST output a final 'design_complete' JSON object to signal that you are finished.
-    Example: {"type": "design_complete"}
-
-You must follow this sequence strictly: 1. \`design_spec\`, 2. one or more \`design_mockup\`s, 3. \`design_complete\`. Do not output any other JSON types during this process.
-`;
-
-      const responseStream = await ai.models.generateContentStream({
-        model: settings.model || "gemini-2.5-flash",
-        contents: `${systemInstruction}\n\nUser's app idea: "${prompt}"`,
-        config: {
-          temperature: 0.3,
-        },
-      });
-
-      let buffer = '';
-      for await (const chunk of responseStream) {
-        buffer += chunk.text;
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.substring(0, newlineIndex).trim();
-          buffer = buffer.substring(newlineIndex + 1);
-
-          if (line) {
-            try {
-              const update = JSON.parse(line);
-              onUpdate(update);
-            } catch (e) {
-              console.warn('Failed to parse streaming JSON line for design:', line, e);
-            }
-          }
-        }
-      }
-      resolve();
-    } catch (error) {
-      console.error("Error calling Gemini API for design generation:", error);
-      const detailedError = error instanceof Error ? error.message : String(error);
-      reject(new Error(`Failed to generate design. Details: ${detailedError}`));
-    }
-  });
-};
-
 
 export const generateAgentChatResponse = async (
   history: any[],
