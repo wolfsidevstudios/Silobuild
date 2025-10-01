@@ -419,6 +419,35 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
+            <section id="silo-ai" className="py-20 bg-gray-50 border-y border-gray-200">
+                <div className="container mx-auto px-6 text-center">
+                    <h3 className="text-4xl font-bold">Introducing Silo AI</h3>
+                    <p className="text-gray-600 mt-4 max-w-3xl mx-auto text-lg">
+                        Effortlessly embed powerful generative AI features directly into your applications, no backend required. With Silo AI, you can build chatbots, content generators, summarizers, and more, all running on the client-side.
+                    </p>
+                    <div className="mt-12 max-w-4xl mx-auto text-left grid md:grid-cols-3 gap-8">
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                            <h4 className="font-bold text-lg text-gray-900"><span className="text-blue-600 font-black text-2xl mr-2">1.</span>Prompt for a Feature</h4>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Simply describe the AI feature you want in the chat. For example, "Add a chatbot to answer user questions" or "Create a tool to summarize articles from a URL".
+                            </p>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                            <h4 className="font-bold text-lg text-gray-900"><span className="text-blue-600 font-black text-2xl mr-2">2.</span>Provide Your API Key</h4>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Codepilot will recognize your request and ask for the necessary API key (like a Google Gemini key). Your key is only used for your generated app.
+                            </p>
+                        </div>
+                        <div className="bg-white p-6 rounded-lg border border-gray-200">
+                            <h4 className="font-bold text-lg text-gray-900"><span className="text-blue-600 font-black text-2xl mr-2">3.</span>Get Functional Code</h4>
+                            <p className="mt-2 text-sm text-gray-600">
+                                Codepilot will generate the complete, functional code that integrates the AI feature, ready for you to download and use.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="workflow" className="py-20 bg-transparent border-t border-gray-200">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
