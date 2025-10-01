@@ -105,6 +105,13 @@ export const CreationFlowPage: React.FC = () => {
             setPrompt(initialPrompt);
             sessionStorage.removeItem('initialPrompt');
         }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const stackParam = urlParams.get('stack');
+        if (stackParam && ['react', 'html', 'svelte', 'react-native', 'infinity'].includes(stackParam)) {
+            handleStackSelect(stackParam as TechStack);
+        }
+
     }, []);
 
     useEffect(() => {
@@ -112,7 +119,7 @@ export const CreationFlowPage: React.FC = () => {
             const now = new Date().toISOString();
             const newProject: Project = {
                 id: crypto.randomUUID(),
-                name: prompt.substring(0, 30) || 'New Project',
+                name: prompt.substring(0, 50) || 'New Project',
                 createdAt: now,
                 updatedAt: now,
                 files: generatedFiles,
@@ -123,138 +130,113 @@ export const CreationFlowPage: React.FC = () => {
             };
             setProjects(prev => [newProject, ...prev]);
             
-            setTimeout(() => {
+            // Redirect after a delay
+            const timer = setTimeout(() => {
                 window.location.hash = `#/project/${newProject.id}`;
-            }, 1500);
+            }, 2000);
+
+            return () => clearTimeout(timer);
         }
     }, [stage, techStack, generatedFiles, previewFile, prompt, plan, setProjects]);
 
+    const handleStackSelect = (stack: TechStack) => {
+        if (stack === 'infinity') {
+            const now = new Date().toISOString();
+            const newProject: Project = {
+                id: crypto.randomUUID(),
+                name: prompt || 'New Infinity App',
+                createdAt: now,
+                updatedAt: now,
+                files: [],
+                previewFile: null,
+                stack: 'infinity',
+                deployments: [],
+            };
+            setProjects(prev => [newProject, ...prev]);
+            window.location.hash = `#/project/${newProject.id}`;
+            return;
+        }
+        setTechStack(stack);
+        setStage('prompt');
+    }
 
     const renderContent = () => {
         switch (stage) {
             case 'stack':
+                return (
+                    <div className="text-center transition-opacity duration-500">
+                        <h2 className="text-3xl font-bold mb-4">Choose your technology</h2>
+                        <p className="text-gray-600 mb-8">Select a stack to generate code, or try the Infinity App for a simulated experience.</p>
+                        <div className="flex flex-wrap items-center justify-center gap-3">
+                            <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => handleStackSelect('react')} />
+                            <StackCard icon={<MobileIcon />} title="React Native" onClick={() => handleStackSelect('react-native')} />
+                            <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => handleStackSelect('svelte')} />
+                            <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => handleStackSelect('html')} />
+                            <StackCard icon={<InfinityIcon />} title="Infinity App" onClick={() => handleStackSelect('infinity')} />
+                        </div>
+                    </div>
+                );
             case 'prompt':
-                const PromptComponent = () => {
-                    const [currentPrompt, setCurrentPrompt] = useState(prompt);
-                    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-                    useEffect(() => {
-                        const textarea = textareaRef.current;
-                        if (textarea) {
-                          textarea.style.height = 'auto';
-                          textarea.style.height = `${textarea.scrollHeight}px`;
-                        }
-                    }, [currentPrompt]);
-                    
-                    const handleSubmit = (e: React.FormEvent) => {
-                        e.preventDefault();
-                        if (currentPrompt.trim()) {
-                            handlePromptSubmit(currentPrompt);
-                        }
-                    };
-
-                    return (
-                        <div className="w-full max-w-3xl">
-                            <form onSubmit={handleSubmit}>
-                                <div className="relative bg-white/50 border border-gray-200 rounded-2xl shadow-xl p-4 backdrop-blur-lg">
-                                    <label className="text-left block text-sm font-medium text-gray-700 mb-2 px-2">Ask Codepilot to build a prototype of...</label>
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={currentPrompt}
-                                        onChange={(e) => setCurrentPrompt(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                handleSubmit(e as any);
-                                            }
-                                        }}
-                                        placeholder="a modern SaaS dashboard with a sidebar, charts, and a data table for user management"
-                                        className="w-full h-24 bg-transparent resize-none text-gray-900 text-base placeholder-gray-500 focus:outline-none p-2"
-                                    />
-                                    <button type="submit" disabled={!currentPrompt.trim()} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                                        <svg className="w-6 h-6 transform -rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-                                    </button>
-                                </div>
-                            </form>
-                            <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
-                                <span className="text-gray-500">Try one →</span>
-                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Kanban Board")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
-                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Movie Finder")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Movie Finder</button>
-                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Pomodoro Timer")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
+                return (
+                     <div className="w-full max-w-2xl text-center transition-opacity duration-500">
+                        <h2 className="text-3xl font-bold mb-4">What should we build?</h2>
+                        <p className="text-gray-600 mb-8">Describe the application you want to create. Be as specific as you can.</p>
+                        <textarea
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePromptSubmit(prompt); } }}
+                            placeholder="e.g., A pomodoro timer with start, stop, and reset buttons"
+                            className="w-full h-32 bg-white border border-gray-300 rounded-lg p-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        />
+                        <div className="flex items-center justify-between mt-4">
+                            <button onClick={resetFlow} className="text-sm text-gray-600 hover:underline">Back</button>
+                             <button onClick={() => handlePromptSubmit(prompt)} disabled={!prompt.trim()} className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
+                                Generate App
+                            </button>
+                        </div>
+                        <div className="text-left mt-6">
+                            <p className="text-xs text-gray-500 mb-2">Or try an example:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {prompts.slice(0, 3).map(p => (
+                                    <button key={p.title} onClick={() => setPrompt(p.prompt)} className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-md hover:bg-gray-300">{p.title}</button>
+                                ))}
                             </div>
                         </div>
-                    );
-                }
-                return (
-                    <div className="w-full max-w-3xl mx-auto text-center">
-                        <h1 className="text-4xl font-bold mb-4">Let's build something new</h1>
-                        <p className="text-gray-600 mb-8">First, choose your technology stack.</p>
-                        <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-                            <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => { setTechStack('react'); setStage('prompt'); }}/>
-                            <StackCard icon={<MobileIcon />} title="React Native" onClick={() => { setTechStack('react-native'); setStage('prompt'); }}/>
-                            <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => { setTechStack('svelte'); setStage('prompt'); }}/>
-                            <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => { setTechStack('html'); setStage('prompt'); }}/>
-                            <StackCard icon={<InfinityIcon />} title="Infinity App" onClick={() => { window.location.hash = `#/project/infinity`; }}/>
-                        </div>
-                         {stage === 'prompt' && <PromptComponent />}
                     </div>
                 );
             case 'generating_app':
+                const progress = plan?.files.length ? Math.round((generatedFiles.length / plan.files.length) * 100) : 0;
                 return (
-                    <div className="w-full max-w-4xl mx-auto text-center">
-                        <div className="flex flex-col items-center gap-4">
-                            <Spinner className="w-12 h-12" />
-                            <h2 className="text-2xl font-bold">Building your app...</h2>
-                            <p className="text-gray-600">Codepilot is generating the code. This might take a minute.</p>
+                    <div className="w-full max-w-lg text-center transition-opacity duration-500">
+                        <h2 className="text-3xl font-bold mb-4">Codepilot is building...</h2>
+                        {plan?.summary && <p className="text-gray-600 mb-2">{plan.summary.replace(/[\n-]/g, ' ')}</p>}
+                        
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 my-4">
+                           <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%`, transition: 'width 0.5s' }}></div>
                         </div>
-                        {plan?.files && plan.files.length > 0 && (
-                            <div className="mt-8 text-left max-w-md mx-auto">
-                                <h3 className="font-semibold mb-2">Generating Files:</h3>
-                                <ul className="space-y-1 text-sm">
-                                    {plan.files.map(file => {
-                                        const isDone = generatedFiles.some(f => f.path === file);
-                                        return (
-                                            <li key={file} className={`flex items-center gap-2 transition-colors duration-300 ${isDone ? 'text-gray-500' : 'text-gray-800'}`}>
-                                                <div className="w-4 h-4 flex items-center justify-center">
-                                                    {isDone ? 
-                                                        <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> : 
-                                                        <Spinner className="w-4 h-4" />
-                                                    }
-                                                </div>
-                                                <span className={isDone ? 'line-through' : ''}>{file}</span>
-                                            </li>
-                                        )
-                                    })}
-                                </ul>
-                            </div>
-                        )}
+
+                        {currentFile && <p className="text-sm text-gray-500 font-mono animate-pulse">{currentFile}</p>}
                     </div>
                 );
             case 'complete':
-                 return (
-                    <div className="w-full max-w-4xl mx-auto text-center">
-                        <div className="flex flex-col items-center gap-4">
-                            <svg className="w-16 h-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            <h2 className="text-2xl font-bold">Build Complete!</h2>
-                            <p className="text-gray-600">Redirecting to your new project...</p>
+                return (
+                    <div className="text-center transition-opacity duration-500">
+                        <h2 className="text-3xl font-bold mb-4">Build Complete!</h2>
+                        <p className="text-gray-600">Your new project has been created and saved.</p>
+                        <p className="text-gray-600 mt-2">Redirecting you to the builder...</p>
+                        <div className="mt-6 flex justify-center">
+                            <Spinner className="w-8 h-8"/>
                         </div>
                     </div>
                 );
         }
-    }
+    };
 
 
     return (
-        <div className="h-screen w-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-            <div className="absolute top-4 left-4">
-                <a href="#/dashboard" className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-full font-semibold hover:bg-gray-100">← Dashboard</a>
-            </div>
-            {error ? (
-                <div className="w-full max-w-2xl text-center">
-                    <h2 className="text-2xl font-bold text-red-600 mb-4">An Error Occurred</h2>
-                    <p className="text-gray-700 bg-red-100 p-4 rounded-md">{error}</p>
-                    <button onClick={resetFlow} className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md font-semibold">Start Over</button>
-                </div>
-            ) : renderContent()}
+        <div className="h-screen w-screen bg-gray-50 text-gray-900 flex flex-col justify-center items-center p-4">
+            <a href="#/dashboard" className="absolute top-4 left-4 text-sm text-gray-600 hover:underline">&larr; Back to Dashboard</a>
+            {renderContent()}
         </div>
     );
 };
