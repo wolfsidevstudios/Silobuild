@@ -82,7 +82,7 @@ Example: {"type": "thoughts", "thoughts": "1. I'll start with a standard HTML5 b
 Third, output a 'plan' object that lists all the file paths that will be created for a standard ${techStack} project structure.
 Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.css"]}
 
-Do not generate any file content or code. Only output the three planning JSON objects.
+Your response MUST contain ONLY these three JSON objects and nothing else. After you output the 'plan' object, your task is complete. Do not output any file content, code, or any other text.
 Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
 
             const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey || process.env.API_KEY });
