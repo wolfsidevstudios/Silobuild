@@ -46,6 +46,7 @@ export const CreationFlowPage: React.FC = () => {
     const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
     const [previewFile, setPreviewFile] = useState<GeneratedFile | null>(null);
     const [currentFile, setCurrentFile] = useState<string | null>(null);
+    const [newProjectId, setNewProjectId] = useState<string | null>(null);
     
     const [, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
@@ -114,10 +115,11 @@ export const CreationFlowPage: React.FC = () => {
 
     }, []);
 
+    // Effect to create the project and trigger redirection
     useEffect(() => {
-        if (stage === 'complete' && techStack) {
+        if (stage === 'complete' && techStack && !newProjectId) {
             const now = new Date().toISOString();
-            const newProject: Project = {
+            const project: Project = {
                 id: crypto.randomUUID(),
                 name: prompt.substring(0, 50) || 'New Project',
                 createdAt: now,
@@ -128,16 +130,22 @@ export const CreationFlowPage: React.FC = () => {
                 deployments: [],
                 thoughts: plan?.thoughts,
             };
-            setProjects(prev => [newProject, ...prev]);
-            
-            // Redirect after a delay
+            setProjects(prev => [project, ...prev]);
+            setNewProjectId(project.id); // Set the new ID to trigger the redirect effect
+        }
+    }, [stage, techStack, generatedFiles, previewFile, prompt, plan, setProjects, newProjectId]);
+
+    // Effect that handles only the redirection
+    useEffect(() => {
+        if (newProjectId) {
             const timer = setTimeout(() => {
-                window.location.hash = `#/project/${newProject.id}`;
+                window.location.hash = `#/project/${newProjectId}`;
             }, 2000);
 
             return () => clearTimeout(timer);
         }
-    }, [stage, techStack, generatedFiles, previewFile, prompt, plan, setProjects]);
+    }, [newProjectId]);
+
 
     const handleStackSelect = (stack: TechStack) => {
         if (stack === 'infinity') {
