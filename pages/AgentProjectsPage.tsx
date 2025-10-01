@@ -3,6 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project } from '../types';
 import { TrashIcon, EditIcon, SparklesIcon, AgentIcon, PlusIcon } from '../components/icons';
 import { timeAgo } from '../utils/projectUtils';
+import { useUsageLimit } from '../hooks/useUsageLimit';
 
 const AgentCard: React.FC<{ project: Project; onDelete: (id: string) => void }> = ({ project, onDelete }) => (
     <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between hover:border-indigo-300 transition-all duration-300 group hover:shadow-xl hover:-translate-y-1">
@@ -37,6 +38,7 @@ const AgentCard: React.FC<{ project: Project; onDelete: (id: string) => void }> 
 export const AgentProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isBlocked, limit } = useUsageLimit();
 
   const deleteProject = (projectId: string) => {
     if (window.confirm('Are you sure you want to delete this agent?')) {
@@ -44,6 +46,14 @@ export const AgentProjectsPage: React.FC = () => {
     }
   };
   
+  const handleNewAgentClick = () => {
+    if (isBlocked) {
+        alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+        return;
+    }
+    window.location.hash = '#/agent-builder';
+  };
+
   const agentProjects = useMemo(() => {
     return projects
         .filter(p => p.stack === 'agent')
@@ -57,10 +67,10 @@ export const AgentProjectsPage: React.FC = () => {
             <AgentIcon className="w-8 h-8 text-indigo-500" />
             <h1 className="text-3xl font-bold">AI Agents</h1>
         </div>
-        <a href="#/agent-builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-colors duration-300">
+        <button onClick={handleNewAgentClick} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-colors duration-300">
             <PlusIcon />
             New Agent
-        </a>
+        </button>
       </div>
       
        <div className="mb-8">

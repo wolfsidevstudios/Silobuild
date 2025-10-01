@@ -4,6 +4,7 @@ import { Project, GeneratedFile, Team } from '../types';
 import { TrashIcon, EditIcon, FileIcon, SparklesIcon, CodeIcon, DownloadIcon, GithubIcon, UsersIcon, DotsHorizontalIcon } from '../components/icons';
 import { ProjectMetadataModal } from '../components/ProjectMetadataModal';
 import { downloadProjectAsZip, timeAgo } from '../utils/projectUtils';
+import { useUsageLimit } from '../hooks/useUsageLimit';
 
 const studioBoilerplatePreview: GeneratedFile = {
     path: 'preview.html',
@@ -153,6 +154,7 @@ export const ProjectsPage: React.FC = () => {
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isBlocked, recordUsage, limit } = useUsageLimit();
 
   const deleteProject = (projectId: string) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
@@ -167,9 +169,25 @@ export const ProjectsPage: React.FC = () => {
     }
   };
 
+  const handleNewProjectClick = (url: string) => {
+    if(isBlocked) {
+        alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+        return;
+    }
+    window.location.hash = url;
+  };
+
   const handleNewStudioProject = () => {
+    if (isBlocked) {
+        alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+        return;
+    }
     const name = prompt("Enter a name for your new studio project:", "My Studio App");
     if (name) {
+        if (!recordUsage()) {
+             alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+             return;
+        }
         const now = new Date().toISOString();
         const newProject: Project = {
             id: Date.now().toString(),
@@ -205,14 +223,14 @@ export const ProjectsPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">My Projects</h1>
         <div className="flex items-center gap-3">
-            <a href="#/builder?stack=infinity" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
+            <button onClick={() => handleNewProjectClick("#/builder?stack=infinity")} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
                 <InfinityIcon />
                 New Infinity App
-            </a>
-            <a href="#/builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors duration-300">
+            </button>
+            <button onClick={() => handleNewProjectClick("#/builder")} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors duration-300">
                 <SparklesIcon />
                 New Codepilot Project
-            </a>
+            </button>
              <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors duration-300">
                 <CodeIcon />
                 New Studio Project

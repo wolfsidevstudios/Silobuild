@@ -18,8 +18,9 @@ import { PublishView } from './PublishView';
 import { InfinityView } from './InfinityView';
 import { AddAuthModal } from './AddAuthModal';
 import { VersionHistoryModal } from './VersionHistoryModal';
-import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon } from './icons';
+import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon, PaintBrushIcon, SparklesIcon } from './icons';
 import { prompts } from '../data/prompts';
+import { useUsageLimit } from '../hooks/useUsageLimit';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -118,11 +119,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [preferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
+  const { recordUsage } = useUsageLimit();
 
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isIdeaMode, setIsIdeaMode] = useState(false);
   const [techStack, setTechStack] = useState<TechStack | null>(null);
+  const [pilot, setPilot] = useState<'code' | 'design'>('code');
   const [isMacPreviewVisible, setIsMacPreviewVisible] = useState(false);
   const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null);
@@ -150,21 +153,15 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return;
     }
     
-    // Save the current state as a version before making changes
-    if (currentProject && multiFileCode.length > 0) {
-        const newVersion: Version = {
-            id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
-            message: buildPrompt,
-            files: multiFileCode,
-            previewFile: previewFile,
-        };
-        setCurrentProject(prev => prev ? ({
-            ...prev,
-            versionHistory: [...(prev.versionHistory || []), newVersion]
-        }) : null);
+    // For new projects, record usage
+    if (!currentProject) {
+        if (!recordUsage()) {
+            setError("You have reached your monthly creation limit.");
+            setCreationStage('prompt');
+            return;
+        }
     }
-      
+
     if (currentProject) { // This is an update in the builder
         const userMessage: ChatMessage = { role: 'user', content: buildPrompt || "Updating app from image..." };
         setMessages(prev => [...prev, userMessage]);
@@ -213,19 +210,19 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setPromptForCredentials(buildPrompt);
             credentialRequestReceived = true;
             if (currentProject) {
-                // For the builder, we throw to let the catch block handle pausing.
                 throw new Error('CREDENTIAL_REQUEST_PENDING');
             }
           }
-        }, stackToUse, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData, authConfigToUse);
+        }, stackToUse, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData, authConfigToUse, pilot);
         
         if (credentialRequestReceived) {
             setIsLoading(false);
             return;
         }
+        
+        const now = new Date().toISOString();
 
         if (!currentProject) { // This was a new project creation
-            const now = new Date().toISOString();
             const newProject: Project = {
                 id: crypto.randomUUID(),
                 name: buildPrompt.substring(0, 50).trim() || 'New Project',
@@ -237,20 +234,37 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 deployments: [],
                 thoughts: thoughts,
                 workflow: workflow || undefined,
+                pilot: pilot,
                 versionHistory: [],
             };
             setCurrentProject(newProject);
+            setProjects(prev => [newProject, ...prev]);
             setMultiFileCode(newProject.files);
             setPreviewFile(newProject.previewFile);
             setDeployments(newProject.deployments);
             setWorkflow(newProject.workflow);
-            setMessages([{ role: 'model', content: `Generated project: ${newProject.name}`, thoughts: thoughts }]);
+            setMessages([{ role: 'model', content: `Generated and saved project: ${newProject.name}`, thoughts: thoughts }]);
         } else { // This was an update
+             const newVersion: Version = {
+                id: crypto.randomUUID(),
+                timestamp: now,
+                message: buildPrompt,
+                files: multiFileCode, // The files before the change
+                previewFile: previewFile, // The preview before the change
+            };
+            const updatedProject: Project = { 
+                ...currentProject, 
+                files: tempFiles, 
+                previewFile: tempPreviewFile, 
+                thoughts: thoughts, 
+                updatedAt: now,
+                versionHistory: [...(currentProject.versionHistory || []), newVersion]
+            };
             setMultiFileCode(tempFiles);
             setPreviewFile(tempPreviewFile);
-            const updatedProject = { ...currentProject, files: tempFiles, previewFile: tempPreviewFile, thoughts: thoughts };
             setCurrentProject(updatedProject);
-            setMessages(prev => [...prev, { role: 'model', content: 'I have applied the changes to the application.', thoughts: thoughts }]);
+            setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+            setMessages(prev => [...prev, { role: 'model', content: "✅ I've applied the changes. This new version has been saved automatically.", thoughts: thoughts }]);
         }
 
         setAppMode('CHAT');
@@ -273,7 +287,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setIsLoading(false);
         }
     }
-  }, [techStack, settings, currentProject, multiFileCode, previewFile, setProjects, setSchema]);
+  }, [techStack, settings, currentProject, multiFileCode, previewFile, setProjects, setSchema, pilot, recordUsage]);
 
   useEffect(() => {
     if (projectId) {
@@ -288,6 +302,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         }
         setMessages(initialMessages);
         setTechStack(project.stack || 'react');
+        setPilot(project.pilot || 'code');
         setDeployments(project.deployments || []);
         setWorkflow(project.workflow || null);
       } else if (projects.length > 0) {
@@ -326,7 +341,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
     const now = new Date().toISOString();
     
-    const projectToSave: Project = { ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode, previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl, teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts, versionHistory: currentProject?.versionHistory || [] };
+    const projectToSave: Project = { ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode, previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl, teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts, versionHistory: currentProject?.versionHistory || [], pilot: pilot };
 
     let finalProjectUrl = `#/project/${projectToSave.id}`;
 
@@ -425,9 +440,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
   const handleSkipToBuilder = () => {
     if (!techStack) return;
+    if (!recordUsage()) {
+        setError("You have reached your monthly creation limit.");
+        return;
+    }
     const now = new Date().toISOString();
-    const newProject: Project = { id: crypto.randomUUID(), name: 'New Blank Project', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: techStack, deployments: [], versionHistory: [] };
+    const newProject: Project = { id: crypto.randomUUID(), name: 'New Blank Project', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: techStack, deployments: [], versionHistory: [], pilot: pilot };
     setCurrentProject(newProject);
+    setProjects(prev => [newProject, ...prev]);
     setMessages([{ role: 'model', content: `Started a new blank ${techStack} project. What would you like to build first?` }]);
   };
 
@@ -515,7 +535,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
                 <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
                 <h2 className="relative text-3xl font-bold mb-2">What do you want to build?</h2>
-                <p className="relative text-gray-600 mb-8 max-w-xl text-center">Describe your application in detail. The more specific you are, the better the result.</p>
+                <p className="relative text-gray-600 mb-4 max-w-xl text-center">Describe your application in detail. The more specific you are, the better the result.</p>
+                <div className="relative flex items-center gap-2 mb-8 bg-gray-200 p-1 rounded-full">
+                    <button onClick={() => setPilot('code')} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${pilot === 'code' ? 'bg-white shadow' : 'text-gray-600'}`}><SparklesIcon/> Codepilot</button>
+                    <button onClick={() => setPilot('design')} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-full transition-colors ${pilot === 'design' ? 'bg-white shadow' : 'text-gray-600'}`}><PaintBrushIcon/> Designpilot</button>
+                </div>
+
                 <div className="relative w-full max-w-2xl">
                     {error && <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg mb-4 text-sm" role="alert"><strong>Error:</strong> {error}</div>}
                      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-xl p-4">
@@ -547,6 +572,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         onAddSupabase={handleAddSupabase} onAddAuth={() => setIsAuthModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)}
         onDownload={handleDownload} isGithubConnected={!!currentProject?.githubUrl}
         onOpenVersionHistory={() => setIsHistoryModalOpen(true)}
+        pilot={pilot} setPilot={setPilot}
       />
       <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
         {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /><span className="ml-2">Pushing...</span></div>}

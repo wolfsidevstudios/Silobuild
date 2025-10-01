@@ -82,8 +82,16 @@ const App = () => {
 **Integration**: For multi-file apps, create an \`Auth\` component and manage state in your root component (\`App.tsx\`, etc.). For single-file HTML apps, embed the logic directly in the script tag. You MUST manage the signed-in state to conditionally render the UI. The Google button should be hidden after sign-in.
 `;
 
-const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>, authConfig?: AuthConfig): string => {
+const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>, authConfig?: AuthConfig, pilot: 'code' | 'design' = 'code'): string => {
   const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo Build 2.0</div>`;
+
+  const DESIGN_PILOT_INSTRUCTION = `
+--- DESIGN PILOT MODE ---
+You are Designpilot, an expert UI/UX designer. Your primary goal is to generate visually stunning, modern, and responsive user interfaces.
+- **DO NOT** write complex JavaScript logic. Use placeholder functions like \`onClick={() => alert('Action!')}\` or empty handlers. Your focus is on aesthetics.
+- Focus on excellent layout, typography, color palettes, and spacing. Create beautiful, professional-looking components.
+- For all generated applications, you MUST include a button or link with the text "Open in Figma". This link should open "https://www.figma.com" in a new tab. Place this in a sensible location, like the footer or main layout.
+`;
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
 --- WATERMARK REQUIREMENT ---
@@ -579,7 +587,7 @@ Be creative! Make the simulated apps feel real and interesting. Generate plausib
   if (techStack === 'infinity') {
       instruction = INFINITY_APP_INSTRUCTION;
   } else if (techStack === 'html') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert web developer specializing in generating single-file HTML applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+      instruction = `You are ${pilot === 'design' ? 'Designpilot' : 'Codepilot v1'}, a world-class AI agent and expert web developer specializing in generating single-file HTML applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 You must stream your response as a sequence of JSON objects, each on a new line.
 
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
@@ -605,13 +613,14 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       } else {
          instruction += `\nYour task is to generate a complete, single-file HTML application based on the user's prompt.`;
       }
+      if (pilot === 'design') instruction += DESIGN_PILOT_INSTRUCTION;
       instruction += VISUAL_APP_WATERMARK_INSTRUCTION;
       instruction += DATABASE_INSTRUCTION;
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
       instruction += SILO_AI_INSTRUCTION_HTML;
   } else if (techStack === 'vue') {
-    instruction = `You are Codepilot v1, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+    instruction = `You are ${pilot === 'design' ? 'Designpilot' : 'Codepilot v1'}, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
@@ -639,6 +648,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
         instruction += `\nYour task is to generate a complete, multi-file Vue 3 TypeScript application based on the user's prompt.`;
       }
       
+      if (pilot === 'design') instruction += DESIGN_PILOT_INSTRUCTION;
       instruction += `\n
 --- PWA & CUSTOMIZATION INSTRUCTIONS ---
 All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), following a standard Vite project structure.
@@ -688,7 +698,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += SILO_AI_INSTRUCTION_VUE;
 
   } else if (techStack === 'svelte') {
-    instruction = `You are Codepilot v1, a world-class AI agent and expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+    instruction = `You are ${pilot === 'design' ? 'Designpilot' : 'Codepilot v1'}, a world-class AI agent and expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
@@ -716,6 +726,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
         instruction += `\nYour task is to generate a complete, multi-file Svelte 5 TypeScript application based on the user's prompt.`;
     }
 
+    if (pilot === 'design') instruction += DESIGN_PILOT_INSTRUCTION;
     instruction += `\n
 --- PWA & CUSTOMIZATION INSTRUCTIONS ---
 All applications you generate for 'multiFileCode' MUST be Progressive Web Apps (PWAs), following a standard Vite project structure for Svelte.
@@ -810,7 +821,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   } else if (techStack === 'react-native') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo). Your code MUST be of the highest quality: production-ready, performant, and complete.
+      instruction = `You are ${pilot === 'design' ? 'Designpilot' : 'Codepilot v1'}, a world-class AI agent and expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo). Your code MUST be of the highest quality: production-ready, performant, and complete.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
@@ -845,6 +856,7 @@ The generated README.md file MUST end with the following line, separated by a ho
 ---
 *Built with Silo Build 2.0*
 `;
+      if (pilot === 'design') instruction += DESIGN_PILOT_INSTRUCTION;
 
       instruction += `\n
 --- FILE CONTENT INSTRUCTIONS ('multiFileCode') ---
@@ -894,7 +906,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_REACT;
   } else if (techStack === 'react') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+      instruction = `You are ${pilot === 'design' ? 'Designpilot' : 'Codepilot v1'}, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
 The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
@@ -921,6 +933,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       } else {
         instruction += `\nYour task is to generate a complete, multi-file React TypeScript application based on the user's prompt.`;
       }
+      if (pilot === 'design') instruction += DESIGN_PILOT_INSTRUCTION;
 
       instruction += `\n
 --- PWA & CUSTOMIZATION INSTRUCTIONS ('multiFileCode') ---
@@ -988,6 +1001,7 @@ export const generateAppStream = (
   customCredentials?: Record<string, string>,
   imageData?: string | null, // base64 data URI
   authConfig?: AuthConfig,
+  pilot?: 'code' | 'design'
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -999,7 +1013,7 @@ export const generateAppStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       const isEditing = !!existingFiles && existingFiles.length > 0;
-      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials, authConfig);
+      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials, authConfig, pilot);
       
       let userPromptText = prompt;
 

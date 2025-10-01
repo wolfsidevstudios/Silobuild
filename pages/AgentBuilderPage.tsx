@@ -6,6 +6,7 @@ import { Spinner } from '../components/Spinner';
 import { SaveIcon, SparklesIcon, HomeIcon, AgentIcon, TrashIcon, DownloadIcon } from '../components/icons';
 import { Type } from '@google/genai';
 import { downloadProjectAsZip } from '../utils/projectUtils';
+import { useUsageLimit } from '../hooks/useUsageLimit';
 
 // FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
@@ -166,6 +167,7 @@ const AgentChatView: React.FC<{
 export const AgentBuilderPage: React.FC<{ projectId?: string }> = ({ projectId }) => {
     const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+    const { recordUsage, limit } = useUsageLimit();
 
     const [project, setProject] = useState<Project | null>(null);
     const [config, setConfig] = useState<AgentConfig>(defaultAgentConfig);
@@ -227,6 +229,10 @@ export const AgentBuilderPage: React.FC<{ projectId?: string }> = ({ projectId }
             savedProject = { ...project, name, agentConfig: config, updatedAt: now };
             setProjects(p => p.map(p => p.id === projectId ? savedProject : p));
         } else { // Create new project
+            if (!recordUsage()) {
+                alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+                return;
+            }
             savedProject = {
                 id: crypto.randomUUID(),
                 name,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, KeyIcon, TemplateIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, KeyIcon, TemplateIcon, SparklesIcon, PaintBrushIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
@@ -12,6 +12,8 @@ interface HeaderProps {
   onDownload: () => void;
   isGithubConnected: boolean;
   onOpenVersionHistory: () => void;
+  pilot: 'code' | 'design';
+  setPilot: (pilot: 'code' | 'design') => void;
 }
 
 const NavButton: React.FC<{
@@ -36,6 +38,17 @@ const NavButton: React.FC<{
   );
 };
 
+const PilotToggle: React.FC<{ activePilot: 'code' | 'design'; setPilot: (pilot: 'code' | 'design') => void }> = ({ activePilot, setPilot }) => (
+    <div className="flex items-center gap-1 bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 shadow-lg">
+        <button onClick={() => setPilot('code')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${activePilot === 'code' ? 'bg-blue-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
+            <SparklesIcon /> Codepilot
+        </button>
+        <button onClick={() => setPilot('design')} className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${activePilot === 'design' ? 'bg-purple-500 text-white shadow' : 'text-gray-600 hover:bg-gray-200'}`}>
+            <PaintBrushIcon /> Designpilot
+        </button>
+    </div>
+);
+
 export const Header: React.FC<HeaderProps> = ({
   activeMode,
   setAppMode,
@@ -46,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
   onDownload,
   isGithubConnected,
   onOpenVersionHistory,
+  pilot,
+  setPilot,
 }) => {
   return (
     <header className="flex justify-between items-center p-4 bg-white/50 backdrop-blur-md border-b border-gray-200">
@@ -54,37 +69,40 @@ export const Header: React.FC<HeaderProps> = ({
           Dashboard
       </a>
 
-      <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-lg">
-        <NavButton
-          label="Chat"
-          isActive={activeMode === 'CHAT'}
-          onClick={() => setAppMode('CHAT')}
-          icon={<ChatIcon />}
-        />
-        <NavButton
-          label="Code"
-          isActive={activeMode === 'CODE'}
-          onClick={() => setAppMode('CODE')}
-          icon={<CodeIcon />}
-        />
-        <NavButton
-          label="Preview"
-          isActive={activeMode === 'PREVIEW'}
-          onClick={() => setAppMode('PREVIEW')}
-          icon={<EyeIcon />}
-        />
-        <NavButton
-            label="Backend"
-            isActive={activeMode === 'WORKFLOW'}
-            onClick={() => setAppMode('WORKFLOW')}
-            icon={<WorkflowIcon />}
-        />
-        <NavButton
-          label="Publish"
-          isActive={activeMode === 'PUBLISH'}
-          onClick={() => setAppMode('PUBLISH')}
-          icon={<UploadIcon />}
-        />
+      <div className="flex items-center gap-4">
+        <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-lg">
+            <NavButton
+            label="Chat"
+            isActive={activeMode === 'CHAT'}
+            onClick={() => setAppMode('CHAT')}
+            icon={<ChatIcon />}
+            />
+            <NavButton
+            label="Code"
+            isActive={activeMode === 'CODE'}
+            onClick={() => setAppMode('CODE')}
+            icon={<CodeIcon />}
+            />
+            <NavButton
+            label="Preview"
+            isActive={activeMode === 'PREVIEW'}
+            onClick={() => setAppMode('PREVIEW')}
+            icon={<EyeIcon />}
+            />
+            <NavButton
+                label="Backend"
+                isActive={activeMode === 'WORKFLOW'}
+                onClick={() => setAppMode('WORKFLOW')}
+                icon={<WorkflowIcon />}
+            />
+            <NavButton
+            label="Publish"
+            isActive={activeMode === 'PUBLISH'}
+            onClick={() => setAppMode('PUBLISH')}
+            icon={<UploadIcon />}
+            />
+        </div>
+        <PilotToggle activePilot={pilot} setPilot={setPilot} />
       </div>
       
       <div className="w-auto flex items-center justify-end gap-2 min-w-[200px]">

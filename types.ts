@@ -96,6 +96,7 @@ export interface Project {
   workflow?: WorkflowDefinition;
   thoughts?: string;
   versionHistory?: Version[];
+  pilot?: 'code' | 'design';
 }
 
 export interface DecodedCredential {

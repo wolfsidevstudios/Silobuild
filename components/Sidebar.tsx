@@ -2,6 +2,7 @@ import React from 'react';
 import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon, InspirationIcon, KeyIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useUsageLimit } from '../hooks/useUsageLimit';
 
 const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -42,6 +43,15 @@ const SidebarNavLink: React.FC<{ href: string; icon: React.ReactNode; label: str
 export const Sidebar: React.FC = () => {
   const [isBetaMember] = useLocalStorage('isBetaMember', false);
   const [isCollapsed, setIsCollapsed] = useLocalStorage('sidebar-collapsed', false);
+  const { count, limit, isBlocked } = useUsageLimit();
+
+  const handleCreateClick = (url: string) => {
+      if (isBlocked) {
+          alert(`You have reached your monthly creation limit of ${limit} projects/agents.`);
+          return;
+      }
+      window.location.hash = url;
+  };
 
   return (
     <aside className={`relative bg-white/50 backdrop-blur-md border-r border-gray-200 flex flex-col p-4 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
@@ -59,22 +69,22 @@ export const Sidebar: React.FC = () => {
         </button>
       </div>
        <div className={`mb-6 space-y-2 ${isCollapsed ? 'px-0' : 'px-2'}`}>
-        <a 
-          href="#/builder"
+        <button 
+          onClick={() => handleCreateClick("#/builder")}
           title={isCollapsed ? 'New App with Codepilot' : ''}
           className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-900 hover:bg-gray-800 text-white rounded-full transition-colors duration-300 ${isCollapsed ? 'justify-center' : ''}`}
         >
             <SparklesIcon />
             {!isCollapsed && "New App"}
-        </a>
-        <a 
-          href="#/agent-builder" 
+        </button>
+        <button 
+          onClick={() => handleCreateClick("#/agent-builder")}
           title={isCollapsed ? 'New AI Agent' : ''}
           className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 text-gray-900 rounded-full transition-colors duration-300 border border-gray-200 ${isCollapsed ? 'justify-center' : ''}`}
         >
             <AgentIcon />
             {!isCollapsed && "New Agent"}
-        </a>
+        </button>
       </div>
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" isCollapsed={isCollapsed} />
@@ -95,6 +105,14 @@ export const Sidebar: React.FC = () => {
         )}
         
         <div className="mt-auto border-t border-gray-200 pt-2 flex flex-col gap-2">
+          {!isCollapsed && (
+              <div className="px-3 py-2 text-xs text-gray-500">
+                  <p>Monthly Creations: {count} / {limit}</p>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                      <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${(count / limit) * 100}%` }}></div>
+                  </div>
+              </div>
+          )}
           <SidebarNavLink href="#/dashboard/beta" icon={<BetaIcon />} label="Beta Program" isCollapsed={isCollapsed} />
           <SidebarNavLink href="#/dashboard/help" icon={<HelpCircleIcon />} label="Help & Support" isCollapsed={isCollapsed} />
           <SidebarNavLink href="#/dashboard/settings" icon={<SettingsIcon />} label="Settings" isCollapsed={isCollapsed} />
