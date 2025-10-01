@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project, Deployment } from '../types';
-import { GithubIcon, CloudUploadIcon, UploadIcon } from './icons';
+import { GithubIcon, CloudUploadIcon, NetlifyIcon, VercelIcon } from './icons';
 import { Spinner } from './Spinner';
 import { timeAgo } from '../utils/projectUtils';
 
@@ -8,7 +8,8 @@ interface PublishViewProps {
   project: Project | null;
   deployments: Deployment[];
   onCommitAndPush: () => void;
-  onDeployClick: () => void;
+  onDeployNetlifyClick: () => void;
+  onDeployVercelClick: () => void;
   onConnectGitHub: () => void;
   isPushing: boolean;
 }
@@ -43,7 +44,7 @@ const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployment
     );
 };
 
-export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployClick, onConnectGitHub, isPushing }) => {
+export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployNetlifyClick, onDeployVercelClick, onConnectGitHub, isPushing }) => {
     const isGithubConnected = !!project?.githubUrl;
 
     if (!project) {
@@ -97,12 +98,16 @@ export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, 
                             <CloudUploadIcon className="w-6 h-6"/>
                             <h2 className="text-xl font-bold">Deployments</h2>
                         </div>
-                        <button onClick={onDeployClick} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-lg transition-colors">
-                            <UploadIcon />
-                            <span>New Deployment</span>
-                        </button>
+                         <div className="flex items-center gap-2">
+                            <button onClick={onDeployNetlifyClick} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-white rounded-md transition-colors">
+                                <NetlifyIcon /> Deploy to Netlify
+                            </button>
+                            <button onClick={onDeployVercelClick} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-md transition-colors">
+                                <VercelIcon className="h-4" /> Deploy to Vercel
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4">Deploy your project to a live URL using Netlify.</p>
+                    <p className="text-sm text-gray-600 mb-4">Deploy your project to a live URL using Netlify or Vercel.</p>
                      <div className="mt-4 border-t pt-4">
                         <h3 className="font-semibold mb-3">Deployment History</h3>
                         <DeploymentHistory deployments={deployments} />

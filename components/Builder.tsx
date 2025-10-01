@@ -14,6 +14,7 @@ import { MacPreview } from './MacPreview';
 import { showLocalNotification, downloadProjectAsZip, timeAgo } from '../utils/projectUtils';
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 import { DeployModal } from './DeployModal';
+import { VercelDeployModal } from './VercelDeployModal';
 import { PublishView } from './PublishView';
 import { InfinityView } from './InfinityView';
 import { AddAuthModal } from './AddAuthModal';
@@ -131,6 +132,9 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
+  const [isVercelDeployModalOpen, setIsVercelDeployModalOpen] = useState(false);
+  const [isVercelDeploying, setIsVercelDeploying] = useState(false);
+  const [vercelDeploymentError, setVercelDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -507,6 +511,76 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsDeploying(false);
     }
   };
+  const handleVercelDeploy = async (token: string, newSiteName: string) => {
+    if (!token) {
+        setVercelDeploymentError("Vercel token is missing.");
+        return;
+    }
+    if (!currentProject) {
+        setVercelDeploymentError("Project data is not available.");
+        return;
+    }
+
+    setIsVercelDeploying(true);
+    setVercelDeploymentError(null);
+
+    try {
+        const { stack } = currentProject;
+        const filesToDeploy: { file: string; data: string }[] = [];
+        
+        const vercelJsonContent = `{
+"rewrites": [
+{ "source": "/(.*)", "destination": "/index.html" }
+]
+}`;
+
+        if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
+            if (multiFileCode.length === 0) throw new Error("Project has no source files to build and deploy.");
+            multiFileCode.forEach(f => filesToDeploy.push({ file: f.path, data: f.content }));
+        } else if (stack === 'html' || stack === 'react-native') {
+            if (!previewFile) throw new Error("Preview file is missing for this project type.");
+            filesToDeploy.push({ file: 'index.html', data: previewFile.content });
+        } else {
+            throw new Error(`Deployment for the "${stack}" tech stack is not currently supported on Vercel.`);
+        }
+
+        filesToDeploy.push({ file: 'vercel.json', data: vercelJsonContent });
+        
+        const vercelApi = 'https://api.vercel.com/v13/deployments';
+        const projectName = (newSiteName || currentProject.name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        
+        const response = await fetch(`${vercelApi}?forceNew=1`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: projectName,
+                files: filesToDeploy,
+                projectSettings: {
+                    framework: stack === 'react' || stack === 'svelte' || stack === 'vue' ? 'vite' : null,
+                }
+            }),
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(`Failed to create Vercel deployment: ${err.error?.message || response.statusText}`);
+        }
+
+        const deploymentData = await response.json();
+        const deploymentUrl = `https://${deploymentData.url}`;
+
+        handleNewDeployment({ url: deploymentUrl, timestamp: new Date().toISOString() });
+        setIsVercelDeployModalOpen(false);
+
+    } catch (error) {
+        setVercelDeploymentError(`Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+        setIsVercelDeploying(false);
+    }
+  };
   const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
   const handleSkipToBuilder = () => {
     if (!techStack) return;
@@ -644,13 +718,14 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} />}
         {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
         {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
-        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployClick={() => setIsDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />}
+        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />}
         {appMode === 'WORKFLOW' && (workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full text-gray-500">No workflow defined.</div>)}
       </main>
       {promptInputLayout === 'floating' && <PromptInput onSend={executeBuild} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />}
       {isMacPreviewVisible && previewFile && <MacPreview previewFile={previewFile} projectName={currentProject?.name || 'My App'} appIcon={currentProject?.appIcon || null} onClose={() => setIsMacPreviewVisible(false)} />}
       <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon} title="Save Project Details" isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
       <DeployModal isOpen={isDeployModalOpen} onClose={() => { setIsDeployModalOpen(false); setDeploymentError(null); }} onDeploy={handleDeploy} isDeploying={isDeploying} initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
+      <VercelDeployModal isOpen={isVercelDeployModalOpen} onClose={() => { setIsVercelDeployModalOpen(false); setVercelDeploymentError(null); }} onDeploy={handleVercelDeploy} isDeploying={isVercelDeploying} initialProjectName={currentProject?.name} initialToken={settings.vercelPat} deploymentError={vercelDeploymentError} />
       <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
       <VersionHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={currentProject?.versionHistory || []} onRestore={handleRestoreVersion} />
     </div>
