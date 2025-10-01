@@ -6,17 +6,18 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, CredentialRequest, AuthConfig } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, CredentialRequest, AuthConfig, Version } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
 import { MacPreview } from './MacPreview';
-import { showLocalNotification, downloadProjectAsZip } from '../utils/projectUtils';
+import { showLocalNotification, downloadProjectAsZip, timeAgo } from '../utils/projectUtils';
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 import { DeployModal } from './DeployModal';
 import { PublishView } from './PublishView';
 import { InfinityView } from './InfinityView';
 import { AddAuthModal } from './AddAuthModal';
+import { VersionHistoryModal } from './VersionHistoryModal';
 import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon } from './icons';
 import { prompts } from '../data/prompts';
 
@@ -130,6 +131,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   
   // --- CREATION FLOW STATE ---
   const [creationStage, setCreationStage] = useState<'stack' | 'prompt'>('stack');
@@ -146,6 +148,21 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     if (!stackToUse) {
         setError("Tech stack is not defined.");
         return;
+    }
+    
+    // Save the current state as a version before making changes
+    if (currentProject && multiFileCode.length > 0) {
+        const newVersion: Version = {
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            message: buildPrompt,
+            files: multiFileCode,
+            previewFile: previewFile,
+        };
+        setCurrentProject(prev => prev ? ({
+            ...prev,
+            versionHistory: [...(prev.versionHistory || []), newVersion]
+        }) : null);
     }
       
     if (currentProject) { // This is an update in the builder
@@ -220,6 +237,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 deployments: [],
                 thoughts: thoughts,
                 workflow: workflow || undefined,
+                versionHistory: [],
             };
             setCurrentProject(newProject);
             setMultiFileCode(newProject.files);
@@ -261,7 +279,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     if (projectId) {
       const project = projects.find(p => p.id === projectId);
       if (project) {
-        setCurrentProject(project);
+        setCurrentProject({ ...project, versionHistory: project.versionHistory || [] });
         setMultiFileCode(project.files);
         setPreviewFile(project.previewFile);
         const initialMessages: ChatMessage[] = [{ role: 'model', content: `Loaded project: ${project.name}` }];
@@ -308,7 +326,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
     const now = new Date().toISOString();
     
-    const projectToSave: Project = { ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode, previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl, teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts };
+    const projectToSave: Project = { ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode, previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl, teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts, versionHistory: currentProject?.versionHistory || [] };
 
     let finalProjectUrl = `#/project/${projectToSave.id}`;
 
@@ -408,10 +426,21 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const handleSkipToBuilder = () => {
     if (!techStack) return;
     const now = new Date().toISOString();
-    const newProject: Project = { id: crypto.randomUUID(), name: 'New Blank Project', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: techStack, deployments: [] };
+    const newProject: Project = { id: crypto.randomUUID(), name: 'New Blank Project', createdAt: now, updatedAt: now, files: [], previewFile: null, stack: techStack, deployments: [], versionHistory: [] };
     setCurrentProject(newProject);
     setMessages([{ role: 'model', content: `Started a new blank ${techStack} project. What would you like to build first?` }]);
   };
+
+  const handleRestoreVersion = (version: Version) => {
+    if (window.confirm(`Are you sure you want to restore to the version from ${timeAgo(version.timestamp)}? This will overwrite your current code.`)) {
+        setMultiFileCode(version.files);
+        setPreviewFile(version.previewFile);
+        setCurrentProject(prev => prev ? ({ ...prev, files: version.files, previewFile: version.previewFile }) : null);
+        setMessages(prev => [...prev, { role: 'model', content: `Restored project to version saved ${timeAgo(version.timestamp)}.` }]);
+        setIsHistoryModalOpen(false);
+    }
+  };
+
 
   if (!isInitialized) {
     return <div className="h-screen w-screen flex items-center justify-center"><Spinner className="w-10 h-10" /></div>;
@@ -517,6 +546,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         activeMode={appMode} setAppMode={setAppMode} project={currentProject}
         onAddSupabase={handleAddSupabase} onAddAuth={() => setIsAuthModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)}
         onDownload={handleDownload} isGithubConnected={!!currentProject?.githubUrl}
+        onOpenVersionHistory={() => setIsHistoryModalOpen(true)}
       />
       <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
         {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /><span className="ml-2">Pushing...</span></div>}
@@ -531,6 +561,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon} title="Save Project Details" isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
       <DeployModal isOpen={isDeployModalOpen} onClose={() => { setIsDeployModalOpen(false); setDeploymentError(null); }} onDeploy={handleDeploy} isDeploying={isDeploying} initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
       <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
+      <VersionHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={currentProject?.versionHistory || []} onRestore={handleRestoreVersion} />
     </div>
   );
 };

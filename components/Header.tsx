@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, KeyIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, KeyIcon, TemplateIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
@@ -11,6 +11,7 @@ interface HeaderProps {
   onConnectGitHub: () => void;
   onDownload: () => void;
   isGithubConnected: boolean;
+  onOpenVersionHistory: () => void;
 }
 
 const NavButton: React.FC<{
@@ -44,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   onConnectGitHub,
   onDownload,
   isGithubConnected,
+  onOpenVersionHistory,
 }) => {
   return (
     <header className="flex justify-between items-center p-4 bg-white/50 backdrop-blur-md border-b border-gray-200">
@@ -99,6 +101,13 @@ export const Header: React.FC<HeaderProps> = ({
             title="Add Authentication"
           >
             <KeyIcon className="w-5 h-5 text-yellow-600" />
+        </button>
+        <button 
+            onClick={onOpenVersionHistory} 
+            className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+            title="Version History"
+          >
+            <TemplateIcon className="w-5 h-5 text-purple-600" />
         </button>
          <button 
             onClick={onAddSupabase} 

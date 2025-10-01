@@ -72,6 +72,13 @@ export interface AgentConfig {
   geminiApiKey?: string;
 }
 
+export interface Version {
+  id: string;
+  timestamp: string;
+  message: string;
+  files: GeneratedFile[];
+  previewFile: GeneratedFile | null;
+}
 
 export interface Project {
   id: string;
@@ -88,6 +95,7 @@ export interface Project {
   agentConfig?: AgentConfig;
   workflow?: WorkflowDefinition;
   thoughts?: string;
+  versionHistory?: Version[];
 }
 
 export interface DecodedCredential {
