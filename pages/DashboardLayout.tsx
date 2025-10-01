@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../components/Sidebar';
 import { ProjectsPage } from './ProjectsPage';
 import { DatabasePage } from './DatabasePage';
@@ -11,12 +11,32 @@ import { DeploymentsPage } from './DeploymentsPage';
 import { HelpPage } from './HelpPage';
 import { IntegrationsPage } from './IntegrationsPage';
 import { InspirationPage } from './InspirationPage';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { SiloAiAnnouncementModal } from '../components/SiloAiAnnouncementModal';
 
 interface DashboardLayoutProps {
   route: string;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
+  const [hasSeenAnnouncement, setHasSeenAnnouncement] = useLocalStorage('hasSeenSiloAiAnnouncementV2', false);
+  const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
+
+  useEffect(() => {
+    // Show announcement after a short delay to not be too intrusive on load
+    const timer = setTimeout(() => {
+      if (!hasSeenAnnouncement) {
+        setIsAnnouncementOpen(true);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [hasSeenAnnouncement]);
+
+  const handleCloseAnnouncement = () => {
+    setIsAnnouncementOpen(false);
+    setHasSeenAnnouncement(true);
+  };
+
   const renderPage = () => {
     if (route.startsWith('#/dashboard/prompt-library')) {
       return <PromptLibraryPage />;
@@ -61,6 +81,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
       <main className="flex-1 overflow-y-auto bg-gray-50 rounded-tl-3xl">
         {renderPage()}
       </main>
+      {isAnnouncementOpen && <SiloAiAnnouncementModal onClose={handleCloseAnnouncement} />}
     </div>
   );
 };

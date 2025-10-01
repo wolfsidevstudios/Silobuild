@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, NetlifyIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon, AgentIcon } from '../components/icons';
+import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, NetlifyIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon, AgentIcon, CloudUploadIcon } from '../components/icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
@@ -415,6 +415,33 @@ export const LoginPage: React.FC = () => {
                         <FeatureCard icon={<MobileIcon />} title="PWA-Ready by Default" description="Every app is generated as a Progressive Web App, complete with a manifest and service worker for offline capabilities." />
                         <FeatureCard icon={<DownloadIcon />} title="Full Project Download" description="Receive a complete project with a logical file structure. Download a ZIP file and you're ready to run locally." />
                         <FeatureCard icon={<DatabaseIcon />} title="Service Integrations" description="The AI can automatically integrate with services like Supabase and Stripe if you provide your keys, wiring them up for you." />
+                    </div>
+                </div>
+            </section>
+
+            <section id="silo-ai-announcement" className="py-20 bg-gray-900 text-white">
+                <div className="container mx-auto px-6 max-w-4xl text-center">
+                    <h2 className="text-4xl font-bold">The Next Evolution: Silo AI Tools</h2>
+                    <p className="mt-4 text-lg text-gray-300">Seamlessly integrating the power of Google's Gemini AI.</p>
+                    
+                    <div className="mt-12 text-left space-y-6 text-gray-300 leading-relaxed bg-white/5 p-8 rounded-xl border border-white/10">
+                        <p>Our platform, Silo Build, has always been about empowering creators with a simple and intuitive way to bring their ideas to life. But we recognized a key challenge: integrating advanced AI features was often a technical hurdle, requiring users to navigate complex APIs and backend services.</p>
+                        <p className="font-bold text-white">That's why we're thrilled to announce the next evolution of our platform: Silo AI Tools, powered by Gemini AI.</p>
+                        <div className="flex justify-center py-4">
+                            <GeminiLogo className="h-10 text-white" />
+                        </div>
+                        <p>Silo AI Tools is not a separate product—it's a game-changing set of built-in capabilities that seamlessly integrates the power of Google's Gemini AI directly into your Silo Build experience. This powerful synergy allows you to go from a simple idea to a fully functional, AI-powered app in seconds, without ever needing to touch a complex backend like Supabase.</p>
+                        <p>With a single click, you can now add the most advanced large language models to your application. Want to build a chatbot? A content generator? A tool that can analyze and summarize text? Silo AI Tools handles all the heavy lifting for you, so you can focus on the user experience and the core functionality of your app.</p>
+                        
+                        <div className="pt-6 border-t border-white/10">
+                            <h3 className="text-2xl font-semibold text-white text-center">Coming Soon: Silo Cloud</h3>
+                            <div className="flex justify-center py-4">
+                                <CloudUploadIcon className="w-12 h-12 text-blue-400" />
+                            </div>
+                            <p>But we're just getting started. In the coming months, we will be rolling out Silo Cloud. This revolutionary feature will use AI to automatically add backend functionality to your apps, create and manage databases, and handle all the complexities of deployment. This means you will soon be able to deploy your AI-powered apps directly to the Apple App Store, the Google Play Store, our own upcoming Silo Labs Marketplace, and even to Google Cloud, all with the simplicity and speed you've come to expect from Silo Build.</p>
+                        </div>
+                        
+                        <p className="mt-6 text-center italic text-gray-400">We believe that the power of AI should be accessible to everyone. Silo Build, with its new Silo AI Tools and upcoming Silo Cloud features, is built for innovators, entrepreneurs, and creators who want to build the future without the technical roadblocks of the past.</p>
                     </div>
                 </div>
             </section>
