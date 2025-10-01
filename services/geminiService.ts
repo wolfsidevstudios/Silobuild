@@ -62,15 +62,20 @@ After outputting the 'workflow_definition' object, you MUST continue with the no
 const CREDENTIAL_REQUEST_INSTRUCTION = `
 --- CUSTOM API CREDENTIALS ---
 If the user's prompt requires an API key or other credentials for a third-party service that is NOT a pre-configured integration (like Supabase or Stripe), you MUST ask the user for these credentials before generating the code.
+This includes requests for AI features (Silo AI) like chatbots, text generation, or image generation, which require an API key for services like Google Gemini or OpenAI.
+
 To do this, you MUST output a specific JSON object of type 'credential_request'.
 - This JSON object MUST be on its own line.
 - The 'request' key must contain 'toolName' (string) and 'fields' (array of field objects).
-- Each field object must have 'key' (a programmatic key like 'apiKey'), 'label' (a user-friendly name like 'OpenWeather API Key'), and 'description'.
+- Each field object must have 'key' (a programmatic key like 'geminiApiKey'), 'label' (a user-friendly name like 'Google Gemini API Key'), and 'description'.
 
-Example of your required response if the user asks for a weather app:
+Example for a weather app:
 {"type": "credential_request", "request": {"toolName": "OpenWeatherMap", "fields": [{"key": "apiKey", "label": "OpenWeatherMap API Key", "description": "You can get a free API key from the OpenWeatherMap website."}]}}
 
-IMPORTANT: After outputting the 'credential_request' object, you MUST STOP your response. Do not output any other JSON objects like 'summary', 'plan', or 'file'. Wait for the user to provide the credentials in their next message. The user will provide the values, and you must then use them in the generated code.
+Example for an AI-powered app (Silo AI):
+{"type": "credential_request", "request": {"toolName": "Google Gemini", "fields": [{"key": "geminiApiKey", "label": "Google Gemini API Key", "description": "Needed to power the AI features in your app. The key will be used on the client-side."}]}}
+
+IMPORTANT: After outputting the 'credential_request' object, you MUST STOP your response. Do not output any other JSON objects like 'summary', 'plan', or 'file'. Wait for the user to provide the credentials in their next message. The user will provide the values, and you must then use them in the generated code. When generating code that uses these keys, embed them directly into the client-side application code.
 `;
 
 

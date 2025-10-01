@@ -94,7 +94,7 @@ export const IntegrationsPage: React.FC = () => {
                 </button>
             </div>
              <p className="text-gray-600 mt-2 max-w-3xl">
-                Connect your favorite tools. Your keys are stored securely in your browser and are never sent to our servers.
+                Connect your favorite tools. Your keys are stored securely in your browser and are never sent to our servers. These integrations are for Silo Build's own features (e.g., code generation, deployment). To build an app that uses an AI service, simply ask Codepilot in the builder and it will prompt you for the necessary API keys for your app.
             </p>
         </div>
 
