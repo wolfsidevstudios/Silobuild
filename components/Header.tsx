@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, PaintBrushIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
@@ -51,6 +51,12 @@ export const Header: React.FC<HeaderProps> = ({
       </a>
 
       <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-lg">
+        <NavButton
+          label="Design"
+          isActive={activeMode === 'DESIGN'}
+          onClick={() => setAppMode('DESIGN')}
+          icon={<PaintBrushIcon />}
+        />
         <NavButton
           label="Chat"
           isActive={activeMode === 'CHAT'}

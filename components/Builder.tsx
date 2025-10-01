@@ -4,9 +4,9 @@ import { PromptInput } from './PromptInput';
 import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
-import { generateAppStream, generateIdeaStream } from '../services/geminiService';
+import { generateAppStream, generateIdeaStream, generateDesignStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, AppDesign } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -63,54 +63,25 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
 
+  const [designPrompt, setDesignPrompt] = useState<string | null>(null);
+  const [currentDesign, setCurrentDesign] = useState<AppDesign | null>(null);
 
-  const handleSend = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>) => {
-    if (!prompt.trim()) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: prompt };
-    if (!customCredentials) {
-       setMessages(prev => [...prev, userMessage]);
-    }
-    setIsLoading(true);
-    setError(null);
-    
-    const stackToUse = stackOverride || techStack;
-
-    if (isIdeaMode) {
-      // Handle idea generation chat
-      setMessages(prev => [...prev, { role: 'model', content: '' }]);
-      try {
-        await generateIdeaStream(prompt, settings, (chunk) => {
-          setMessages(prev => prev.map((msg, index) => 
-            index === prev.length - 1 
-              ? { ...msg, content: msg.content + chunk } 
-              : msg
-          ));
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(`Failed to get response: ${errorMessage}`);
-        const errorContent = `Sorry, I ran into an error: ${errorMessage}`;
-        setMessages(prev => prev.map((msg, index) => 
-            index === prev.length - 1 
-              ? { ...msg, content: errorContent } 
-              : msg
-        ));
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
+  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>) => {
+      const stackToUse = stackOverride || techStack;
       if (!stackToUse) {
           setError("Please select a technology stack before generating an app.");
           setIsLoading(false);
-          setMessages(prev => prev.slice(0, prev.length -1)); // remove user message
           return;
       }
-      // Handle app generation/editing
+      
+      setAppMode('CHAT');
+      setIsLoading(true);
+      setError(null);
       setGenerationPlan([]);
       setGeneratedFilesProgress([]);
       setGenerationSummary(null);
-      // Clear old deployments for a new generation
+
       if (!isGenerated) {
         setDeployments([]);
       }
@@ -120,7 +91,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       let appName = currentProject?.name;
       const appIcon = currentProject?.appIcon;
 
-      // FIX: Moved wasCredentialRequestHandled outside the try block to make it accessible in the finally block.
       let wasCredentialRequestHandled = false;
       try {
         let planReceived = false;
@@ -145,7 +115,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setGeneratedFilesProgress(prev => [...prev, update.file.path]);
           } else if (update.type === 'previewFile' && update.file) {
             setPreviewFile(update.file);
-            // Infer app name from preview title if not set
             if (!appName) {
                 const titleMatch = update.file.content.match(/<title>(.*?)<\/title>/);
                 if (titleMatch && titleMatch[1]) {
@@ -218,7 +187,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
       } catch (err) {
         if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
-            // This is an expected interruption, not an error.
             setIsLoading(false);
             return;
         }
@@ -231,8 +199,104 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setIsLoading(false);
         }
       }
+  }, [settings, isGenerated, multiFileCode, currentProject, techStack, setSchema]);
+
+
+  const handleSend = useCallback(async (prompt: string) => {
+    if (!prompt.trim()) return;
+
+    const userMessage: ChatMessage = { role: 'user', content: prompt };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+    
+    if (isIdeaMode) {
+      setMessages(prev => [...prev, { role: 'model', content: '' }]);
+      try {
+        await generateIdeaStream(prompt, settings, (chunk) => {
+          setMessages(prev => prev.map((msg, index) => 
+            index === prev.length - 1 
+              ? { ...msg, content: msg.content + chunk } 
+              : msg
+          ));
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Failed to get response: ${errorMessage}`);
+        const errorContent = `Sorry, I ran into an error: ${errorMessage}`;
+        setMessages(prev => prev.map((msg, index) => 
+            index === prev.length - 1 
+              ? { ...msg, content: errorContent } 
+              : msg
+        ));
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (isGenerated) {
+        // Handle edit requests
+        executeBuild(prompt);
+    } else {
+        // New project: Start design phase
+        const stackToUse = techStack;
+         if (!stackToUse) {
+          setError("Please select a technology stack before generating an app.");
+          setIsLoading(false);
+          setMessages(prev => prev.slice(0, prev.length -1)); // remove user message
+          return;
+        }
+        setAppMode('DESIGN');
+        setDesignPrompt(prompt);
+        setCurrentDesign(null);
+
+        const thinkingMessage: ChatMessage = { role: 'model', content: "Let's design your application first..." };
+        setMessages(prev => [...prev, thinkingMessage]);
+
+        let aggregatedDesign: AppDesign = { spec: '', mockups: [] };
+        
+        try {
+            await generateDesignStream(prompt, settings, (update) => {
+                 if (update.type === 'design_spec') {
+                    aggregatedDesign.spec = update.spec;
+                    const designMessage: ChatMessage = { role: 'model', content: "Here's the design plan for your application.", design: { ...aggregatedDesign } };
+                    setMessages(prev => [...prev.slice(0, -1), designMessage]); // Replace thinking message
+                } else if (update.type === 'design_mockup') {
+                    aggregatedDesign.mockups.push(update.mockup);
+                    const designMessage: ChatMessage = { role: 'model', content: "Here's the design plan for your application.", design: { ...aggregatedDesign, mockups: [...aggregatedDesign.mockups] } };
+                     setMessages(prev => [...prev.slice(0, -1), designMessage]);
+                } else if (update.type === 'design_complete') {
+                     setCurrentDesign(aggregatedDesign);
+                     const reviewMessage: ChatMessage = { role: 'model', content: "What do you think of the design?", isDesignReview: true };
+                     setMessages(prev => [...prev, reviewMessage]);
+                }
+            });
+        } catch(err) {
+            const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+            setError(`Failed to generate design: ${errorMessage}`);
+            const modelErrorMessage: ChatMessage = { role: 'model', content: `Sorry, I ran into an error: ${errorMessage}` };
+            setMessages(prev => [...prev, modelErrorMessage]);
+        } finally {
+            setIsLoading(false);
+        }
     }
-  }, [settings, isGenerated, multiFileCode, currentProject, isIdeaMode, techStack, setSchema]);
+  }, [settings, isGenerated, isIdeaMode, techStack, executeBuild]);
+
+
+  const handleBuildFunctionality = useCallback(() => {
+    if (!designPrompt || !currentDesign) return;
+    const buildPrompt = `The user wants to build an app with this initial prompt: "${designPrompt}". I have already created the following UI/UX specification. Now, generate the full, functional application code based on this design.\n\n---DESIGN SPECIFICATION---\n${currentDesign.spec}`;
+    
+    const originalUserMessage = messages.find(m => m.role === 'user');
+    setMessages(originalUserMessage ? [originalUserMessage] : []);
+    
+    executeBuild(buildPrompt);
+  }, [designPrompt, currentDesign, messages, executeBuild]);
+
+  const handleRegenerateDesign = useCallback(() => {
+     if (!designPrompt) return;
+     const originalUserMessage = messages.find(m => m.role === 'user');
+     setMessages(originalUserMessage ? [originalUserMessage] : []);
+     handleSend(designPrompt);
+  }, [designPrompt, messages, handleSend]);
 
   const handleCredentialSubmit = (credentials: Record<string, string>) => {
     if (!promptForCredentials) return;
@@ -240,7 +304,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     const userMessage: ChatMessage = { role: 'user', content: "Okay, I've provided the credentials." };
     setMessages(prev => [...prev, userMessage]);
     
-    handleSend(promptForCredentials, techStack, credentials);
+    executeBuild(promptForCredentials, techStack, credentials);
 
     setPromptForCredentials(null);
   };
@@ -252,7 +316,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return;
     }
     const supabasePrompt = "Please integrate Supabase into this project. Create a `src/supabaseClient.ts` file that exports a configured Supabase client. Use the Supabase URL and Anon Key provided in the system instructions. Also, make sure to import and use this client in the main App component to demonstrate its usage, for example, by fetching a list of items from a 'todos' table and displaying them.";
-    handleSend(supabasePrompt);
+    executeBuild(supabasePrompt);
   };
 
 
@@ -285,6 +349,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setTechStack(null);
         setDeployments([]);
         setWorkflow(null);
+        setDesignPrompt(null);
+        setCurrentDesign(null);
 
         const promptFromStorage = sessionStorage.getItem('initialPrompt');
         if (promptFromStorage) {
@@ -297,7 +363,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const handleSelectStack = (stack: TechStack) => {
     setTechStack(stack);
     if (initialPrompt) {
-        handleSend(initialPrompt, stack);
+        handleSend(initialPrompt);
         setInitialPrompt(null);
     }
   };
@@ -505,10 +571,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   };
 
 
-  const showStackSelector = !isGenerated && !techStack && !isIdeaMode;
+  const showStackSelector = !isGenerated && !techStack && !isIdeaMode && appMode !== 'DESIGN';
 
   const renderContent = () => {
-    switch (appMode) {
+    const currentAppMode = (appMode === 'DESIGN' && multiFileCode.length > 0) ? 'CHAT' : appMode;
+
+    switch (currentAppMode) {
+      case 'DESIGN':
       case 'CHAT':
         return (
           <ChatView
@@ -532,6 +601,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             deployments={deployments}
             techStack={techStack}
             onCredentialSubmit={handleCredentialSubmit}
+            onBuildFunctionality={handleBuildFunctionality}
+            onRegenerateDesign={handleRegenerateDesign}
           />
         );
       case 'CODE':

@@ -2,7 +2,7 @@
 // This file should only contain type exports, not React components.
 // This resolves numerous compilation errors across the project caused by missing or incorrect types.
 
-export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW' | 'PUBLISH';
+export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW' | 'PUBLISH' | 'DESIGN';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
@@ -26,12 +26,25 @@ export interface CredentialRequest {
   fields: CredentialField[];
 }
 
+export interface DesignMockup {
+  page: string;
+  html: string;
+}
+
+export interface AppDesign {
+  spec: string;
+  mockups: DesignMockup[];
+}
+
+
 export interface ChatMessage {
   role: 'user' | 'model';
   content: string;
   schema?: AiGeneratedTable;
   credentialRequest?: CredentialRequest;
   thoughts?: string;
+  design?: AppDesign;
+  isDesignReview?: boolean;
 }
 
 export interface Settings {

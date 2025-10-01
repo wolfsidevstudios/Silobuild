@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable, Project } from '../types';
-import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, DownloadIcon, SparklesIcon } from './icons';
+import { ChatMessage, GeneratedFile, ViewMode, TechStack, Deployment, AiGeneratedTable, Project, AppDesign, DesignMockup } from '../types';
+import { CodeIcon, EyeIcon, CheckIcon, DatabaseIcon, GithubIcon, UploadIcon, DownloadIcon, SparklesIcon, PaintBrushIcon } from './icons';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { Spinner } from './Spinner';
@@ -8,6 +8,56 @@ import { StackSelection } from './StackSelection';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 import { CredentialRequestForm } from './CredentialRequestForm';
 import { ThoughtsModal } from './ThoughtsModal';
+
+// --- New Design Phase Components ---
+
+const DesignMockupCard: React.FC<{ mockup: DesignMockup }> = ({ mockup }) => (
+  <div className="flex-shrink-0 w-72 bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col">
+    <div className="p-2 border-b font-semibold text-sm text-gray-700 bg-gray-50 rounded-t-lg">{mockup.page}</div>
+    <div className="p-4 h-96 overflow-y-auto bg-gray-100">
+        <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: mockup.html }} />
+    </div>
+  </div>
+);
+
+const DesignPreview: React.FC<{ design: AppDesign }> = ({ design }) => (
+  <div className="mt-3 border-t border-gray-200 pt-3 space-y-4">
+    <div>
+        <h4 className="text-xs font-semibold text-gray-500 mb-2">Design Specification:</h4>
+        <p className="text-sm text-gray-700 whitespace-pre-wrap">{design.spec}</p>
+    </div>
+    {design.mockups.length > 0 && (
+      <div>
+        <h4 className="text-xs font-semibold text-gray-500 mb-2">Visual Wireframes:</h4>
+        <div className="flex gap-4 overflow-x-auto pb-3">
+          {design.mockups.map((mockup, i) => (
+            <DesignMockupCard key={i} mockup={mockup} />
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+const DesignReviewActions: React.FC<{ onBuild: () => void; onRegenerate: () => void; }> = ({ onBuild, onRegenerate }) => (
+    <div className="mt-3 border-t border-gray-200 pt-3 flex items-center gap-3">
+        <button
+            onClick={onBuild}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+            <SparklesIcon />
+            Build Functionality
+        </button>
+        <button
+            onClick={onRegenerate}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
+        >
+            <PaintBrushIcon />
+            Regenerate Design
+        </button>
+    </div>
+);
+
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -30,6 +80,8 @@ interface ChatViewProps {
   deployments: Deployment[];
   techStack: TechStack | null;
   onCredentialSubmit: (credentials: Record<string, string>) => void;
+  onBuildFunctionality: () => void;
+  onRegenerateDesign: () => void;
 }
 
 const ViewModeToggle: React.FC<{
@@ -148,12 +200,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
   deployments,
   techStack,
   onCredentialSubmit,
+  onBuildFunctionality,
+  onRegenerateDesign,
 }) => {
   const [modalThoughts, setModalThoughts] = useState<string | null>(null);
 
+  const mainContentSpan = isIdeaMode || (messages.some(m => m.design) && multiFileCode.length === 0) ? 'col-span-1' : 'md:col-span-2';
+
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
-      <div className={`flex flex-col overflow-hidden ${isIdeaMode ? 'col-span-1' : 'md:col-span-2'}`}>
+      <div className={`flex flex-col overflow-hidden ${mainContentSpan}`}>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {showStackSelector ? (
             <div className="flex flex-col items-center justify-center h-full">
@@ -167,7 +223,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <div
-                    className={`max-w-md p-3 rounded-2xl shadow-md ${
+                    className={`max-w-xl w-full p-3 rounded-2xl shadow-md ${
                       msg.role === 'user'
                         ? 'bg-blue-600 text-white rounded-br-none'
                         : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
@@ -192,6 +248,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         onSubmit={onCredentialSubmit}
                       />
                     )}
+                    {msg.design && <DesignPreview design={msg.design} />}
+                    {msg.isDesignReview && <DesignReviewActions onBuild={onBuildFunctionality} onRegenerate={onRegenerateDesign} />}
+
                   </div>
                 </div>
               ))}
@@ -200,7 +259,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   <div className="max-w-md w-full p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none border border-gray-200 shadow-md">
                     <div className="flex items-center gap-2">
                       <Spinner />
-                      <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
+                      <span>{ isIdeaMode ? 'Thinking...' : (generationPlan.length > 0 ? 'Generating application...' : 'Designing application...')}</span>
                     </div>
                     { !isIdeaMode && generationSummary && <GenerationSummary summary={generationSummary} />}
                     { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
@@ -219,7 +278,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           )}
         </div>
       </div>
-      {!isIdeaMode && (
+      {mainContentSpan === 'md:col-span-2' && (
         <div className="md:col-span-3 flex flex-col bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-lg">
             <div className="flex justify-between items-center p-2.5 border-b border-gray-200">
                 <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} />
