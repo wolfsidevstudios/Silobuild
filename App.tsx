@@ -44,6 +44,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const App: React.FC = () => {
   const [isMobileView, setIsMobileView] = useState(isMobile());
   const [route, setRoute] = useState(window.location.hash);
+  const { user, isGuest } = useAuth();
 
   useEffect(() => {
     let intervalId: number | undefined;
@@ -91,6 +92,15 @@ export const App: React.FC = () => {
 
   if (isMobileView) {
     return <MobileApp />;
+  }
+
+  if ((user || isGuest) && (route === '#/' || route === '')) {
+    window.location.hash = '#/dashboard/projects';
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Spinner className="w-10 h-10" />
+      </div>
+    );
   }
   
   if (route.startsWith('#/terms')) {
