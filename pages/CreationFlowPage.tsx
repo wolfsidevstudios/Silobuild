@@ -385,12 +385,14 @@ export const CreationFlowPage: React.FC = () => {
 
     if (stage === 'generating_app') {
         return (
-             <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
-                <Spinner className="w-12 h-12 mb-6" />
-                <h2 className="text-2xl font-bold mb-2">Building your app...</h2>
-                <p className="text-gray-600 mb-6 max-w-md">{generationSummary || "The AI is analyzing your prompt and creating a plan."}</p>
+             <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center overflow-hidden">
+                <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+                <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+                <Spinner className="relative w-12 h-12 mb-6" />
+                <h2 className="relative text-2xl font-bold mb-2">Building your app...</h2>
+                <p className="relative text-gray-600 mb-6 max-w-md">{generationSummary || "The AI is analyzing your prompt and creating a plan."}</p>
                 {generationPlan.length > 0 && (
-                    <div className="text-left w-full max-w-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="relative text-left w-full max-w-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <h3 className="font-semibold text-sm mb-2">Generating files:</h3>
                         <ul className="space-y-1.5 text-sm">
                             {generationPlan.map(file => (
@@ -408,12 +410,14 @@ export const CreationFlowPage: React.FC = () => {
 
     if (stage === 'prompt') {
         return (
-            <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-                <h2 className="text-3xl font-bold mb-2">What do you want to build?</h2>
-                <p className="text-gray-600 mb-8 max-w-xl text-center">
+            <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 overflow-hidden">
+                <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+                <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+                <h2 className="relative text-3xl font-bold mb-2">What do you want to build?</h2>
+                <p className="relative text-gray-600 mb-8 max-w-xl text-center">
                     Describe your application in detail. The more specific you are, the better the result. You can also start with an idea from our prompt library.
                 </p>
-                <div className="w-full max-w-2xl">
+                <div className="relative w-full max-w-2xl">
                     {error && (
                         <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg mb-4 text-sm" role="alert">
                             <strong>Error:</strong> {error}
@@ -440,7 +444,7 @@ export const CreationFlowPage: React.FC = () => {
                             <UpArrowIcon className="w-6 h-6" />
                         </button>
                     </div>
-                     <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
+                     <div className="relative flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
                         <span className="text-gray-500">or try an example:</span>
                         <button onClick={() => setPrompt(prompts[0].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
                         <button onClick={() => setPrompt(prompts[2].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
@@ -453,12 +457,14 @@ export const CreationFlowPage: React.FC = () => {
     
     // Default stage: 'stack'
     return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-             <div className="text-center mb-8">
+        <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 overflow-hidden">
+            <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
+            <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
+             <div className="relative text-center mb-8">
                 <h2 className="text-3xl font-bold">Choose your tech stack</h2>
                 <p className="text-gray-600">Select a technology to generate code for.</p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="relative flex flex-wrap items-center justify-center gap-3">
                 <StackCard icon={<ReactIcon />} title="React + TS" onClick={() => { setTechStack('react'); setStage('prompt'); }} />
                 <StackCard icon={<MobileIcon />} title="React Native" onClick={() => { setTechStack('react-native'); setStage('prompt'); }} />
                 <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => { setTechStack('svelte'); setStage('prompt'); }} />
@@ -469,7 +475,7 @@ export const CreationFlowPage: React.FC = () => {
                 <span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
                 <div className="flex-grow border-t border-gray-300"></div>
             </div>
-             <div className="text-center">
+             <div className="relative text-center">
                  <h2 className="text-2xl font-bold">Try the Infinity App</h2>
                 <p className="text-gray-600 max-w-md mt-1 mb-4">A new experimental way to interact with AI. No code, just conversation.</p>
                 <button onClick={() => setTechStack('infinity')} className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-colors">
