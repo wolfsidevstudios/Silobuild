@@ -420,7 +420,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setIsGenerated(true); // Enable save button if a deployment is made
   };
   
-    const handleDeploy = async (token: string, newSiteName: string) => {
+  const handleDeploy = async (token: string, newSiteName: string) => {
     if (!token || !previewFile) {
       setDeploymentError("Netlify token is missing or there is no preview file to deploy.");
       return;
@@ -429,66 +429,52 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setIsDeploying(true);
     setDeploymentError(null);
 
+    const createAndDeploy = async (siteName: string): Promise<any> => {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        zip.file('index.html', previewFile.content);
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+        const response = await fetch(`https://api.netlify.com/api/v1/sites?name=${siteName}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/zip',
+                Authorization: `Bearer ${token}`,
+            },
+            body: zipBlob,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            if (response.status === 409) {
+                // Specific error for site name conflict
+                throw new Error('SITE_NAME_TAKEN');
+            }
+            throw new Error(errorData.message || 'Failed to create and deploy site.');
+        }
+        return response.json();
+    };
+
     try {
-      // 1. Create a zip file in memory containing only the preview file as index.html
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
-      zip.file('index.html', previewFile.content);
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
+        let sanitizedSiteName = (newSiteName || currentProject?.name || 'silo-build-app')
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, '-')
+            .substring(0, 50);
 
-      // 2. Create a new site on Netlify
-      let sanitizedSiteName = (newSiteName || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 50);
-
-      let createSiteResponse = await fetch('https://api.netlify.com/api/v1/sites', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-              name: sanitizedSiteName,
-          }),
-      });
-
-      if (createSiteResponse.status === 409) { // Site name taken
-          const randomSuffix = Math.random().toString(36).substring(2, 8);
-          sanitizedSiteName = `${sanitizedSiteName}-${randomSuffix}`;
-          createSiteResponse = await fetch('https://api.netlify.com/api/v1/sites', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                  name: sanitizedSiteName,
-              }),
-          });
-      }
-
-      const siteData = await createSiteResponse.json();
-
-      if (!createSiteResponse.ok) {
-          throw new Error(siteData.message || 'Failed to create Netlify site.');
-      }
+        let siteData;
+        try {
+            siteData = await createAndDeploy(sanitizedSiteName);
+        } catch (error) {
+            if (error instanceof Error && error.message === 'SITE_NAME_TAKEN') {
+                console.warn(`Site name "${sanitizedSiteName}" is taken. Retrying with a random suffix.`);
+                const randomSuffix = Math.random().toString(36).substring(2, 8);
+                sanitizedSiteName = `${sanitizedSiteName}-${randomSuffix}`;
+                siteData = await createAndDeploy(sanitizedSiteName);
+            } else {
+                throw error; // Re-throw other errors
+            }
+        }
       
-      const siteId = siteData.site_id;
-
-      // 3. Deploy the zip file
-      const deployResponse = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/deploys`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/zip',
-              Authorization: `Bearer ${token}`,
-          },
-          body: zipBlob,
-      });
-
-      const deployData = await deployResponse.json();
-
-      if (!deployResponse.ok) {
-          throw new Error(deployData.message || 'Failed to deploy to Netlify.');
-      }
-
       const newDeployment: Deployment = {
         url: siteData.ssl_url || siteData.url,
         timestamp: new Date().toISOString(),
