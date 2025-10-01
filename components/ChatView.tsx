@@ -36,19 +36,23 @@ const ViewModeToggle: React.FC<{
   <div className="bg-gray-100/50 backdrop-blur-lg border border-gray-200 rounded-full p-1 flex items-center space-x-1 shadow-sm">
     <button
       onClick={() => setViewMode('CODE')}
-      className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 ${
+      className={`flex items-center justify-center p-2 rounded-full transition-all duration-300 ${
         viewMode === 'CODE' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200'
       }`}
+      aria-label="Code view"
+      title="Code view"
     >
-      <CodeIcon /> Code
+      <CodeIcon />
     </button>
     <button
       onClick={() => setViewMode('PREVIEW')}
-      className={`flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full transition-all duration-300 ${
+      className={`flex items-center justify-center p-2 rounded-full transition-all duration-300 ${
         viewMode === 'PREVIEW' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:bg-gray-200'
       }`}
+      aria-label="Preview view"
+      title="Preview view"
     >
-      <EyeIcon /> Preview
+      <EyeIcon />
     </button>
   </div>
 );
