@@ -3,6 +3,9 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings, GeminiModel, Secret } from '../types';
 import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
+import { GitHubDeviceFlowModal } from '../components/GitHubDeviceFlowModal';
+import { getGitHubUser } from '../services/githubService';
+import { Spinner } from '../components/Spinner';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -61,11 +64,36 @@ export const IntegrationsPage: React.FC = () => {
     const [isSaved, setIsSaved] = useState(false);
     const [newSecretName, setNewSecretName] = useState('');
     const [newSecretValue, setNewSecretValue] = useState('');
+    const [isDeviceFlowModalOpen, setIsDeviceFlowModalOpen] = useState(false);
+    const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string; } | null>(null);
+    const [isLoadingGitHubUser, setIsLoadingGitHubUser] = useState(false);
 
 
     useEffect(() => {
         setLocalSettings(settings);
     }, [settings]);
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (localSettings.githubPat && !githubUser) {
+                setIsLoadingGitHubUser(true);
+                try {
+                    const user = await getGitHubUser(localSettings.githubPat);
+                    setGithubUser(user);
+                } catch (error) {
+                    console.error("Failed to fetch GitHub user, token might be invalid.", error);
+                    // Token is likely invalid, clear it
+                    handleChange('githubPat', '');
+                    setGithubUser(null);
+                } finally {
+                    setIsLoadingGitHubUser(false);
+                }
+            } else if (!localSettings.githubPat) {
+                setGithubUser(null);
+            }
+        };
+        fetchUser();
+    }, [localSettings.githubPat]);
 
     const handleChange = (key: keyof Settings, value: any) => {
         setLocalSettings(prev => ({ ...prev, [key]: value }));
@@ -100,6 +128,15 @@ export const IntegrationsPage: React.FC = () => {
     const handleDeleteSecret = (id: string) => {
         const updatedSecrets = (localSettings.secrets || []).filter(s => s.id !== id);
         handleChange('secrets', updatedSecrets);
+    };
+
+    const handleGitHubConnectSuccess = (token: string) => {
+        handleChange('githubPat', token);
+    };
+    
+    const handleGitHubDisconnect = () => {
+        handleChange('githubPat', '');
+        setGithubUser(null);
     };
 
   return (
@@ -174,12 +211,38 @@ export const IntegrationsPage: React.FC = () => {
             title="GitHub"
             description="Enable creating repositories and pushing code directly to GitHub."
         >
-            <SettingsInput 
-                label="GitHub Personal Access Token"
-                value={localSettings.githubPat}
-                onChange={(e) => handleChange('githubPat', e.target.value)}
-                placeholder="Enter your GitHub PAT"
-            />
+            {isLoadingGitHubUser ? (
+                <div className="flex items-center justify-center h-20">
+                    <Spinner />
+                </div>
+            ) : githubUser ? (
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <img src={githubUser.avatar_url} alt={githubUser.login} className="w-10 h-10 rounded-full" />
+                        <div>
+                            <p className="font-semibold">{githubUser.login}</p>
+                            <p className="text-sm text-gray-500">Connected</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={handleGitHubDisconnect}
+                        className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                    >
+                        Disconnect
+                    </button>
+                </div>
+            ) : (
+                <div>
+                     <p className="text-sm text-gray-500 mb-2">Authorize Silo Build to access your repositories.</p>
+                     <button 
+                        onClick={() => setIsDeviceFlowModalOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
+                    >
+                        <GithubIcon />
+                        <span>Connect with GitHub</span>
+                    </button>
+                </div>
+            )}
         </IntegrationCard>
         <IntegrationCard 
             icon={<NetlifyIcon className="h-7"/>}
@@ -284,6 +347,11 @@ export const IntegrationsPage: React.FC = () => {
             </div>
         </IntegrationCard>
       </div>
+      <GitHubDeviceFlowModal
+        isOpen={isDeviceFlowModalOpen}
+        onClose={() => setIsDeviceFlowModalOpen(false)}
+        onSuccess={handleGitHubConnectSuccess}
+      />
     </div>
   );
 };

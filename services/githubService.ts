@@ -96,6 +96,10 @@ const pushFiles = async (
   });
 };
 
+export const getGitHubUser = async (token: string): Promise<{ login: string; avatar_url: string; }> => {
+  return apiFetch(token, '/user');
+};
+
 export const createAndPushToRepo = async (
     pat: string, 
     projectName: string, 
