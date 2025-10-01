@@ -6,7 +6,7 @@ import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
 import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
-import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition } from '../types';
+import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, AuthConfig } from '../types';
 import { Spinner } from './Spinner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { ProjectMetadataModal } from './ProjectMetadataModal';
@@ -16,6 +16,7 @@ import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 import { DeployModal } from './DeployModal';
 import { PublishView } from './PublishView';
 import { InfinityView } from './InfinityView';
+import { AddAuthModal } from './AddAuthModal';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -49,6 +50,16 @@ const initialPreferences: UserPreferences = {
   }
 };
 
+const initialAuthConfig: AuthConfig = {
+  appName: 'My App',
+  appLogo: null,
+  providers: {
+    google: { enabled: false, clientId: '' },
+    github: { enabled: false, clientId: '', clientSecret: '' },
+    x: { enabled: false, clientId: '', clientSecret: '' },
+  },
+};
+
 interface BuilderProps {
   projectId: string;
 }
@@ -68,6 +79,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+  const [authConfig] = useLocalStorage<AuthConfig>('silo-build-auth-config', initialAuthConfig);
   const [preferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
@@ -83,8 +95,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>, imageData?: string | null) => {
+
+  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>, imageData?: string | null, authConfigToUse?: AuthConfig) => {
       const stackToUse = stackOverride || techStack;
       if (!stackToUse) {
           setError("Tech stack is not defined for this project.");
@@ -169,7 +183,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
               wasCredentialRequestHandled = true;
               throw new Error('CREDENTIAL_REQUEST_PENDING');
           }
-        }, stackToUse, filesForContext, appName, appIcon, customCredentials, imageData);
+        }, stackToUse, filesForContext, appName, appIcon, customCredentials, imageData, authConfigToUse);
 
         const modelMessage: ChatMessage = {
           role: 'model',
@@ -235,7 +249,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         return;
     }
     const supabasePrompt = "Please integrate Supabase into this project. Create a `src/supabaseClient.ts` file that exports a configured Supabase client. Use the Supabase URL and Anon Key provided in the system instructions. Also, make sure to import and use this client in the main App component to demonstrate its usage, for example, by fetching a list of items from a 'todos' table and displaying them.";
-    executeBuild(supabasePrompt);
+    handleSend(supabasePrompt);
+  };
+  
+  const handleAddAuth = () => {
+    setIsAuthModalOpen(false);
+    const authPrompt = "Please generate a complete authentication system for this application using the configuration provided in the system instructions. This should include a main login/signup page, buttons and logic for each enabled provider, user state management, a protected profile page, and a logout button.";
+    handleSend(authPrompt);
   };
 
 
@@ -527,6 +547,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setAppMode={setAppMode}
         project={currentProject}
         onAddSupabase={handleAddSupabase}
+        onAddAuth={() => setIsAuthModalOpen(true)}
         onConnectGitHub={() => setIsSaveModalOpen(true)}
         onDownload={handleDownload}
         isGithubConnected={!!currentProject?.githubUrl}
@@ -583,6 +604,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         initialProjectName={currentProject?.name}
         initialToken={settings.netlifyPat}
         deploymentError={deploymentError}
+      />
+      <AddAuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onConfirm={handleAddAuth}
       />
     </div>
   );

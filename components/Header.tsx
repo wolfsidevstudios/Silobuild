@@ -1,12 +1,13 @@
 import React from 'react';
 import { AppMode, Project } from '../types';
-import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon } from './icons';
+import { ChatIcon, CodeIcon, EyeIcon, HomeIcon, SaveIcon, GithubIcon, WorkflowIcon, UploadIcon, DatabaseIcon, DownloadIcon, KeyIcon } from './icons';
 
 interface HeaderProps {
   activeMode: AppMode;
   setAppMode: (mode: AppMode) => void;
   project?: Project | null;
   onAddSupabase: () => void;
+  onAddAuth: () => void;
   onConnectGitHub: () => void;
   onDownload: () => void;
   isGithubConnected: boolean;
@@ -39,6 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   setAppMode,
   project,
   onAddSupabase,
+  onAddAuth,
   onConnectGitHub,
   onDownload,
   isGithubConnected,
@@ -91,6 +93,13 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-600 text-xs font-bold text-white">+2</div>
             </div>
         )}
+        <button 
+            onClick={onAddAuth} 
+            className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+            title="Add Authentication"
+          >
+            <KeyIcon className="w-5 h-5 text-yellow-600" />
+        </button>
          <button 
             onClick={onAddSupabase} 
             className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"

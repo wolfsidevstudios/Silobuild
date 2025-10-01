@@ -13,6 +13,7 @@ import { IntegrationsPage } from './IntegrationsPage';
 import { InspirationPage } from './InspirationPage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SiloAiAnnouncementModal } from '../components/SiloAiAnnouncementModal';
+import { AuthPage } from './AuthPage';
 
 interface DashboardLayoutProps {
   route: string;
@@ -55,6 +56,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     }
     if (route.startsWith('#/dashboard/integrations')) {
         return <IntegrationsPage />;
+    }
+    if (route.startsWith('#/dashboard/auth')) {
+        return <AuthPage />;
     }
     if (route.startsWith('#/dashboard/assist')) {
         return <InspirationPage />;

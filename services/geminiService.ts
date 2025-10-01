@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret } from "../types";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret, AuthConfig } from "../types";
 
 const GOOGLE_SIGN_IN_INSTRUCTION = `
 --- GOOGLE SIGN-IN INTEGRATION ---
@@ -82,7 +82,7 @@ const App = () => {
 **Integration**: For multi-file apps, create an \`Auth\` component and manage state in your root component (\`App.tsx\`, etc.). For single-file HTML apps, embed the logic directly in the script tag. You MUST manage the signed-in state to conditionally render the UI. The Google button should be hidden after sign-in.
 `;
 
-const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>): string => {
+const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>, authConfig?: AuthConfig): string => {
   const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo Build 2.0</div>`;
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
@@ -986,7 +986,8 @@ export const generateAppStream = (
   appName?: string,
   appIcon?: string, // base64 string
   customCredentials?: Record<string, string>,
-  imageData?: string | null // base64 data URI
+  imageData?: string | null, // base64 data URI
+  authConfig?: AuthConfig,
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -998,7 +999,7 @@ export const generateAppStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       const isEditing = !!existingFiles && existingFiles.length > 0;
-      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials);
+      const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials, authConfig);
       
       let userPromptText = prompt;
 

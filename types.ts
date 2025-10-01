@@ -168,3 +168,20 @@ export interface InfinityUI {
     streamedText: string;
     actions: InfinityAction[];
 }
+
+// Types for Authentication Page
+export interface AuthProviderConfig {
+  enabled: boolean;
+  clientId: string;
+  clientSecret?: string;
+}
+
+export interface AuthConfig {
+  appName: string;
+  appLogo: string | null;
+  providers: {
+    google: AuthProviderConfig;
+    github: AuthProviderConfig;
+    x: AuthProviderConfig;
+  };
+}
