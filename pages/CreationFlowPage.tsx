@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Project, Settings, TechStack, GeneratedFile } from '../types';
 import { generateAppStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
 import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon } from '../components/icons';
 import { prompts } from '../data/prompts';
-import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -33,7 +32,7 @@ const StackCard: React.FC<{ icon: React.ReactNode; title: string; onClick: () =>
 );
 
 
-type Stage = 'stack' | 'prompt' | 'generating_plan' | 'approval' | 'refining' | 'generating_app' | 'complete';
+type Stage = 'stack' | 'prompt' | 'generating_app' | 'complete';
 type Plan = { summary: string; thoughts: string; files: string[]; };
 
 export const CreationFlowPage: React.FC = () => {
@@ -51,10 +50,7 @@ export const CreationFlowPage: React.FC = () => {
     const [, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     
-    const streamIteratorRef = useRef<AsyncIterator<GenerateContentResponse> | null>(null);
-
     const resetFlow = () => {
-        streamIteratorRef.current = null;
         setStage('stack');
         setTechStack(null);
         setPrompt('');
@@ -63,121 +59,53 @@ export const CreationFlowPage: React.FC = () => {
         setPreviewFile(null);
     }
     
-    const handleStream = useCallback(async (isPlanOnly: boolean) => {
-        setIsLoading(true);
-        setError(null);
-        if (isPlanOnly && techStack) {
-            setPlan(null);
-            setStage('generating_plan');
-            
-            const planSystemInstruction = `You are an AI planning agent for a code generation tool. Your task is to take a user's app idea and generate a plan for building it as a ${techStack} application.
-You must stream your response as a sequence of three specific JSON objects, each on a new line, in this exact order: 'summary', 'thoughts', 'plan'.
-
-First, output a 'summary' object with a brief, user-friendly description of the app you are about to generate, outlining the key features in a bulleted list.
-Example: {"type": "summary", "summary": "- A simple landing page\\n- Includes a header, feature section, and footer."}
-
-Second, output a 'thoughts' object. The 'thoughts' property should be a string containing a detailed, step-by-step technical plan for how you will build the application.
-Example: {"type": "thoughts", "thoughts": "1. I'll start with a standard HTML5 boilerplate... 2. The main content will be in a <main> tag..."}
-
-Third, output a 'plan' object that lists all the file paths that will be created for a standard ${techStack} project structure.
-Example: {"type": "plan", "files": ["index.html", "src/App.tsx", "src/index.css"]}
-
-Your response MUST contain ONLY these three JSON objects and nothing else. After you output the 'plan' object, your task is complete. Do not output any file content, code, or any other text.
-Ensure each JSON object is a single, complete line. Do not wrap your response in markdown backticks.`;
-
-            const ai = new GoogleGenAI({ apiKey: settings.geminiApiKey || process.env.API_KEY });
-            const responseStream = await ai.models.generateContentStream({
-                model: settings.model || "gemini-2.5-flash",
-                contents: `User request: "${prompt}"`,
-                config: { systemInstruction: planSystemInstruction }
-            });
-            streamIteratorRef.current = responseStream[Symbol.asyncIterator]();
-        }
-
-        let buffer = '';
-        let currentPlan: Plan = { summary: '', thoughts: '', files: [] };
-
-        while (streamIteratorRef.current) {
-            const { value, done } = await streamIteratorRef.current.next();
-            if (done) {
-                if(isPlanOnly) setError("The AI didn't provide a plan. Please try rephrasing your prompt.");
-                else setStage('complete');
-                setIsLoading(false);
-                break;
-            }
-
-            buffer += value.text;
-            let newlineIndex;
-            while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-                const line = buffer.substring(0, newlineIndex).trim();
-                buffer = buffer.substring(newlineIndex + 1);
-
-                if (line) {
-                    try {
-                        const update = JSON.parse(line.replace(/^```json/, '').replace(/```$/, '').trim());
-                        if (isPlanOnly) {
-                            if (update.type === 'summary') currentPlan.summary = update.summary;
-                            if (update.type === 'thoughts') currentPlan.thoughts = update.thoughts;
-                            if (update.type === 'plan') {
-                                currentPlan.files = update.files;
-                                setPlan(currentPlan);
-                                setStage('approval');
-                                setIsLoading(false);
-                                return; // Pause the stream
-                            }
-                        } else {
-                           if (update.type === 'file') {
-                                setGeneratedFiles(prev => [...prev, update.file]);
-                                setCurrentFile(update.file.path);
-                            } else if (update.type === 'previewFile') {
-                                setPreviewFile(update.file);
-                            }
-                        }
-                    } catch (e) { /* Ignore non-json lines */ }
-                }
-            }
-        }
-    }, [prompt, settings, techStack]);
-
-    const handlePromptSubmit = (currentPrompt: string) => {
-        setPrompt(currentPrompt);
-        handleStream(true);
-    };
-    
-    const handleDecline = () => {
-        setStage('refining');
-        streamIteratorRef.current = null; // Discard old stream
-    };
-    
-    const handleApprove = async () => {
-        setStage('generating_app');
-        // This is a bit of a workaround. The current Gemini API for streaming doesn't seem to support continuing a stream.
-        // So we have to re-initiate the entire generation process. The main `generateAppStream` in `geminiService` handles this.
-        
-        if (!prompt || !techStack) {
-            setError("Missing prompt or tech stack.");
+    const handlePromptSubmit = async (currentPrompt: string) => {
+        if (!techStack) {
+            setError("Please select a technology stack first.");
             return;
         }
-
+        setPrompt(currentPrompt);
+        setStage('generating_app');
         setIsLoading(true);
         setError(null);
-        
+        setPlan({ summary: '', thoughts: '', files: [] }); // Reset plan for progress display
+
         try {
-            await generateAppStream(prompt, settings, (update) => {
-                if (update.type === 'file' && update.file) {
-                    setGeneratedFiles(prev => [...prev.filter(f => f.path !== update.file.path), update.file]);
-                    setCurrentFile(update.file.path);
-                } else if (update.type === 'previewFile' && update.file) {
-                    setPreviewFile(update.file);
-                }
-            }, techStack);
+            await generateAppStream(
+                currentPrompt, 
+                settings, 
+                (update) => {
+                    if (update.type === 'summary' && typeof update.summary === 'string') {
+                        setPlan(prev => ({ ...prev!, summary: update.summary }));
+                    } else if (update.type === 'thoughts' && typeof update.thoughts === 'string') {
+                        setPlan(prev => ({ ...prev!, thoughts: update.thoughts }));
+                    } else if (update.type === 'plan' && Array.isArray(update.files)) {
+                        setPlan(prev => ({ ...prev!, files: update.files }));
+                    } else if (update.type === 'file' && update.file) {
+                        setGeneratedFiles(prev => [...prev.filter(f => f.path !== update.file.path), update.file]);
+                        setCurrentFile(update.file.path);
+                    } else if (update.type === 'previewFile' && update.file) {
+                        setPreviewFile(update.file);
+                    }
+                }, 
+                techStack
+            );
             setStage('complete');
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unknown error occurred.");
+            setStage('prompt'); // Go back to prompt on error
         } finally {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        const initialPrompt = sessionStorage.getItem('initialPrompt');
+        if (initialPrompt) {
+            setPrompt(initialPrompt);
+            sessionStorage.removeItem('initialPrompt');
+        }
+    }, []);
 
     useEffect(() => {
         if (stage === 'complete' && techStack) {
@@ -206,6 +134,56 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
         switch (stage) {
             case 'stack':
             case 'prompt':
+                const PromptComponent = () => {
+                    const [currentPrompt, setCurrentPrompt] = useState(prompt);
+                    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+                    useEffect(() => {
+                        const textarea = textareaRef.current;
+                        if (textarea) {
+                          textarea.style.height = 'auto';
+                          textarea.style.height = `${textarea.scrollHeight}px`;
+                        }
+                    }, [currentPrompt]);
+                    
+                    const handleSubmit = (e: React.FormEvent) => {
+                        e.preventDefault();
+                        if (currentPrompt.trim()) {
+                            handlePromptSubmit(currentPrompt);
+                        }
+                    };
+
+                    return (
+                        <div className="w-full max-w-3xl">
+                            <form onSubmit={handleSubmit}>
+                                <div className="relative bg-white/50 border border-gray-200 rounded-2xl shadow-xl p-4 backdrop-blur-lg">
+                                    <label className="text-left block text-sm font-medium text-gray-700 mb-2 px-2">Ask Codepilot to build a prototype of...</label>
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={currentPrompt}
+                                        onChange={(e) => setCurrentPrompt(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                handleSubmit(e as any);
+                                            }
+                                        }}
+                                        placeholder="a modern SaaS dashboard with a sidebar, charts, and a data table for user management"
+                                        className="w-full h-24 bg-transparent resize-none text-gray-900 text-base placeholder-gray-500 focus:outline-none p-2"
+                                    />
+                                    <button type="submit" disabled={!currentPrompt.trim()} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                                        <svg className="w-6 h-6 transform -rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+                                    </button>
+                                </div>
+                            </form>
+                            <div className="flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
+                                <span className="text-gray-500">Try one →</span>
+                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Kanban Board")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
+                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Movie Finder")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Movie Finder</button>
+                                <button onClick={() => setCurrentPrompt(prompts.find(p => p.title === "Pomodoro Timer")?.prompt || '')} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
+                            </div>
+                        </div>
+                    );
+                }
                 return (
                     <div className="w-full max-w-3xl mx-auto text-center">
                         <h1 className="text-4xl font-bold mb-4">Let's build something new</h1>
@@ -215,104 +193,68 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
                             <StackCard icon={<MobileIcon />} title="React Native" onClick={() => { setTechStack('react-native'); setStage('prompt'); }}/>
                             <StackCard icon={<SvelteIcon />} title="Svelte + TS" onClick={() => { setTechStack('svelte'); setStage('prompt'); }}/>
                             <StackCard icon={<HtmlIcon />} title="HTML + JS" onClick={() => { setTechStack('html'); setStage('prompt'); }}/>
-                            <StackCard icon={<InfinityIcon />} title="Infinity App" onClick={() => { setTechStack('infinity'); setStage('prompt'); }}/>
+                            <StackCard icon={<InfinityIcon />} title="Infinity App" onClick={() => { window.location.hash = `#/project/infinity`; }}/>
                         </div>
-                        <textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePromptSubmit(prompt); } }}
-                            placeholder="Describe the app you want to build..."
-                            disabled={stage === 'stack'}
-                            className="w-full h-32 p-4 bg-white/50 border border-gray-300 rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-200/50 disabled:cursor-not-allowed transition-all"
-                        />
-                        <div className="flex items-center justify-center gap-2 mt-4 text-sm flex-wrap">
-                            <span className="text-gray-500">or try an idea:</span>
-                            {prompts.slice(0, 3).map(p => (
-                                <button key={p.title} onClick={() => setPrompt(p.prompt)} disabled={stage === 'stack'} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors disabled:opacity-50">
-                                    {p.title}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                );
-            case 'generating_plan':
-                return (
-                    <div className="text-center">
-                        <Spinner className="w-10 h-10 mx-auto" />
-                        <h2 className="text-2xl font-bold mt-4">Drafting a plan...</h2>
-                        {error && <p className="text-red-500 mt-2">{error}</p>}
-                    </div>
-                );
-            case 'approval':
-            case 'refining':
-                return (
-                    <div className="w-full max-w-3xl mx-auto">
-                        <h2 className="text-3xl font-bold text-center mb-6">Here's the plan:</h2>
-                        <div className="bg-white/50 border border-gray-200 rounded-xl shadow-lg p-6 space-y-4">
-                            <div>
-                                <h3 className="font-semibold text-lg">Summary</h3>
-                                <ul className="list-disc list-inside text-gray-700">
-                                    {plan?.summary.split('\n').map((item, i) => <li key={i}>{item.replace('- ','')}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">Files to be created</h3>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {plan?.files.map(file => <span key={file} className="bg-gray-200 text-gray-800 text-xs font-mono px-2 py-1 rounded">{file}</span>)}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex justify-center gap-4 mt-6">
-                            <button onClick={handleDecline} className="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-full hover:bg-gray-300 transition-colors">Decline</button>
-                            <button onClick={handleApprove} className="px-6 py-2 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transition-colors">Approve</button>
-                        </div>
+                         {stage === 'prompt' && <PromptComponent />}
                     </div>
                 );
             case 'generating_app':
                 return (
-                     <div className="text-center text-white">
-                        <h2 className="text-4xl font-bold">Generating your app...</h2>
-                        <div className="mt-8 flex justify-center">
-                             <div className="bg-black/20 border border-white/20 rounded-full px-4 py-2 text-sm">
-                                {currentFile ? `Working on: ${currentFile}` : 'Initializing build...'}
-                            </div>
+                    <div className="w-full max-w-4xl mx-auto text-center">
+                        <div className="flex flex-col items-center gap-4">
+                            <Spinner className="w-12 h-12" />
+                            <h2 className="text-2xl font-bold">Building your app...</h2>
+                            <p className="text-gray-600">Codepilot is generating the code. This might take a minute.</p>
                         </div>
+                        {plan?.files && plan.files.length > 0 && (
+                            <div className="mt-8 text-left max-w-md mx-auto">
+                                <h3 className="font-semibold mb-2">Generating Files:</h3>
+                                <ul className="space-y-1 text-sm">
+                                    {plan.files.map(file => {
+                                        const isDone = generatedFiles.some(f => f.path === file);
+                                        return (
+                                            <li key={file} className={`flex items-center gap-2 transition-colors duration-300 ${isDone ? 'text-gray-500' : 'text-gray-800'}`}>
+                                                <div className="w-4 h-4 flex items-center justify-center">
+                                                    {isDone ? 
+                                                        <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg> : 
+                                                        <Spinner className="w-4 h-4" />
+                                                    }
+                                                </div>
+                                                <span className={isDone ? 'line-through' : ''}>{file}</span>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 );
             case 'complete':
                  return (
-                     <div className="text-center text-white">
-                        <h2 className="text-4xl font-bold">Build complete!</h2>
-                        <p className="mt-2">Redirecting you to the editor...</p>
+                    <div className="w-full max-w-4xl mx-auto text-center">
+                        <div className="flex flex-col items-center gap-4">
+                            <svg className="w-16 h-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h2 className="text-2xl font-bold">Build Complete!</h2>
+                            <p className="text-gray-600">Redirecting to your new project...</p>
+                        </div>
                     </div>
                 );
         }
-    };
+    }
+
 
     return (
-        <div className="relative w-screen h-screen bg-white overflow-hidden flex items-center justify-center transition-colors duration-1000" style={{ backgroundColor: stage === 'generating_app' || stage === 'complete' ? '#111827' : '#FFFFFF'}}>
-            <div className={`absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40 transition-transform duration-[2000ms] ease-in-out ${stage === 'generating_app' || stage === 'complete' ? 'scale-[10]' : 'scale-1'}`} />
-            <div className={`absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40 transition-transform duration-[2000ms] ease-in-out ${stage === 'generating_app' || stage === 'complete' ? 'scale-[10]' : 'scale-1'}`} />
-
-            <div className="relative z-10 p-4 w-full">
-                {renderContent()}
+        <div className="h-screen w-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+            <div className="absolute top-4 left-4">
+                <a href="#/dashboard" className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-full font-semibold hover:bg-gray-100">← Dashboard</a>
             </div>
-            
-             <div className={`absolute bottom-0 left-0 right-0 p-4 transition-transform duration-500 ${stage === 'approval' || stage === 'refining' ? 'translate-y-0' : 'translate-y-full'}`}>
-                <div className="w-full max-w-3xl mx-auto">
-                    <input
-                        type="text"
-                        placeholder={stage === 'refining' ? "What would you like to change in the plan?" : "Enter a new prompt..."}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                handlePromptSubmit((e.target as HTMLInputElement).value);
-                                (e.target as HTMLInputElement).value = '';
-                            }
-                        }}
-                        className="w-full p-4 bg-white/80 border border-gray-300 rounded-xl shadow-2xl backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+            {error ? (
+                <div className="w-full max-w-2xl text-center">
+                    <h2 className="text-2xl font-bold text-red-600 mb-4">An Error Occurred</h2>
+                    <p className="text-gray-700 bg-red-100 p-4 rounded-md">{error}</p>
+                    <button onClick={resetFlow} className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md font-semibold">Start Over</button>
                 </div>
-            </div>
+            ) : renderContent()}
         </div>
     );
 };
