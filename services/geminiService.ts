@@ -887,37 +887,7 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_REACT;
   }
-
-  const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
-  const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
   
-  const promptLower = prompt.toLowerCase();
-  const wantsSupabase = hasSupabase && /\b(supabase|database|auth|authentication|login|signup|users)\b/i.test(promptLower);
-  const wantsStripe = hasStripe && /\b(stripe|payment|checkout|billing|subscription|price|buy|shop)\b/i.test(promptLower);
-
-
-  if (wantsSupabase || wantsStripe) {
-    instruction += "\n\n--- USER-CONFIGURED INTEGRATIONS ---";
-    instruction += "\nThe user has provided the following service credentials and their prompt indicates they want to use them. Use these exact values in the generated code. Do not use placeholders.";
-    if (wantsSupabase) {
-      instruction += `\n- Supabase URL: ${settings.supabaseUrl}`;
-      instruction += `\n- Supabase Anon Key: ${settings.supabaseAnonKey}`;
-    }
-    if (wantsStripe) {
-      instruction += `\n- Stripe Public Key: ${settings.stripePublicKey}`;
-    }
-    instruction += "\n------------------------------------";
-  }
-
-  if (customCredentials && Object.keys(customCredentials).length > 0) {
-    instruction += "\n\n--- USER-PROVIDED CREDENTIALS ---";
-    instruction += "\nThe user has provided the following credentials that you requested. Use these exact values in the generated code where appropriate. Do not use placeholders for these.";
-    for (const [key, value] of Object.entries(customCredentials)) {
-        instruction += `\n- ${key}: ${value}`;
-    }
-    instruction += "\n------------------------------------";
-  }
-
   return instruction;
 };
 
@@ -930,7 +900,8 @@ export const generateAppStream = (
   existingFiles?: GeneratedFile[],
   appName?: string,
   appIcon?: string, // base64 string
-  customCredentials?: Record<string, string>
+  customCredentials?: Record<string, string>,
+  imageData?: string | null // base64 data URI
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -944,39 +915,87 @@ export const generateAppStream = (
       const isEditing = !!existingFiles && existingFiles.length > 0;
       const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials);
       
-      let fullPrompt: string;
+      let userPromptText = prompt;
+
       if (isEditing) {
           const filesJsonString = JSON.stringify(existingFiles);
-          fullPrompt = `${systemInstruction}\n\nHere is the current application's code as a JSON array of file objects:\n${filesJsonString}\n\nNow, please apply this change based on the user's request:\n\n${prompt}`;
+          userPromptText = `Here is the current application's code as a JSON array of file objects:\n${filesJsonString}\n\nNow, please apply this change based on the user's request:\n\n${prompt}`;
       } else {
-          fullPrompt = `${systemInstruction}\n\nBased on the instructions above, please fulfill the following user request:\n\n${prompt}`;
+          userPromptText = `Based on the instructions above, please fulfill the following user request:\n\n${prompt}`;
       }
       
       if (appName || appIcon) {
-        fullPrompt += `\n\n--- REQUIRED APP CUSTOMIZATION ---`;
+        userPromptText += `\n\n--- REQUIRED APP CUSTOMIZATION ---`;
         if (appName) {
           if (techStack === 'react') {
-            fullPrompt += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in index.html, and the 'name' and 'short_name' properties in manifest.json.`;
+            userPromptText += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in index.html, and the 'name' and 'short_name' properties in manifest.json.`;
           } else {
-            fullPrompt += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in the HTML file.`;
+            userPromptText += `\nThe user has specified the App Name MUST be: "${appName}". You must use this for the <title> in the HTML file.`;
           }
         }
          if (appIcon) {
             const iconTag = `<link rel="icon" href="${appIcon}">`;
             if (techStack === 'react') {
-                fullPrompt += `\nFor the 'previewFile', you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
+                userPromptText += `\nFor the 'previewFile', you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
             } else {
-                fullPrompt += `\nFor the HTML file, you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
+                userPromptText += `\nFor the HTML file, you MUST include a favicon link in the <head> using this exact Base64 data URI: ${iconTag}. Do not modify the data URI.`;
             }
         }
-        fullPrompt += `\n---------------------------------`;
+        userPromptText += `\n---------------------------------`;
+      }
+      
+      const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
+      const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
+      
+      const promptLower = prompt.toLowerCase();
+      const wantsSupabase = hasSupabase && /\b(supabase|database|auth|authentication|login|signup|users)\b/i.test(promptLower);
+      const wantsStripe = hasStripe && /\b(stripe|payment|checkout|billing|subscription|price|buy|shop)\b/i.test(promptLower);
+
+
+      if (wantsSupabase || wantsStripe) {
+        userPromptText += "\n\n--- USER-CONFIGURED INTEGRATIONS ---";
+        userPromptText += "\nThe user has provided the following service credentials and their prompt indicates they want to use them. Use these exact values in the generated code. Do not use placeholders.";
+        if (wantsSupabase) {
+          userPromptText += `\n- Supabase URL: ${settings.supabaseUrl}`;
+          userPromptText += `\n- Supabase Anon Key: ${settings.supabaseAnonKey}`;
+        }
+        if (wantsStripe) {
+          userPromptText += `\n- Stripe Public Key: ${settings.stripePublicKey}`;
+        }
+        userPromptText += "\n------------------------------------";
+      }
+
+      if (customCredentials && Object.keys(customCredentials).length > 0) {
+        userPromptText += "\n\n--- USER-PROVIDED CREDENTIALS ---";
+        userPromptText += "\nThe user has provided the following credentials that you requested. Use these exact values in the generated code where appropriate. Do not use placeholders for these.";
+        for (const [key, value] of Object.entries(customCredentials)) {
+            userPromptText += `\n- ${key}: ${value}`;
+        }
+        userPromptText += "\n------------------------------------";
+      }
+
+      let userContents: string | { parts: any[] };
+
+      if (imageData) {
+        const [meta, base64Data] = imageData.split(',');
+        const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+        
+        userContents = {
+          parts: [
+            { text: userPromptText },
+            { inlineData: { mimeType, data: base64Data } }
+          ]
+        };
+      } else {
+        userContents = userPromptText;
       }
 
 
       const responseStream = await ai.models.generateContentStream({
         model: settings.model || "gemini-2.5-flash",
-        contents: fullPrompt,
+        contents: userContents,
         config: {
+          systemInstruction: systemInstruction,
           temperature: 0.2,
         },
       });

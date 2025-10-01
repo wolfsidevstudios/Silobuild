@@ -64,7 +64,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [deploymentError, setDeploymentError] = useState<string | null>(null);
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
 
-  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>) => {
+  const executeBuild = useCallback(async (prompt: string, stackOverride?: TechStack, customCredentials?: Record<string, string>, imageData?: string | null) => {
       const stackToUse = stackOverride || techStack;
       if (!stackToUse) {
           setError("Please select a technology stack before generating an app.");
@@ -160,7 +160,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
               wasCredentialRequestHandled = true;
               throw new Error('CREDENTIAL_REQUEST_PENDING');
           }
-        }, stackToUse, filesForContext, appName, appIcon, customCredentials);
+        }, stackToUse, filesForContext, appName, appIcon, customCredentials, imageData);
 
         const modelMessage: ChatMessage = {
           role: 'model',
@@ -199,10 +199,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   }, [settings, isGenerated, multiFileCode, currentProject, techStack, setSchema]);
 
 
-  const handleSend = useCallback(async (prompt: string) => {
-    if (!prompt.trim()) return;
+  const handleSend = useCallback(async (prompt: string, imageData?: string | null) => {
+    if (!prompt.trim() && !imageData) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: prompt };
+    const userMessage: ChatMessage = { role: 'user', content: prompt || "Generating app from image..." };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
@@ -231,7 +231,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       }
     } else {
         // Handle new app generation or edit requests
-        executeBuild(prompt);
+        executeBuild(prompt, undefined, undefined, imageData);
     }
   }, [settings, isGenerated, isIdeaMode, techStack, executeBuild]);
 
