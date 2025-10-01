@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Project, Settings, TechStack, GeneratedFile, AppMode, ChatMessage, ViewMode, Deployment, Team, Table, WorkflowDefinition, CredentialRequest } from '../types';
+import { Project, Settings, TechStack, GeneratedFile, AppMode, ChatMessage, ViewMode, Deployment, Team, Table, WorkflowDefinition, CredentialRequest, AuthConfig } from '../types';
 import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
 import { Spinner } from '../components/Spinner';
@@ -20,6 +20,7 @@ import { WorkflowBuilderPage } from './WorkflowBuilderPage';
 import { DeployModal } from '../components/DeployModal';
 import { PublishView } from '../components/PublishView';
 import { InfinityView } from '../components/InfinityView';
+import { AddAuthModal } from '../components/AddAuthModal';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -51,6 +52,16 @@ const initialPreferences: UserPreferences = {
   layout: {
       promptInputLayout: 'floating',
   }
+};
+
+const initialAuthConfig: AuthConfig = {
+  appName: 'My App',
+  appLogo: null,
+  providers: {
+    google: { enabled: false, clientId: '' },
+    github: { enabled: false, clientId: '', clientSecret: '' },
+    x: { enabled: false, clientId: '', clientSecret: '' },
+  },
 };
 
 
@@ -138,6 +149,7 @@ export const CreationFlowPage: React.FC = () => {
     
     const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+    const [authConfig] = useLocalStorage<AuthConfig>('silo-build-auth-config', initialAuthConfig);
     const [preferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
     const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
     const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
@@ -154,9 +166,10 @@ export const CreationFlowPage: React.FC = () => {
     const [deploymentError, setDeploymentError] = useState<string | null>(null);
     const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
     const [pendingCredentialRequest, setPendingCredentialRequest] = useState<CredentialRequest | null>(null);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
 
-    const executeBuild = useCallback(async (buildPrompt: string, imageData?: string | null, customCredentials?: Record<string, string>) => {
+    const executeBuild = useCallback(async (buildPrompt: string, imageData?: string | null, customCredentials?: Record<string, string>, authConfigToUse?: AuthConfig) => {
         if (!techStack) {
             setError("Tech stack is not defined.");
             return;
@@ -218,7 +231,7 @@ export const CreationFlowPage: React.FC = () => {
                     throw new Error('CREDENTIAL_REQUEST_PENDING');
                 }
               }
-            }, techStack, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData);
+            }, techStack, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData, authConfigToUse);
             
             if (credentialRequestReceived) {
                 setIsLoading(false);
@@ -239,8 +252,13 @@ export const CreationFlowPage: React.FC = () => {
                     thoughts: thoughts,
                     workflow: workflow || undefined,
                 };
-                setProjects(prev => [newProject, ...prev]);
-                window.location.hash = `#/project/${newProject.id}`;
+                setCurrentProject(newProject);
+                setMultiFileCode(newProject.files);
+                setPreviewFile(newProject.previewFile);
+                setDeployments(newProject.deployments);
+                setWorkflow(newProject.workflow || null);
+                setMessages([{ role: 'model', content: `Generated project: ${newProject.name}`, thoughts: thoughts }]);
+                setStage('builder');
                 return;
             } else {
                 setMultiFileCode(tempFiles);
@@ -274,16 +292,28 @@ export const CreationFlowPage: React.FC = () => {
     
     // --- BUILDER HANDLERS ---
     const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
-        if (!name.trim() || !techStack || !currentProject) return;
+        if (!name.trim() || !techStack || !currentProject) {
+            alert("Cannot save: project name, code, or tech stack is missing.");
+            return;
+        }
         
         setIsSaveModalOpen(false);
         const lastThoughts = [...messages].reverse().find(m => m.thoughts)?.thoughts;
         const now = new Date().toISOString();
         
         const projectToSave: Project = {
-            ...currentProject, name, appIcon: icon || undefined, updatedAt: now, files: multiFileCode,
-            previewFile, stack: techStack, deployments, githubUrl: currentProject?.githubUrl,
-            teamId: teamId || undefined, workflow: workflow || undefined, thoughts: lastThoughts || currentProject?.thoughts,
+            ...currentProject,
+            name: name,
+            appIcon: icon || undefined,
+            updatedAt: now,
+            files: multiFileCode,
+            previewFile: previewFile,
+            stack: techStack,
+            deployments: deployments,
+            githubUrl: currentProject?.githubUrl,
+            teamId: teamId || undefined,
+            workflow: workflow || undefined,
+            thoughts: lastThoughts || currentProject?.thoughts,
         };
 
         setProjects(prev => {
@@ -293,21 +323,27 @@ export const CreationFlowPage: React.FC = () => {
         });
         setCurrentProject(projectToSave);
         
+        let finalProject = projectToSave;
+
         if (createRepo && !projectToSave.githubUrl) {
           if (!settings.githubPat) { alert("Please set your GitHub PAT in Settings."); return; }
           setIsPushing(true);
           try {
             const repoUrl = await createAndPushToRepo(settings.githubPat, name, multiFileCode);
-            const updatedProject = { ...projectToSave, githubUrl: repoUrl };
-            setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
-            setCurrentProject(updatedProject);
-            alert(`Successfully pushed to ${repoUrl}`);
-          } catch (error) { alert(`GitHub repo creation failed: ${error}`); } 
+            finalProject = { ...projectToSave, githubUrl: repoUrl };
+            setProjects(prev => prev.map(p => p.id === finalProject.id ? finalProject : p));
+            setCurrentProject(finalProject);
+            alert(`Successfully created and pushed to ${repoUrl}`);
+          } catch (error) { 
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            alert(`GitHub repo creation failed: ${errorMessage}`);
+          } 
           finally { setIsPushing(false); }
         } else {
            alert(`Project "${name}" saved!`);
-           window.location.hash = `#/project/${projectToSave.id}`; // Redirect to permanent project URL
         }
+
+        window.location.hash = `#/project/${finalProject.id}`;
     };
     
     const handleCredentialSubmit = (credentials: Record<string, string>) => {
@@ -326,11 +362,19 @@ export const CreationFlowPage: React.FC = () => {
 
     const handleAddSupabase = () => {
       if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
+        setMessages(prev => [...prev, {role: 'model', content: "Supabase credentials are not configured. Please add them in the Settings page."}]);
         setError("Supabase credentials are not configured in Settings.");
         return;
       }
       executeBuild("Please integrate Supabase into this project. Create a `src/supabaseClient.ts`, export a configured client, and demonstrate its usage by fetching a list of 'todos'.");
     };
+
+    const handleAddAuth = () => {
+      setIsAuthModalOpen(false);
+      const authPrompt = "Please generate a complete authentication system for this application using the configuration provided in the system instructions. This should include a main login/signup page, buttons and logic for each enabled provider, user state management, a protected profile page, and a logout button.";
+      executeBuild(authPrompt, null, undefined, authConfig);
+    };
+
     const handleCommitAndPush = async () => {
         if (!currentProject?.githubUrl || !settings.githubPat) { alert("GitHub not configured."); return; }
         const commitMessage = prompt("Enter commit message:", "Update from Silo Build");
@@ -339,9 +383,12 @@ export const CreationFlowPage: React.FC = () => {
         try {
             await pushToRepo(settings.githubPat, currentProject.githubUrl, multiFileCode, commitMessage);
             alert("Successfully pushed to GitHub!");
-        } catch (error) { alert(`Failed to push: ${error}`); } 
-        finally { setIsPushing(false); }
+        } catch (error) { 
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            alert(`Failed to push: ${errorMessage}`); 
+        } finally { setIsPushing(false); }
     };
+
     const handleFileUpdate = (path: string, content: string) => setMultiFileCode(prev => prev.map(f => f.path === path ? { ...f, content } : f));
     const handleFileDelete = (path: string) => setMultiFileCode(prev => prev.filter(f => f.path !== path));
     const handleFileAdd = (path: string): boolean => {
@@ -379,6 +426,30 @@ export const CreationFlowPage: React.FC = () => {
         downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile });
     };
 
+    const handleSkipToBuilder = () => {
+        if (!techStack) return;
+    
+        const now = new Date().toISOString();
+        const newProject: Project = {
+            id: crypto.randomUUID(),
+            name: 'New Project',
+            createdAt: now,
+            updatedAt: now,
+            files: [],
+            previewFile: null,
+            stack: techStack,
+            deployments: [],
+        };
+        
+        setCurrentProject(newProject);
+        setMultiFileCode(newProject.files);
+        setPreviewFile(newProject.previewFile);
+        setDeployments(newProject.deployments);
+        setWorkflow(null);
+        setMessages([{ role: 'model', content: `Started a new blank ${techStack} project. What would you like to build first?` }]);
+        setStage('builder');
+    };
+
     // --- INITIALIZATION ---
     useEffect(() => {
         const initialPrompt = sessionStorage.getItem('initialPrompt');
@@ -414,6 +485,7 @@ export const CreationFlowPage: React.FC = () => {
                     setAppMode={setAppMode}
                     project={currentProject}
                     onAddSupabase={handleAddSupabase}
+                    onAddAuth={() => setIsAuthModalOpen(true)}
                     onConnectGitHub={() => setIsSaveModalOpen(true)}
                     onDownload={handleDownload}
                     isGithubConnected={!!currentProject?.githubUrl}
@@ -442,6 +514,7 @@ export const CreationFlowPage: React.FC = () => {
                 {isMacPreviewVisible && previewFile && <MacPreview previewFile={previewFile} projectName={currentProject?.name || 'My App'} appIcon={currentProject?.appIcon || null} onClose={() => setIsMacPreviewVisible(false)} />}
                 <ProjectMetadataModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} onSave={handleSaveProject} initialName={currentProject?.name} initialIcon={currentProject?.appIcon} title="Save New Project" isGithubLinked={!!currentProject?.githubUrl} teams={teams} initialTeamId={currentProject?.teamId} />
                 <DeployModal isOpen={isDeployModalOpen} onClose={() => { setIsDeployModalOpen(false); setDeploymentError(null); }} onDeploy={handleDeploy} isDeploying={isDeploying} initialProjectName={currentProject?.name} initialToken={settings.netlifyPat} deploymentError={deploymentError} />
+                <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
             </div>
         );
     }
@@ -505,7 +578,7 @@ export const CreationFlowPage: React.FC = () => {
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
-                                    executeBuild(prompt);
+                                    if(prompt.trim() && !isLoading) executeBuild(prompt);
                                 }
                             }}
                             placeholder="e.g., a modern SaaS dashboard with charts and a data table"
@@ -519,11 +592,16 @@ export const CreationFlowPage: React.FC = () => {
                             <UpArrowIcon className="w-6 h-6" />
                         </button>
                     </div>
-                     <div className="relative flex items-center justify-center gap-2 mt-6 text-sm flex-wrap">
-                        <span className="text-gray-500">or try an example:</span>
-                        <button onClick={() => setPrompt(prompts[0].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
-                        <button onClick={() => setPrompt(prompts[2].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
-                        <a href="#/dashboard/prompt-library" className="text-blue-600 hover:underline">More ideas...</a>
+                     <div className="relative flex flex-col items-center justify-center gap-2 mt-6 text-sm">
+                        <div className="flex items-center gap-2 flex-wrap justify-center">
+                            <span className="text-gray-500">or try an example:</span>
+                            <button onClick={() => setPrompt(prompts[0].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Pomodoro Timer</button>
+                            <button onClick={() => setPrompt(prompts[2].prompt)} className="bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-100 transition-colors">Kanban Board</button>
+                            <a href="#/dashboard/prompt-library" className="text-blue-600 hover:underline">More ideas...</a>
+                        </div>
+                        <button onClick={handleSkipToBuilder} className="relative text-sm text-gray-600 hover:text-black mt-4 hover:underline">
+                            or skip and start with a blank project
+                        </button>
                     </div>
                 </div>
             </div>
