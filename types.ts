@@ -1,3 +1,5 @@
+import React from 'react';
+
 // FIX: Replaced incorrect component code with proper type definitions for the entire application.
 // This file should only contain type exports, not React components.
 // This resolves numerous compilation errors across the project caused by missing or incorrect types.
@@ -6,7 +8,7 @@ export type AppMode = 'CHAT' | 'CODE' | 'PREVIEW' | 'WORKFLOW' | 'PUBLISH';
 
 export type ViewMode = 'CODE' | 'PREVIEW';
 
-export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs' | 'react-native';
+export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs' | 'react-native' | 'infinity';
 
 export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
 
@@ -143,4 +145,17 @@ export interface WorkflowConnection {
 export interface WorkflowDefinition {
   nodes: WorkflowNode[];
   connections: WorkflowConnection[];
+}
+
+// Types for Infinity App
+export interface InfinityAction {
+    id: string;
+    label: string;
+    prompt: string;
+}
+
+export interface InfinityUI {
+    title: string;
+    streamedText: string;
+    actions: InfinityAction[];
 }

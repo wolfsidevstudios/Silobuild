@@ -15,6 +15,7 @@ import { showLocalNotification, downloadProjectAsZip } from '../utils/projectUti
 import { WorkflowBuilderPage } from '../pages/WorkflowBuilderPage';
 import { DeployModal } from './DeployModal';
 import { PublishView } from './PublishView';
+import { InfinityView } from './InfinityView';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -282,14 +283,19 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setPreviewFile(null);
         setMessages([]);
         setIsGenerated(false);
-        setTechStack(null);
-        setDeployments([]);
-        setWorkflow(null);
+        
+        const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+        const stackFromUrl = urlParams.get('stack') as TechStack;
 
-        const promptFromStorage = sessionStorage.getItem('initialPrompt');
-        if (promptFromStorage) {
-            setInitialPrompt(promptFromStorage);
-            sessionStorage.removeItem('initialPrompt');
+        if (stackFromUrl === 'infinity') {
+          setTechStack('infinity');
+        } else {
+          setTechStack(null);
+          const promptFromStorage = sessionStorage.getItem('initialPrompt');
+          if (promptFromStorage) {
+              setInitialPrompt(promptFromStorage);
+              sessionStorage.removeItem('initialPrompt');
+          }
         }
     }
   }, [projectId, projects]);
@@ -570,6 +576,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   };
   
   const isBusy = isLoading || isPushing;
+
+  if (techStack === 'infinity') {
+      return <InfinityView settings={settings} />;
+  }
 
   return (
     <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">

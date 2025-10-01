@@ -142,6 +142,12 @@ const ProjectCard: React.FC<{ project: Project; onEdit: (project: Project) => vo
     </div>
 );
 
+const InfinityIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.172 16.172a4 4 0 01-5.656 0l-3.364-3.364a4 4 0 115.656-5.656l.354.354a4 4 0 005.656 5.656l3.364 3.364a4 4 0 01-5.656 0l-.354-.354z" />
+    </svg>
+);
+
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
@@ -181,7 +187,7 @@ export const ProjectsPage: React.FC = () => {
   };
   
   const filteredProjects = useMemo(() => {
-    return projects.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return projects.filter(p => p.stack !== 'agent' && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [projects, searchTerm]);
 
   const { personalProjects, teamProjects } = useMemo(() => {
@@ -199,6 +205,10 @@ export const ProjectsPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">My Projects</h1>
         <div className="flex items-center gap-3">
+            <a href="#/builder?stack=infinity" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-300">
+                <InfinityIcon />
+                New Infinity App
+            </a>
             <a href="#/builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300">
                 <SparklesIcon />
                 New Codepilot Project
@@ -220,7 +230,7 @@ export const ProjectsPage: React.FC = () => {
             />
         </div>
 
-      {projects.length === 0 ? (
+      {projects.filter(p => p.stack !== 'agent').length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-white/50 rounded-lg p-8">
             <h2 className="text-xl font-semibold mb-2 text-gray-800">No projects yet</h2>
             <p>Create a new project using the AI builder or the code studio.</p>

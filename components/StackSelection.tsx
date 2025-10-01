@@ -6,6 +6,13 @@ interface StackSelectionProps {
   onSelect: (stack: TechStack) => void;
 }
 
+const InfinityIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-purple-600">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.172 16.172a4 4 0 01-5.656 0l-3.364-3.364a4 4 0 115.656-5.656l.354.354a4 4 0 005.656 5.656l3.364 3.364a4 4 0 01-5.656 0l-.354-.354z" />
+    </svg>
+);
+
+
 const StackCard: React.FC<{
     icon: React.ReactNode;
     title: string;
@@ -26,8 +33,8 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold">Choose your stack</h3>
-        <p className="text-gray-600">Select the technology for your new application.</p>
+        <h3 className="text-2xl font-bold">Choose your experience</h3>
+        <p className="text-gray-600">Select a technology to generate code, or try the Infinity App.</p>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <StackCard
@@ -49,6 +56,11 @@ export const StackSelection: React.FC<StackSelectionProps> = ({ onSelect }) => {
           icon={<HtmlIcon />}
           title="HTML + JS"
           onClick={() => onSelect('html')}
+        />
+        <StackCard
+          icon={<InfinityIcon />}
+          title="Infinity App"
+          onClick={() => onSelect('infinity')}
         />
       </div>
     </div>
