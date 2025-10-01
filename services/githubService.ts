@@ -96,6 +96,11 @@ const pushFiles = async (
   });
 };
 
+export const getGitHubRepos = async (token: string): Promise<any[]> => {
+  // Fetch up to 100 repos, sorted by last push
+  return apiFetch(token, '/user/repos?sort=pushed&per_page=100');
+};
+
 export const getGitHubUser = async (token: string): Promise<{ login: string; avatar_url: string; }> => {
   return apiFetch(token, '/user');
 };

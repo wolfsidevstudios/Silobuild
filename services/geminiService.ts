@@ -1,6 +1,87 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret } from "../types";
 
+const GOOGLE_SIGN_IN_INSTRUCTION = `
+--- GOOGLE SIGN-IN INTEGRATION ---
+If the user has provided a 'googleClientId' in the 'USER-CONFIGURED INTEGRATIONS' section, and their prompt asks for Google Sign-In, you MUST generate functional code for client-side Google Sign-In.
+
+**Core Logic (for all frameworks):**
+1.  **HTML Script**: You MUST add this script tag to the \`<head>\` of your main HTML file (\`index.html\` and the preview file).
+    \`<script src="https://accounts.google.com/gsi/client" async defer></script>\`
+2.  **State Management**: Your UI must manage the user's signed-in state (e.g., storing the user object) and conditionally render UI based on whether a user is signed in or not (e.g., show user info and a sign-out button, or show the sign-in button).
+
+**React Implementation Example (\`src/components/Auth.tsx\`):**
+You MUST follow this structure for React. Use \`useEffect\` to initialize the Google client and define the callback. The user object should be stored in state.
+
+\`\`\`tsx
+import React, { useState, useEffect } from 'react';
+
+// A simple JWT decoder for client-side use. DO NOT use external libraries for this in the preview file.
+const jwtDecode = (token) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+};
+
+const Auth = ({ onSignIn }) => {
+  // IMPORTANT: Replace with the actual key provided by the user from your instructions.
+  const CLIENT_ID = 'THE_USER_PROVIDED_CLIENT_ID';
+
+  const handleCredentialResponse = (response) => {
+    const decoded = jwtDecode(response.credential);
+    onSignIn(decoded);
+  };
+
+  useEffect(() => {
+    // @ts-ignore
+    if (window.google) {
+      // @ts-ignore
+      window.google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: handleCredentialResponse
+      });
+      // @ts-ignore
+      window.google.accounts.id.renderButton(
+        document.getElementById("signInDiv"),
+        { theme: "outline", size: "large" }
+      );
+    }
+  }, [CLIENT_ID]);
+
+  return <div id="signInDiv" style={{ display: 'flex', justifyContent: 'center' }}></div>;
+};
+
+
+// In your App.tsx
+const App = () => {
+    const [user, setUser] = useState(null);
+
+    const handleSignOut = () => {
+        setUser(null);
+        // You may also want to disable one-tap sign-in here
+        // if (window.google) window.google.accounts.id.disableAutoSelect();
+    };
+
+    return (
+        <div className="p-4">
+            {user ? (
+                <div>
+                    <h3>Welcome, {user.name}!</h3>
+                    <img src={user.picture} alt="User avatar" className="rounded-full w-12 h-12" />
+                    <button onClick={handleSignOut} className="mt-2 px-4 py-2 bg-gray-200 text-black rounded-md">Sign Out</button>
+                </div>
+            ) : (
+                <Auth onSignIn={setUser} />
+            )}
+        </div>
+    );
+};
+\`\`\`
+**Integration**: For multi-file apps, create an \`Auth\` component and manage state in your root component (\`App.tsx\`, etc.). For single-file HTML apps, embed the logic directly in the script tag. You MUST manage the signed-in state to conditionally render the UI. The Google button should be hidden after sign-in.
+`;
+
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>): string => {
   const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo Build 2.0</div>`;
 
@@ -888,6 +969,10 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += SILO_AI_INSTRUCTION_REACT;
   }
   
+  if (settings.googleClientId) {
+    instruction += GOOGLE_SIGN_IN_INSTRUCTION;
+  }
+  
   return instruction;
 };
 
@@ -946,13 +1031,15 @@ export const generateAppStream = (
       
       const hasSupabase = settings.supabaseUrl && settings.supabaseAnonKey;
       const hasStripe = settings.stripePublicKey && settings.stripeSecretKey;
+      const hasGoogleSignIn = settings.googleClientId;
       
       const promptLower = prompt.toLowerCase();
       const wantsSupabase = hasSupabase && /\b(supabase|database|auth|authentication|login|signup|users)\b/i.test(promptLower);
       const wantsStripe = hasStripe && /\b(stripe|payment|checkout|billing|subscription|price|buy|shop)\b/i.test(promptLower);
+      const wantsGoogleSignIn = hasGoogleSignIn && /\b(google sign in|google login|google auth|sign in with google)\b/i.test(promptLower);
 
 
-      if (wantsSupabase || wantsStripe) {
+      if (wantsSupabase || wantsStripe || wantsGoogleSignIn) {
         userPromptText += "\n\n--- USER-CONFIGURED INTEGRATIONS ---";
         userPromptText += "\nThe user has provided the following service credentials and their prompt indicates they want to use them. Use these exact values in the generated code. Do not use placeholders.";
         if (wantsSupabase) {
@@ -961,6 +1048,9 @@ export const generateAppStream = (
         }
         if (wantsStripe) {
           userPromptText += `\n- Stripe Public Key: ${settings.stripePublicKey}`;
+        }
+        if (wantsGoogleSignIn) {
+          userPromptText += `\n- Google Client ID: ${settings.googleClientId}`;
         }
         userPromptText += "\n------------------------------------";
       }

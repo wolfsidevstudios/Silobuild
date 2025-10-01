@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings, GeminiModel, Secret } from '../types';
-import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon } from '../components/icons';
+import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon, SlackIcon, JiraIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
-import { getGitHubUser } from '../services/githubService';
+import { getGitHubUser, getGitHubRepos } from '../services/githubService';
 import { Spinner } from '../components/Spinner';
 
 const initialSettings: Settings = {
@@ -14,6 +14,8 @@ const initialSettings: Settings = {
   stripeSecretKey: '',
   githubPat: '',
   netlifyPat: '',
+  vercelPat: '',
+  googleClientId: '',
   model: 'gemini-2.5-flash',
   secrets: [],
 };
@@ -65,6 +67,8 @@ export const IntegrationsPage: React.FC = () => {
     const [newSecretValue, setNewSecretValue] = useState('');
     const [githubUser, setGithubUser] = useState<{ login: string; avatar_url: string; } | null>(null);
     const [isLoadingGitHubUser, setIsLoadingGitHubUser] = useState(false);
+    const [githubRepos, setGithubRepos] = useState<any[] | null>(null);
+    const [isLoadingRepos, setIsLoadingRepos] = useState(false);
 
 
     useEffect(() => {
@@ -88,6 +92,7 @@ export const IntegrationsPage: React.FC = () => {
                 }
             } else if (!localSettings.githubPat) {
                 setGithubUser(null);
+                setGithubRepos(null);
             }
         };
         fetchUser();
@@ -131,6 +136,22 @@ export const IntegrationsPage: React.FC = () => {
     const handleGitHubDisconnect = () => {
         handleChange('githubPat', '');
         setGithubUser(null);
+        setGithubRepos(null);
+    };
+    
+    const handleViewRepos = async () => {
+        if (localSettings.githubPat) {
+            setIsLoadingRepos(true);
+            setGithubRepos(null); // Clear previous results
+            try {
+                const repos = await getGitHubRepos(localSettings.githubPat);
+                setGithubRepos(repos);
+            } catch (error) {
+                console.error("Failed to fetch GitHub repos", error);
+            } finally {
+                setIsLoadingRepos(false);
+            }
+        }
     };
 
   return (
@@ -200,6 +221,30 @@ export const IntegrationsPage: React.FC = () => {
                 </div>
             </div>
         </IntegrationCard>
+        <IntegrationCard
+            icon={<img src="https://www.svgrepo.com/show/355037/google.svg" className="h-7 w-7" alt="Google Logo"/>}
+            title="Google Sign-In"
+            description="Allow users to sign into your generated apps with their Google account."
+        >
+            <SettingsInput
+                label="Google Client ID"
+                value={localSettings.googleClientId || ''}
+                onChange={(e) => handleChange('googleClientId', e.target.value)}
+                placeholder="Enter your Google Client ID"
+                isPassword={false}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+                Create a Client ID in the Google Cloud Console for your web application.
+                <a
+                    href="https://console.cloud.google.com/apis/credentials"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline ml-1"
+                >
+                    Get it here.
+                </a>
+            </p>
+        </IntegrationCard>
         <IntegrationCard 
             icon={<GithubIcon className="w-7 h-7 text-black"/>}
             title="GitHub"
@@ -210,20 +255,36 @@ export const IntegrationsPage: React.FC = () => {
                     <Spinner />
                 </div>
             ) : githubUser ? (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={githubUser.avatar_url} alt={githubUser.login} className="w-10 h-10 rounded-full" />
-                        <div>
-                            <p className="font-semibold">{githubUser.login}</p>
-                            <p className="text-sm text-gray-500">Connected</p>
+                <div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <img src={githubUser.avatar_url} alt={githubUser.login} className="w-10 h-10 rounded-full" />
+                            <div>
+                                <p className="font-semibold">{githubUser.login}</p>
+                                <p className="text-sm text-gray-500">Connected</p>
+                            </div>
                         </div>
+                        <button 
+                            onClick={handleGitHubDisconnect}
+                            className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                        >
+                            Disconnect
+                        </button>
                     </div>
-                    <button 
-                        onClick={handleGitHubDisconnect}
-                        className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-                    >
-                        Disconnect
-                    </button>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <button onClick={handleViewRepos} disabled={isLoadingRepos} className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50">
+                            {isLoadingRepos ? 'Loading Repos...' : 'View Repositories'}
+                        </button>
+                        {githubRepos && (
+                             <div className="mt-2 max-h-36 overflow-y-auto space-y-2 rounded-lg bg-gray-50 border p-2">
+                                {githubRepos.map(repo => (
+                                    <div key={repo.id} className="text-sm">
+                                        <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:underline truncate block">{repo.full_name}</a>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             ) : (
                 <div>
@@ -257,6 +318,18 @@ export const IntegrationsPage: React.FC = () => {
                 value={localSettings.netlifyPat}
                 onChange={(e) => handleChange('netlifyPat', e.target.value)}
                 placeholder="Enter your Netlify Access Token"
+            />
+        </IntegrationCard>
+        <IntegrationCard 
+            icon={<VercelIcon className="h-6 text-black"/>}
+            title="Vercel"
+            description="Connect your Vercel account for one-click deployments."
+        >
+             <SettingsInput
+                label="Vercel Access Token"
+                value={localSettings.vercelPat || ''}
+                onChange={(e) => handleChange('vercelPat', e.target.value)}
+                placeholder="Enter your Vercel Access Token"
             />
         </IntegrationCard>
          <IntegrationCard 
@@ -294,6 +367,37 @@ export const IntegrationsPage: React.FC = () => {
                 value={localSettings.stripeSecretKey}
                 onChange={(e) => handleChange('stripeSecretKey', e.target.value)}
                 placeholder="sk_live_... (used for backend logic)"
+            />
+        </IntegrationCard>
+         <IntegrationCard 
+            icon={<SlackIcon />}
+            title="Slack"
+            description="Enable your generated apps to interact with Slack APIs."
+        >
+            <SettingsInput 
+                label="Slack Bot Token"
+                value={''}
+                onChange={() => {}}
+                placeholder="xoxb-..."
+            />
+        </IntegrationCard>
+        <IntegrationCard 
+            icon={<JiraIcon />}
+            title="Jira"
+            description="Connect to Jira for project management integrations."
+        >
+            <SettingsInput 
+                label="Jira API Token"
+                value={''}
+                onChange={() => {}}
+                placeholder="Enter your Jira API token"
+            />
+             <SettingsInput 
+                label="Jira Host"
+                value={''}
+                onChange={() => {}}
+                placeholder="your-company.atlassian.net"
+                isPassword={false}
             />
         </IntegrationCard>
         <IntegrationCard

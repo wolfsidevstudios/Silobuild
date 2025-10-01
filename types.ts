@@ -50,6 +50,8 @@ export interface Settings {
   stripeSecretKey: string;
   githubPat: string;
   netlifyPat: string;
+  vercelPat?: string;
+  googleClientId?: string;
   model?: GeminiModel;
   secrets?: Secret[];
 }
