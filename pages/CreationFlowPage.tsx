@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Project, Settings, TechStack, GeneratedFile, AppMode, ChatMessage, ViewMode, Deployment, Team, Table, WorkflowDefinition } from '../types';
+import { Project, Settings, TechStack, GeneratedFile, AppMode, ChatMessage, ViewMode, Deployment, Team, Table, WorkflowDefinition, CredentialRequest } from '../types';
 import { generateAppStream } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
 import { Spinner } from '../components/Spinner';
-import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon } from '../components/icons';
+import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon } from '../components/icons';
 import { prompts } from '../data/prompts';
 
 // Builder components
@@ -65,6 +65,56 @@ const StackCard: React.FC<{ icon: React.ReactNode; title: string; onClick: () =>
 type Stage = 'stack' | 'prompt' | 'generating_app' | 'builder';
 type Plan = { summary: string; thoughts: string; files: string[]; };
 
+const CreationCredentialForm: React.FC<{
+  request: CredentialRequest;
+  onSubmit: (credentials: Record<string, string>) => void;
+}> = ({ request, onSubmit }) => {
+  const [credentials, setCredentials] = useState<Record<string, string>>(() => 
+    request.fields.reduce((acc, field) => ({ ...acc, [field.key]: '' }), {})
+  );
+
+  const handleChange = (key: string, value: string) => {
+    setCredentials(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(credentials);
+  };
+
+  const isFormValid = request.fields.every(field => credentials[field.key]?.trim() !== '');
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 text-left">
+      {request.fields.map(field => (
+        <div key={field.key}>
+          <label htmlFor={field.key} className="block text-xs font-medium text-gray-700">{field.label}</label>
+          <div className="mt-1 relative rounded-md shadow-sm">
+             <input
+              type="password"
+              id={field.key}
+              value={credentials[field.key]}
+              onChange={(e) => handleChange(field.key, e.target.value)}
+              className="block w-full rounded-md border-gray-300 bg-gray-50 p-2 text-sm focus:border-blue-500 focus:ring-blue-500"
+              required
+            />
+          </div>
+        </div>
+      ))}
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={!isFormValid}
+          className="bg-blue-600 text-white px-3 py-1.5 text-xs rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+        >
+          Add API Key & Continue
+        </button>
+      </div>
+    </form>
+  );
+};
+
+
 export const CreationFlowPage: React.FC = () => {
     // --- CREATION FLOW STATE ---
     const [stage, setStage] = useState<Stage>('stack');
@@ -103,6 +153,7 @@ export const CreationFlowPage: React.FC = () => {
     const [isDeploying, setIsDeploying] = useState(false);
     const [deploymentError, setDeploymentError] = useState<string | null>(null);
     const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
+    const [pendingCredentialRequest, setPendingCredentialRequest] = useState<CredentialRequest | null>(null);
 
 
     const executeBuild = useCallback(async (buildPrompt: string, imageData?: string | null, customCredentials?: Record<string, string>) => {
@@ -111,7 +162,6 @@ export const CreationFlowPage: React.FC = () => {
             return;
         }
         
-        // This is a new message from the user
         if (stage === 'builder') {
              const userMessage: ChatMessage = { role: 'user', content: buildPrompt || "Updating app from image..." };
              setMessages(prev => [...prev, userMessage]);
@@ -127,7 +177,7 @@ export const CreationFlowPage: React.FC = () => {
         setCurrentFile(null);
 
         const filesForContext = stage === 'builder' ? multiFileCode : undefined;
-        let wasCredentialRequestHandled = false;
+        let credentialRequestReceived = false;
 
         try {
             let tempFiles: GeneratedFile[] = [];
@@ -154,15 +204,27 @@ export const CreationFlowPage: React.FC = () => {
                 setWorkflow(update.workflow);
                 setMessages(prev => [...prev, { role: 'model', content: "I've created/updated the workflow." }]);
               }
-              if (update.type === 'credential_request') {
-                const credentialMessage: ChatMessage = { role: 'model', content: `I need some info for ${update.request.toolName}.`, credentialRequest: update.request };
-                setMessages(prev => [...prev, credentialMessage]);
-                setPromptForCredentials(buildPrompt);
-                wasCredentialRequestHandled = true;
-                throw new Error('CREDENTIAL_REQUEST_PENDING');
+              if (update.type === 'credential_request' && update.request) {
+                 if (stage !== 'builder') { // Initial creation flow
+                    setPendingCredentialRequest(update.request);
+                    setPromptForCredentials(buildPrompt);
+                    credentialRequestReceived = true;
+                } else { // In the full builder
+                    const credentialMessage: ChatMessage = { role: 'model', content: `I need some info for ${update.request.toolName}.`, credentialRequest: update.request };
+                    setMessages(prev => [...prev, credentialMessage]);
+                    setPromptForCredentials(buildPrompt);
+                    credentialRequestReceived = true;
+                    // For the builder, we throw to let the catch block handle pausing.
+                    throw new Error('CREDENTIAL_REQUEST_PENDING');
+                }
               }
             }, techStack, filesForContext, currentProject?.name, currentProject?.appIcon, customCredentials, imageData);
             
+            if (credentialRequestReceived) {
+                setIsLoading(false);
+                return;
+            }
+
             if (stage !== 'builder') {
                 const now = new Date().toISOString();
                 const newProject: Project = {
@@ -177,13 +239,10 @@ export const CreationFlowPage: React.FC = () => {
                     thoughts: thoughts,
                     workflow: workflow || undefined,
                 };
-                // Save the new project to local storage
                 setProjects(prev => [newProject, ...prev]);
-                // Redirect to the main builder for this new project
                 window.location.hash = `#/project/${newProject.id}`;
-                return; // Stop further state updates as we are redirecting
+                return;
             } else {
-                // This handles subsequent edits while still on the #/builder page.
                 setMultiFileCode(tempFiles);
                 setPreviewFile(tempPreviewFile);
                 const updatedProject = { ...currentProject!, files: tempFiles, previewFile: tempPreviewFile, thoughts: thoughts };
@@ -196,8 +255,8 @@ export const CreationFlowPage: React.FC = () => {
 
         } catch (err) {
             if (err instanceof Error && err.message === 'CREDENTIAL_REQUEST_PENDING') {
-                setIsLoading(false);
-                return; // Stop execution, wait for user input
+                setIsLoading(false); // Pause loading, form is now visible
+                return;
             }
             const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
             setError(errorMessage);
@@ -207,7 +266,9 @@ export const CreationFlowPage: React.FC = () => {
                 setStage('prompt');
             }
         } finally {
-             if (!wasCredentialRequestHandled) setIsLoading(false);
+            if (!credentialRequestReceived) {
+                setIsLoading(false);
+            }
         }
     }, [techStack, stage, settings, currentProject, multiFileCode, setProjects, setSchema]);
     
@@ -255,6 +316,14 @@ export const CreationFlowPage: React.FC = () => {
       executeBuild(promptForCredentials, null, credentials);
       setPromptForCredentials(null);
     };
+
+    const handleCreationCredentialSubmit = (credentials: Record<string, string>) => {
+        if (promptForCredentials) {
+            setPendingCredentialRequest(null);
+            executeBuild(promptForCredentials, null, credentials);
+        }
+    };
+
     const handleAddSupabase = () => {
       if (!settings.supabaseUrl || !settings.supabaseAnonKey) {
         setError("Supabase credentials are not configured in Settings.");
@@ -318,8 +387,6 @@ export const CreationFlowPage: React.FC = () => {
             sessionStorage.removeItem('initialPrompt');
         }
         
-        // FIX: The URL parameter parsing was incorrect for hash-based routing and contained a typo.
-        // It should parse the query string from the hash, not the full location.
         const hash = window.location.hash;
         const queryString = hash.split('?')[1] || '';
         const urlParams = new URLSearchParams(queryString);
@@ -330,11 +397,6 @@ export const CreationFlowPage: React.FC = () => {
             setStage('prompt');
         }
         
-        // FIX: Removed buggy auto-execution of build. The `executeBuild` function call
-        // within this `useEffect` would capture a stale `techStack` value (null)
-        // causing a silent failure. The user can now reliably trigger the build manually after
-        // the UI loads with the pre-filled data.
-
     }, []);
 
     if (techStack === 'infinity') {
@@ -389,10 +451,12 @@ export const CreationFlowPage: React.FC = () => {
              <div className="relative h-screen w-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center overflow-hidden">
                 <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-200 rounded-full filter blur-3xl opacity-40" />
                 <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-purple-200 rounded-full filter blur-3xl opacity-40" />
-                <Spinner className="relative w-12 h-12 mb-6" />
-                <h2 className="relative text-2xl font-bold mb-2">Building your app...</h2>
-                <p className="relative text-gray-600 mb-6 max-w-md">{generationSummary || "The AI is analyzing your prompt and creating a plan."}</p>
-                {generationPlan.length > 0 && (
+                {isLoading && <Spinner className="relative w-12 h-12 mb-6" />}
+                <h2 className="relative text-2xl font-bold mb-2">{isLoading ? "Building your app..." : "Action Required"}</h2>
+                <p className="relative text-gray-600 mb-6 max-w-md">
+                  {isLoading ? (generationSummary || "The AI is analyzing your prompt and creating a plan.") : "Please provide the required API keys to continue."}
+                </p>
+                {isLoading && generationPlan.length > 0 && (
                     <div className="relative text-left w-full max-w-sm bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <h3 className="font-semibold text-sm mb-2">Generating files:</h3>
                         <ul className="space-y-1.5 text-sm">
@@ -404,6 +468,16 @@ export const CreationFlowPage: React.FC = () => {
                             ))}
                         </ul>
                     </div>
+                )}
+                {pendingCredentialRequest && !isLoading && (
+                  <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-xl border border-gray-200 w-full max-w-sm z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                        <KeyIcon className="w-5 h-5 text-yellow-500"/>
+                        <h3 className="font-bold text-sm text-left">Add API Key</h3>
+                    </div>
+                    <p className="text-xs text-gray-600 text-left mb-3">The AI needs the following keys to build your app:</p>
+                    <CreationCredentialForm request={pendingCredentialRequest} onSubmit={handleCreationCredentialSubmit} />
+                  </div>
                 )}
              </div>
         )
