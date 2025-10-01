@@ -205,15 +205,15 @@ export const ProjectsPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">My Projects</h1>
         <div className="flex items-center gap-3">
-            <a href="#/builder?stack=infinity" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-300">
+            <a href="#/builder?stack=infinity" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-300">
                 <InfinityIcon />
                 New Infinity App
             </a>
-            <a href="#/builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300">
+            <a href="#/builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors duration-300">
                 <SparklesIcon />
                 New Codepilot Project
             </a>
-             <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg transition-colors duration-300">
+             <button onClick={handleNewStudioProject} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors duration-300">
                 <CodeIcon />
                 New Studio Project
             </button>
@@ -226,7 +226,7 @@ export const ProjectsPage: React.FC = () => {
                 placeholder="Search projects..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full max-w-sm bg-white border border-gray-300 rounded-lg p-2.5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full max-w-sm bg-white border border-gray-300 rounded-full p-2.5 px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
         </div>
 

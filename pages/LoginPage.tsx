@@ -652,13 +652,13 @@ export const LoginPage: React.FC = () => {
                                 <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Full Code Download</li>
                                 <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Community Support</li>
                             </ul>
-                            <a href="#/builder" className="w-full mt-8 bg-gray-100 text-gray-800 py-2.5 rounded-lg font-semibold hover:bg-gray-200 transition-colors block text-center">
+                            <a href="#/builder" className="w-full mt-8 bg-gray-100 text-gray-800 py-2.5 rounded-full font-semibold hover:bg-gray-200 transition-colors block text-center">
                                 Get Started
                             </a>
                         </div>
                         <div className="border-2 border-blue-600 rounded-2xl p-8 relative shadow-2xl">
                             <div className="absolute top-0 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 text-xs font-semibold rounded-full">
-                                Most Popular
+                                Popular
                             </div>
                             <h4 className="text-lg font-semibold">Pro</h4>
                             <p className="text-gray-500 mt-2">For professionals and teams who need more power.</p>
@@ -671,7 +671,7 @@ export const LoginPage: React.FC = () => {
                                 <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Team Collaboration</li>
                                 <li className="flex items-center gap-2"><CheckIcon className="w-5 h-5 text-green-500"/> Priority Support</li>
                             </ul>
-                            <a href="#/dashboard" className="w-full mt-8 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors block text-center">
+                            <a href="#/dashboard" className="w-full mt-8 bg-blue-600 text-white py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-colors block text-center">
                                 Go Pro
                             </a>
                         </div>

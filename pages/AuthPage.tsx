@@ -80,9 +80,9 @@ export const AuthPage: React.FC = () => {
                         <p className="text-gray-500 text-sm">Sign in to continue</p>
                     </div>
                     <form className="space-y-4">
-                        <input type="email" placeholder="Email" className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm" disabled/>
-                        <input type="password" placeholder="Password" className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg text-sm" disabled/>
-                        <button className="w-full p-3 bg-gray-800 text-white rounded-lg font-semibold" disabled>Sign In</button>
+                        <input type="email" placeholder="Email" className="w-full p-3 bg-gray-50 border border-gray-300 rounded-full text-sm" disabled/>
+                        <input type="password" placeholder="Password" className="w-full p-3 bg-gray-50 border border-gray-300 rounded-full text-sm" disabled/>
+                        <button className="w-full p-3 bg-gray-800 text-white rounded-full font-semibold" disabled>Sign In</button>
                     </form>
                     <div className="relative flex py-5 items-center">
                         <div className="flex-grow border-t border-gray-200"></div>
@@ -90,9 +90,9 @@ export const AuthPage: React.FC = () => {
                         <div className="flex-grow border-t border-gray-200"></div>
                     </div>
                     <div className="space-y-3">
-                        {localConfig.providers.google.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50" disabled><GoogleIcon /> Google</button>}
-                        {localConfig.providers.github.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50" disabled><GithubIcon className="w-5 h-5"/> GitHub</button>}
-                        {localConfig.providers.x.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50" disabled><XIcon /> X</button>}
+                        {localConfig.providers.google.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-full text-sm font-medium hover:bg-gray-50" disabled><GoogleIcon /> Google</button>}
+                        {localConfig.providers.github.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-full text-sm font-medium hover:bg-gray-50" disabled><GithubIcon className="w-5 h-5"/> GitHub</button>}
+                        {localConfig.providers.x.enabled && <button className="w-full flex items-center justify-center gap-3 p-3 border border-gray-300 rounded-full text-sm font-medium hover:bg-gray-50" disabled><XIcon /> X</button>}
                     </div>
                 </div>
             </div>
@@ -104,7 +104,7 @@ export const AuthPage: React.FC = () => {
                         <KeyIcon className="w-8 h-8 text-blue-500" />
                         <h1 className="text-3xl font-bold">Authentication</h1>
                     </div>
-                    <button onClick={handleSave} disabled={isSaved} className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:bg-gray-400">
+                    <button onClick={handleSave} disabled={isSaved} className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors disabled:bg-gray-400">
                         <SaveIcon />
                         {isSaved ? 'Saved' : 'Save Changes'}
                     </button>
@@ -118,12 +118,12 @@ export const AuthPage: React.FC = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">App Name</label>
-                                <input type="text" value={localConfig.appName} onChange={e => handleConfigChange('appName', e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm" />
+                                <input type="text" value={localConfig.appName} onChange={e => handleConfigChange('appName', e.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">App Logo</label>
                                 <input type="file" accept="image/*" onChange={handleLogoChange} ref={fileInputRef} className="hidden" />
-                                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg transition-colors">
+                                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
                                     <UploadIcon />
                                     {localConfig.appLogo ? "Change Logo" : "Upload Logo"}
                                 </button>
@@ -141,7 +141,7 @@ export const AuthPage: React.FC = () => {
                                     <ToggleSwitch enabled={localConfig.providers.google.enabled} onChange={val => handleConfigChange('providers.google.enabled', val)} />
                                 </div>
                                 {localConfig.providers.google.enabled && <div className="mt-4 pl-8 space-y-2">
-                                    <input type="text" value={localConfig.providers.google.clientId} onChange={e => handleConfigChange('providers.google.clientId', e.target.value)} placeholder="Google Client ID" className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"/>
+                                    <input type="text" value={localConfig.providers.google.clientId} onChange={e => handleConfigChange('providers.google.clientId', e.target.value)} placeholder="Google Client ID" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm"/>
                                 </div>}
                             </div>
                              {/* GitHub */}
@@ -151,8 +151,8 @@ export const AuthPage: React.FC = () => {
                                     <ToggleSwitch enabled={localConfig.providers.github.enabled} onChange={val => handleConfigChange('providers.github.enabled', val)} />
                                 </div>
                                 {localConfig.providers.github.enabled && <div className="mt-4 pl-8 space-y-2">
-                                    <input type="text" value={localConfig.providers.github.clientId} onChange={e => handleConfigChange('providers.github.clientId', e.target.value)} placeholder="GitHub Client ID" className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"/>
-                                    <input type="password" value={localConfig.providers.github.clientSecret} onChange={e => handleConfigChange('providers.github.clientSecret', e.target.value)} placeholder="GitHub Client Secret" className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"/>
+                                    <input type="text" value={localConfig.providers.github.clientId} onChange={e => handleConfigChange('providers.github.clientId', e.target.value)} placeholder="GitHub Client ID" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm"/>
+                                    <input type="password" value={localConfig.providers.github.clientSecret} onChange={e => handleConfigChange('providers.github.clientSecret', e.target.value)} placeholder="GitHub Client Secret" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm"/>
                                 </div>}
                             </div>
                              {/* X */}
@@ -162,8 +162,8 @@ export const AuthPage: React.FC = () => {
                                     <ToggleSwitch enabled={localConfig.providers.x.enabled} onChange={val => handleConfigChange('providers.x.enabled', val)} />
                                 </div>
                                 {localConfig.providers.x.enabled && <div className="mt-4 pl-8 space-y-2">
-                                    <input type="text" value={localConfig.providers.x.clientId} onChange={e => handleConfigChange('providers.x.clientId', e.target.value)} placeholder="X Client ID (API Key)" className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"/>
-                                    <input type="password" value={localConfig.providers.x.clientSecret} onChange={e => handleConfigChange('providers.x.clientSecret', e.target.value)} placeholder="X Client Secret (API Key Secret)" className="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-sm"/>
+                                    <input type="text" value={localConfig.providers.x.clientId} onChange={e => handleConfigChange('providers.x.clientId', e.target.value)} placeholder="X Client ID (API Key)" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm"/>
+                                    <input type="password" value={localConfig.providers.x.clientSecret} onChange={e => handleConfigChange('providers.x.clientSecret', e.target.value)} placeholder="X Client Secret (API Key Secret)" className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-full text-sm"/>
                                 </div>}
                             </div>
                         </div>

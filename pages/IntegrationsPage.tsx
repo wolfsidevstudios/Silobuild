@@ -34,7 +34,7 @@ const SettingsInput: React.FC<{
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
     </div>
 );
@@ -162,9 +162,9 @@ export const IntegrationsPage: React.FC = () => {
                     <IntegrationsIcon className="w-8 h-8 text-blue-500" />
                     <h1 className="text-3xl font-bold">Integrations</h1>
                 </div>
-                 <button 
+                 <button
                     onClick={handleSave}
-                    className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
                 >
                     <SaveIcon />
                     {isSaved ? 'Saved!' : 'Save Settings'}
@@ -266,7 +266,7 @@ export const IntegrationsPage: React.FC = () => {
                         </div>
                         <button 
                             onClick={handleGitHubDisconnect}
-                            className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                            className="px-3 py-1.5 text-sm font-medium bg-red-100 text-red-700 rounded-full hover:bg-red-200"
                         >
                             Disconnect
                         </button>
@@ -433,20 +433,20 @@ export const IntegrationsPage: React.FC = () => {
                         value={newSecretName}
                         onChange={(e) => setNewSecretName(e.target.value)}
                         placeholder="Secret Name (e.g., MY_API_KEY)"
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <input
                         type="password"
                         value={newSecretValue}
                         onChange={(e) => setNewSecretValue(e.target.value)}
                         placeholder="Secret Value"
-                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
                 <div className="flex justify-end">
                     <button
                         onClick={handleAddSecret}
-                        className="px-4 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 rounded-lg transition-colors"
+                        className="px-4 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 rounded-full transition-colors"
                     >
                         Add Secret
                     </button>

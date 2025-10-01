@@ -77,7 +77,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               id="projectName"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -103,7 +103,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 type="button"
-                className="bg-gray-100 px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
+                className="bg-gray-100 px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-200 border border-gray-300 transition-colors"
               >
                 Upload Icon
               </button>
@@ -118,7 +118,7 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
               id="team"
               value={teamId || ''}
               onChange={(e) => setTeamId(e.target.value || null)}
-              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Personal</option>
               {teams.map(team => (
@@ -145,13 +145,13 @@ export const ProjectMetadataModal: React.FC<ProjectMetadataModalProps> = ({
           )}
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim()}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             Save
           </button>

@@ -48,7 +48,7 @@ export const BetaProgramPage: React.FC = () => {
 
                     <button
                         onClick={() => setIsBetaMember(false)}
-                        className="bg-red-100 text-red-700 px-4 py-2 text-sm rounded-lg font-semibold hover:bg-red-200 transition-colors"
+                        className="bg-red-100 text-red-700 px-4 py-2 text-sm rounded-full font-semibold hover:bg-red-200 transition-colors"
                     >
                         Leave Beta Program
                     </button>
@@ -62,7 +62,7 @@ export const BetaProgramPage: React.FC = () => {
                     </p>
                     <button
                         onClick={() => setIsBetaMember(true)}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                        className="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors"
                     >
                         Join Beta Program
                     </button>

@@ -57,7 +57,7 @@ export const AgentProjectsPage: React.FC = () => {
             <AgentIcon className="w-8 h-8 text-indigo-500" />
             <h1 className="text-3xl font-bold">AI Agents</h1>
         </div>
-        <a href="#/agent-builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors duration-300">
+        <a href="#/agent-builder" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-colors duration-300">
             <PlusIcon />
             New Agent
         </a>
@@ -69,7 +69,7 @@ export const AgentProjectsPage: React.FC = () => {
                 placeholder="Search agents..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full max-w-sm bg-white border border-gray-300 rounded-lg p-2.5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full max-w-sm bg-white border border-gray-300 rounded-full p-2.5 px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
         </div>
 

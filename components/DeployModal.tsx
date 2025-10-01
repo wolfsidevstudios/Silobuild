@@ -58,7 +58,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({
               id="projectName"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -72,7 +72,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({
               value={token}
               onChange={(e) => setToken(e.target.value)}
               placeholder="Netlify Access Token"
-              className="w-full bg-gray-50 border border-gray-300 rounded-md p-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -80,13 +80,13 @@ export const DeployModal: React.FC<DeployModalProps> = ({
             <p className="text-red-500 text-sm">{deploymentError}</p>
           )}
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 border border-gray-300 transition-colors" disabled={isDeploying}>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 border border-gray-300 transition-colors" disabled={isDeploying}>
               Cancel
             </button>
             <button
               type="submit"
               disabled={!token.trim() || !projectName.trim() || isDeploying}
-              className="bg-teal-500 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-teal-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
+              className="bg-teal-500 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-teal-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center min-w-[100px]"
             >
               {isDeploying ? <Spinner className="w-5 h-5 text-white" /> : 'Deploy'}
             </button>

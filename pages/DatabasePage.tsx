@@ -132,7 +132,7 @@ const TableCard: React.FC<{
                 {table.columns.map(col => <ColumnRow key={col.id} column={col} onUpdate={updateColumn} onDelete={() => deleteColumn(col.id)} />)}
             </div>
             <div className="p-2 border-t border-gray-200">
-                <button onClick={addColumn} className="w-full text-center text-sm py-1 rounded bg-gray-100 hover:bg-gray-200">
+                <button onClick={addColumn} className="w-full text-center text-sm py-1 rounded-full bg-gray-100 hover:bg-gray-200">
                     + Add Column
                 </button>
             </div>
@@ -157,12 +157,12 @@ const SqlModal: React.FC<{ sql: string; onClose: () => void }> = ({ sql, onClose
                     <pre className="bg-gray-800 p-4 rounded-md text-sm text-gray-300 max-h-[60vh] overflow-auto">
                         <code>{sql}</code>
                     </pre>
-                    <button onClick={handleCopy} className="absolute top-2 right-2 bg-gray-700 text-white px-3 py-1 text-xs rounded-md font-semibold hover:bg-gray-600">
+                    <button onClick={handleCopy} className="absolute top-2 right-2 bg-gray-700 text-white px-3 py-1 text-xs rounded-full font-semibold hover:bg-gray-600">
                         {copied ? 'Copied!' : 'Copy'}
                     </button>
                 </div>
                 <div className="flex justify-end mt-4">
-                     <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 transition-colors">
+                     <button onClick={onClose} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 transition-colors">
                         Close
                     </button>
                 </div>
@@ -207,13 +207,13 @@ const AiSchemaModal: React.FC<{
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         <div className="flex justify-end gap-3 mt-4">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 border border-gray-300 transition-colors" disabled={isGenerating}>
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 border border-gray-300 transition-colors" disabled={isGenerating}>
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!prompt.trim() || isGenerating}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isGenerating ? <><Spinner className="w-4 h-4" /> Generating...</> : 'Generate'}
           </button>
@@ -313,14 +313,14 @@ export const DatabasePage: React.FC = () => {
             <h1 className="text-3xl font-bold">Database</h1>
         </div>
         <div className="flex items-center gap-3">
-            <button onClick={generateSql} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg transition-colors">
+            <button onClick={generateSql} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
                 Generate SQL
             </button>
-            <button onClick={addTable} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg transition-colors">
+            <button onClick={addTable} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
                 <PlusIcon />
                 New Table
             </button>
-             <button onClick={() => setIsAiModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+             <button onClick={() => setIsAiModalOpen(true)} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors">
                 <SparklesIcon />
                 Generate with AI
             </button>

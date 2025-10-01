@@ -24,12 +24,12 @@ export const AddAuthModal: React.FC<AddAuthModalProps> = ({ isOpen, onClose, onC
             This will replace any existing authentication code in your project.
         </p>
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md font-semibold hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors"
           >
             Generate Auth Code
           </button>

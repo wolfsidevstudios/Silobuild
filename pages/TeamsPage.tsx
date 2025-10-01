@@ -68,7 +68,7 @@ export const TeamsPage: React.FC = () => {
                     <UsersIcon className="w-8 h-8 text-blue-500" />
                     <h1 className="text-3xl font-bold">Teams</h1>
                 </div>
-                <button onClick={createTeam} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <button onClick={createTeam} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors">
                     <PlusIcon />
                     Create Team
                 </button>
