@@ -79,7 +79,7 @@ export const Sidebar: React.FC = () => {
       <nav className="flex-1 flex flex-col gap-2">
         <SidebarNavLink href="#/dashboard/projects" icon={<HomeIcon />} label="Projects" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/agents" icon={<AgentIcon />} label="Agents" isCollapsed={isCollapsed} />
-        <SidebarNavLink href="#/dashboard/inspiration" icon={<InspirationIcon />} label="Inspiration" isCollapsed={isCollapsed} />
+        <SidebarNavLink href="#/dashboard/assist" icon={<InspirationIcon />} label="Silo Build Assist" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/deployments" icon={<CloudUploadIcon />} label="Deployments" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" isCollapsed={isCollapsed} />

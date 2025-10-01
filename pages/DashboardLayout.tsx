@@ -56,7 +56,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     if (route.startsWith('#/dashboard/integrations')) {
         return <IntegrationsPage />;
     }
-    if (route.startsWith('#/dashboard/inspiration')) {
+    if (route.startsWith('#/dashboard/assist')) {
         return <InspirationPage />;
     }
     if (route.startsWith('#/dashboard/deployments')) {
