@@ -94,7 +94,7 @@ export const App: React.FC = () => {
   }
 
   if ((user || isGuest) && (route === '#/' || route === '')) {
-    window.location.hash = '#/dashboard/';
+    window.location.hash = '#/dashboard';
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Spinner className="w-10 h-10" />
