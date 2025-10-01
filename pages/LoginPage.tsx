@@ -5,7 +5,6 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
-import { MotionPreview } from '../components/MotionPreview';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -301,13 +300,6 @@ export const LoginPage: React.FC = () => {
                     </div>
                 </div>
             </section>
-
-             <section id="showcase" className="py-20 bg-transparent">
-                <div className="container mx-auto px-6">
-                  <MotionPreview />
-                </div>
-            </section>
-
 
             <section id="how-it-works" className="py-24">
                 <div className="container mx-auto px-6">
