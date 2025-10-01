@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Spinner } from './Spinner';
-import { CloseIcon } from './icons';
+import { CloseIcon, UploadIcon } from './icons';
 
 const GITHUB_CLIENT_ID = 'Iv23livw8759ImCaJKoM';
 
@@ -59,6 +59,7 @@ export const GitHubDeviceFlowModal: React.FC<GitHubDeviceFlowModalProps> = ({ is
         const data: DeviceCodeResponse = await response.json();
         setDeviceCodeData(data);
         setStatus('awaitingUser');
+        window.open(`https://${data.verification_uri}`, '_blank', 'noopener,noreferrer');
         startPolling(data.device_code, data.interval);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
@@ -155,10 +156,8 @@ export const GitHubDeviceFlowModal: React.FC<GitHubDeviceFlowModalProps> = ({ is
 
         {status === 'awaitingUser' && deviceCodeData && (
             <div className="text-center">
-                <p className="text-gray-600 mb-4">To authorize this application, please go to the following URL and enter the code:</p>
-                <a href={`https://${deviceCodeData.verification_uri}`} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-blue-600 hover:underline">
-                    {deviceCodeData.verification_uri}
-                </a>
+                <p className="text-gray-600 mb-4">We've opened a new tab for you to authorize. If it didn't open, use the button below and enter the one-time code.</p>
+
                 <div className="my-6 p-4 bg-gray-100 rounded-lg border border-gray-300">
                     <p className="text-sm text-gray-500 mb-2">Your one-time code:</p>
                     <div className="flex items-center justify-center gap-4">
@@ -166,7 +165,16 @@ export const GitHubDeviceFlowModal: React.FC<GitHubDeviceFlowModalProps> = ({ is
                          <button onClick={handleCopyCode} className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded-md">Copy</button>
                     </div>
                 </div>
-                <div className="flex items-center justify-center gap-3 text-gray-500">
+
+                <button 
+                    onClick={() => window.open(`https://${deviceCodeData.verification_uri}`, '_blank', 'noopener,noreferrer')}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
+                >
+                    <UploadIcon className="w-4 h-4" />
+                    Open GitHub Authorization Page
+                </button>
+
+                <div className="mt-6 flex items-center justify-center gap-3 text-gray-500">
                     <Spinner className="w-5 h-5"/>
                     <p>Waiting for authorization...</p>
                 </div>
