@@ -421,8 +421,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   };
   
     const handleDeploy = async (token: string, newSiteName: string) => {
-    if (!token || multiFileCode.length === 0) {
-      setDeploymentError("Netlify token is missing or there are no files to deploy.");
+    if (!token || !previewFile) {
+      setDeploymentError("Netlify token is missing or there is no preview file to deploy.");
       return;
     }
 
@@ -430,12 +430,10 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setDeploymentError(null);
 
     try {
-      // 1. Create a zip file in memory
+      // 1. Create a zip file in memory containing only the preview file as index.html
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
-      multiFileCode.forEach(file => {
-          zip.file(file.path, file.content);
-      });
+      zip.file('index.html', previewFile.content);
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
       // 2. Create a new site on Netlify
