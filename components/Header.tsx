@@ -91,16 +91,29 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="inline-flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-white bg-gray-600 text-xs font-bold text-white">+2</div>
             </div>
         )}
-         <button onClick={onAddSupabase} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
-            <DatabaseIcon className="w-4 h-4 text-green-500" /> Connect Supabase
+         <button 
+            onClick={onAddSupabase} 
+            className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+            title="Connect Supabase"
+          >
+            <DatabaseIcon className="w-5 h-5 text-green-500" />
         </button>
         {!isGithubConnected && (
-            <button onClick={onConnectGitHub} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors">
-                <GithubIcon className="w-4 h-4" /> Connect GitHub
+            <button 
+              onClick={onConnectGitHub} 
+              className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
+              title="Connect GitHub"
+            >
+                <GithubIcon className="w-5 h-5" />
             </button>
         )}
-        <button onClick={onDownload} disabled={!project} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50">
-            <DownloadIcon className="w-4 h-4" /> Download
+        <button 
+          onClick={onDownload} 
+          disabled={!project} 
+          className="flex items-center justify-center w-9 h-9 bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors disabled:opacity-50"
+          title="Download Project"
+        >
+            <DownloadIcon className="w-5 h-5" />
         </button>
       </div>
     </header>
