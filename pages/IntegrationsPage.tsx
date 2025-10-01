@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Settings, GeminiModel } from '../types';
-import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon } from '../components/icons';
+import { Settings, GeminiModel, Secret } from '../types';
+import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
 
 const initialSettings: Settings = {
@@ -13,6 +13,7 @@ const initialSettings: Settings = {
   githubPat: '',
   netlifyPat: '',
   model: 'gemini-2.5-flash',
+  secrets: [],
 };
 
 const SettingsInput: React.FC<{
@@ -58,12 +59,15 @@ export const IntegrationsPage: React.FC = () => {
     const [settings, setSettings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     const [localSettings, setLocalSettings] = useState<Settings>(initialSettings);
     const [isSaved, setIsSaved] = useState(false);
+    const [newSecretName, setNewSecretName] = useState('');
+    const [newSecretValue, setNewSecretValue] = useState('');
+
 
     useEffect(() => {
         setLocalSettings(settings);
     }, [settings]);
 
-    const handleChange = (key: keyof Settings, value: string) => {
+    const handleChange = (key: keyof Settings, value: any) => {
         setLocalSettings(prev => ({ ...prev, [key]: value }));
         setIsSaved(false);
     };
@@ -75,6 +79,27 @@ export const IntegrationsPage: React.FC = () => {
         showLocalNotification('Warning: Settings Changed', {
             body: 'Your integration settings have been updated.',
         });
+    };
+
+    const handleAddSecret = () => {
+        if (!newSecretName.trim() || !newSecretValue.trim()) {
+            alert("Please provide both a name and a value for the secret.");
+            return;
+        }
+        const newSecret = {
+            id: crypto.randomUUID(),
+            name: newSecretName,
+            value: newSecretValue,
+        };
+        const updatedSecrets = [...(localSettings.secrets || []), newSecret];
+        handleChange('secrets', updatedSecrets);
+        setNewSecretName('');
+        setNewSecretValue('');
+    };
+    
+    const handleDeleteSecret = (id: string) => {
+        const updatedSecrets = (localSettings.secrets || []).filter(s => s.id !== id);
+        handleChange('secrets', updatedSecrets);
     };
 
   return (
@@ -204,6 +229,59 @@ export const IntegrationsPage: React.FC = () => {
                 onChange={(e) => handleChange('stripeSecretKey', e.target.value)}
                 placeholder="sk_live_... (used for backend logic)"
             />
+        </IntegrationCard>
+        <IntegrationCard
+            icon={<KeyIcon />}
+            title="Custom Secrets"
+            description="Store custom API keys or other secrets. The AI can use these in your projects if you reference them by name in your prompts."
+        >
+            <div className="space-y-3">
+                {(localSettings.secrets || []).map(secret => (
+                    <div key={secret.id} className="flex items-center justify-between gap-4 p-2 bg-gray-50 rounded-lg border border-gray-200">
+                        <span className="font-mono text-sm text-gray-800 truncate">{secret.name}</span>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="password"
+                                readOnly
+                                value={secret.value}
+                                className="font-mono text-sm text-gray-500 bg-transparent border-none p-0 w-24 text-right focus:outline-none"
+                            />
+                            <button onClick={() => handleDeleteSecret(secret.id)} className="text-gray-400 hover:text-red-500 flex-shrink-0">
+                                <TrashIcon className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                ))}
+                {(!localSettings.secrets || localSettings.secrets.length === 0) && (
+                    <p className="text-sm text-gray-500 text-center py-2">No custom secrets added yet.</p>
+                )}
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                <h4 className="text-sm font-medium text-gray-800">Add New Secret</h4>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                        value={newSecretName}
+                        onChange={(e) => setNewSecretName(e.target.value)}
+                        placeholder="Secret Name (e.g., MY_API_KEY)"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                        type="password"
+                        value={newSecretValue}
+                        onChange={(e) => setNewSecretValue(e.target.value)}
+                        placeholder="Secret Value"
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div className="flex justify-end">
+                    <button
+                        onClick={handleAddSecret}
+                        className="px-4 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-300 rounded-lg transition-colors"
+                    >
+                        Add Secret
+                    </button>
+                </div>
+            </div>
         </IntegrationCard>
       </div>
     </div>

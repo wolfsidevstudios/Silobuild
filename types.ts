@@ -36,6 +36,12 @@ export interface ChatMessage {
   thoughts?: string;
 }
 
+export interface Secret {
+  id: string;
+  name: string;
+  value: string;
+}
+
 export interface Settings {
   geminiApiKey: string;
   supabaseUrl: string;
@@ -45,6 +51,7 @@ export interface Settings {
   githubPat: string;
   netlifyPat: string;
   model?: GeminiModel;
+  secrets?: Secret[];
 }
 
 export interface Deployment {

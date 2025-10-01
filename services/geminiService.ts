@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig } from "../types";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret } from "../types";
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>): string => {
   const WATERMARK_BADGE_HTML = `<div style="position: fixed; bottom: 16px; right: 16px; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;">Built with ⚡️ Silo Build 2.0</div>`;
@@ -961,6 +961,15 @@ export const generateAppStream = (
         }
         if (wantsStripe) {
           userPromptText += `\n- Stripe Public Key: ${settings.stripePublicKey}`;
+        }
+        userPromptText += "\n------------------------------------";
+      }
+
+      if (settings.secrets && settings.secrets.length > 0) {
+        userPromptText += "\n\n--- CUSTOM SECRETS ---";
+        userPromptText += "\nThe user has provided the following custom secrets. You can use these values in the generated code when the user's prompt refers to them by name. Do not use placeholders for these.";
+        for (const secret of settings.secrets) {
+          userPromptText += `\n- ${secret.name}: ${secret.value}`;
         }
         userPromptText += "\n------------------------------------";
       }
