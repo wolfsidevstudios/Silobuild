@@ -28,6 +28,27 @@ const initialSettings: Settings = {
   model: 'gemini-2.5-flash',
 };
 
+// This type is also defined in SettingsPage.tsx. We define it here to use with useLocalStorage.
+interface UserPreferences {
+  notifications: {
+    updates: boolean;
+    deployments: boolean;
+  };
+  layout?: {
+    promptInputLayout: 'floating' | 'inline';
+  };
+}
+
+const initialPreferences: UserPreferences = {
+  notifications: {
+    updates: true,
+    deployments: true,
+  },
+  layout: {
+      promptInputLayout: 'floating',
+  }
+};
+
 interface BuilderProps {
   projectId: string;
 }
@@ -47,6 +68,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
+  const [preferences] = useLocalStorage<UserPreferences>('silo-build-preferences', initialPreferences);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -422,6 +444,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     downloadProjectAsZip(projectToDownload);
   };
 
+  const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
+
   const renderContent = () => {
     switch (appMode) {
       case 'CHAT':
@@ -445,6 +469,11 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             deployments={deployments}
             techStack={techStack}
             onCredentialSubmit={handleCredentialSubmit}
+            promptInputLayout={promptInputLayout}
+            onSend={handleSend}
+            isAppGenerated={true}
+            onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
+            isReadyToPrompt={true}
           />
         );
       case 'CODE':
@@ -499,7 +528,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         onDownload={handleDownload}
         isGithubConnected={!!currentProject?.githubUrl}
       />
-      <main className="flex-1 flex flex-col overflow-hidden pb-24 relative">
+      <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
         {isPushing && (
           <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="flex flex-col items-center gap-2">
@@ -510,14 +539,17 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         )}
         {renderContent()}
       </main>
-      <PromptInput
-        onSend={handleSend}
-        isLoading={isBusy}
-        isAppGenerated={true}
-        isIdeaMode={isIdeaMode}
-        onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
-        isReadyToPrompt={true}
-      />
+      {promptInputLayout === 'floating' && (
+        <PromptInput
+          onSend={handleSend}
+          isLoading={isBusy}
+          isAppGenerated={true}
+          isIdeaMode={isIdeaMode}
+          onToggleIdeaMode={() => setIsIdeaMode(prev => !prev)}
+          isReadyToPrompt={true}
+          layoutStyle="floating"
+        />
+      )}
        {isMacPreviewVisible && previewFile && (
         <MacPreview
             previewFile={previewFile}

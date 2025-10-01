@@ -8,6 +8,7 @@ interface PromptInputProps {
   isIdeaMode: boolean;
   onToggleIdeaMode: () => void;
   isReadyToPrompt: boolean;
+  layoutStyle?: 'floating' | 'inline';
 }
 
 const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
@@ -17,7 +18,7 @@ const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick:
     </button>
 );
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt }) => {
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt, layoutStyle = 'floating' }) => {
   const [prompt, setPrompt] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
@@ -102,10 +103,14 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isA
     }
     return "Ask Codepilot, or upload an image...";
   };
+  
+  const containerClass = layoutStyle === 'floating'
+    ? "fixed bottom-0 left-0 right-0 p-4 flex justify-center z-10"
+    : "flex-shrink-0 p-2 w-full flex justify-center";
 
   return (
     <>
-    <div className="fixed bottom-0 left-0 right-0 p-4 flex justify-center z-10">
+    <div className={containerClass}>
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-3xl bg-stone-100/80 backdrop-blur-xl border border-stone-200 rounded-3xl shadow-2xl flex flex-col p-3 gap-2 transition-all duration-300 focus-within:border-stone-400"

@@ -7,6 +7,7 @@ import { Spinner } from './Spinner';
 import { downloadProjectAsZip } from '../utils/projectUtils';
 import { CredentialRequestForm } from './CredentialRequestForm';
 import { ThoughtsModal } from './ThoughtsModal';
+import { PromptInput } from './PromptInput';
 
 interface ChatViewProps {
   messages: ChatMessage[];
@@ -27,6 +28,11 @@ interface ChatViewProps {
   deployments: Deployment[];
   techStack: TechStack | null;
   onCredentialSubmit: (credentials: Record<string, string>) => void;
+  promptInputLayout: 'floating' | 'inline';
+  onSend: (prompt: string, imageData?: string | null) => void;
+  isAppGenerated: boolean;
+  onToggleIdeaMode: () => void;
+  isReadyToPrompt: boolean;
 }
 
 const ViewModeToggle: React.FC<{
@@ -147,6 +153,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
   deployments,
   techStack,
   onCredentialSubmit,
+  promptInputLayout,
+  onSend,
+  isAppGenerated,
+  onToggleIdeaMode,
+  isReadyToPrompt,
 }) => {
   const [modalThoughts, setModalThoughts] = useState<string | null>(null);
 
@@ -211,6 +222,17 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           )}
         </div>
+        {promptInputLayout === 'inline' && (
+          <PromptInput
+            layoutStyle="inline"
+            onSend={onSend}
+            isLoading={isLoading}
+            isAppGenerated={isAppGenerated}
+            isIdeaMode={isIdeaMode}
+            onToggleIdeaMode={onToggleIdeaMode}
+            isReadyToPrompt={isReadyToPrompt}
+          />
+        )}
       </div>
       {mainContentSpan === 'md:col-span-2' && (
         <div className="md:col-span-3 flex flex-col bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-lg">

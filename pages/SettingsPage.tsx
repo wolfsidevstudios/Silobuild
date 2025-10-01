@@ -9,13 +9,19 @@ interface UserPreferences {
     updates: boolean;
     deployments: boolean;
   };
+  layout?: {
+    promptInputLayout: 'floating' | 'inline';
+  };
 }
 
 const initialPreferences: UserPreferences = {
   notifications: {
     updates: true,
     deployments: true,
-  }
+  },
+  layout: {
+    promptInputLayout: 'floating',
+  },
 };
 
 const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void; description: string; disabled?: boolean; }> = ({ label, enabled, onChange, description, disabled = false }) => (
@@ -82,6 +88,16 @@ export const SettingsPage: React.FC = () => {
           body: `Notifications for "${key}" have been ${newPreference ? 'enabled' : 'disabled'}.`
       });
   };
+
+    const handleLayoutChange = (layout: 'floating' | 'inline') => {
+        setPreferences(prev => ({
+            ...prev,
+            layout: {
+                ...prev.layout,
+                promptInputLayout: layout,
+            }
+        }));
+    };
   
   const handleClearProjects = () => {
     if(window.confirm('Are you sure you want to delete all your projects? This action cannot be undone.')) {
@@ -115,6 +131,8 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
+  const currentLayout = preferences.layout?.promptInputLayout || 'floating';
+
 
   return (
     <div className="p-8">
@@ -127,6 +145,42 @@ export const SettingsPage: React.FC = () => {
       </p>
 
       <div className="max-w-2xl mx-auto space-y-10">
+        <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">Interface</h2>
+            <p className="text-gray-500 mb-4 text-sm">Customize the builder layout.</p>
+
+            <div className="py-4 border-b border-gray-200 last:border-b-0">
+                <label className="font-medium text-gray-800">Prompt Input Layout</label>
+                <p className="text-sm text-gray-500 mb-3">Choose where the prompt input box appears in the builder.</p>
+                <fieldset className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                        <input
+                            id="layout-floating"
+                            type="radio"
+                            name="layout"
+                            value="floating"
+                            checked={currentLayout === 'floating'}
+                            onChange={() => handleLayoutChange('floating')}
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <label htmlFor="layout-floating" className="text-sm text-gray-700">Floating</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            id="layout-inline"
+                            type="radio"
+                            name="layout"
+                            value="inline"
+                            checked={currentLayout === 'inline'}
+                            onChange={() => handleLayoutChange('inline')}
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <label htmlFor="layout-inline" className="text-sm text-gray-700">In Chat Panel</label>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
         <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
             <h2 className="text-xl font-semibold mb-2 text-gray-800">Notifications</h2>
             <p className="text-gray-500 mb-4 text-sm">Enable browser notifications and choose what you want to be notified about.</p>
