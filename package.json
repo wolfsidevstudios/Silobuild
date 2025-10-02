@@ -16,7 +16,8 @@
     "jszip": "3.10.1",
     "file-saver": "^2.0.5",
     "@supabase/supabase-js": "latest",
-    "html2canvas": "1.4.1"
+    "html2canvas": "1.4.1",
+    "jwt-decode": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

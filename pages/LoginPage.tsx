@@ -206,9 +206,8 @@ export const LoginPage: React.FC = () => {
   }, [user, isGuest, loginWithGoogle]);
   
   const handleSignInClick = () => {
-    if (window.google) {
-        window.google.accounts.id.prompt();
-    }
+    // This function can be used to trigger sign-in if needed, for now the UI shows all options.
+    // If you have a single "Sign In" button, you could show a modal with all providers here.
   };
 
   const handlePromptSubmit = (e: React.FormEvent) => {
@@ -695,7 +694,7 @@ export const LoginPage: React.FC = () => {
                         />
                         <FaqItem
                             question="How are my projects saved?"
-                            answer="Projects are saved directly in your browser's local storage. This means they are tied to the browser you are using. If you clear your browser data or switch to a different browser or device, your projects will not be available."
+                            answer="Projects are saved directly in your browser's local storage. This means they are tied to the browser you are using. If you clear your browser's data or switch to a different browser or device, your projects will not be available."
                         />
                         <FaqItem
                             question="What technology stacks can the AI generate?"

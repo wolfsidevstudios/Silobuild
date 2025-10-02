@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { DecodedCredential } from '../types';
 import { supabase } from '../services/supabaseClient';
 import { Spinner } from '../components/Spinner';
+import { jwtDecode } from 'jwt-decode';
 
 // Using a minimal type to avoid dependency issues with @supabase/supabase-js
 interface SupabaseUser {
@@ -14,7 +15,7 @@ interface SupabaseUser {
 interface AuthContextType {
   user: DecodedCredential | null;
   isGuest: boolean;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  loginWithGoogle: (credential: string) => void;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (email: string, password: string) => Promise<any>;
   logout: () => void;
@@ -22,7 +23,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const USER_STORAGE_KEY = 'ai-app-builder-user';
+const USER_STORAGE_KEY_GOOGLE = 'ai-app-builder-user-google';
 
 const mapSupabaseUserToCredential = (user: SupabaseUser): DecodedCredential => ({
   name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
@@ -44,50 +45,56 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   useEffect(() => {
-    // Check for user session on initial load
-    const getInitialSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            const mappedUser = mapSupabaseUserToCredential(session.user as SupabaseUser);
-            setUser(mappedUser);
-            window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mappedUser));
+    const getInitialUser = async () => {
+      // Check for active Supabase session first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(mapSupabaseUserToCredential(session.user as SupabaseUser));
+      } else {
+        // If no Supabase session, check for a stored Google user
+        const storedGoogleUser = window.localStorage.getItem(USER_STORAGE_KEY_GOOGLE);
+        if (storedGoogleUser) {
+          try {
+            setUser(JSON.parse(storedGoogleUser));
+          } catch (e) {
+            window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
+          }
         }
-        setLoading(false);
+      }
+      setLoading(false);
     };
 
-    getInitialSession();
+    getInitialUser();
 
-    // Listen for auth state changes
+    // Listen for Supabase auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const mappedUser = mapSupabaseUserToCredential(session.user as SupabaseUser);
-        setUser(mappedUser);
-        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mappedUser));
+        // A Supabase session takes precedence
+        setUser(mapSupabaseUserToCredential(session.user as SupabaseUser));
+        window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
         setIsGuest(false);
         sessionStorage.removeItem('isGuest');
-      } else {
-        setUser(null);
-        window.localStorage.removeItem(USER_STORAGE_KEY);
       }
+      // Note: We don't handle the 'else' case (sign-out) here,
+      // as the explicit logout function is the source of truth for clearing all user states.
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const loginWithGoogle = async (credential: string) => {
-    const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: credential });
-    if (error) {
-        console.error("Google sign-in with Supabase failed:", error);
-        // Clear everything on failure
-        await logout();
-        throw error;
-    }
-    // onAuthStateChange will handle setting the user
+  const loginWithGoogle = (credential: string) => {
+    supabase.auth.signOut(); // Ensure no supabase session is active
+    const decoded: DecodedCredential = jwtDecode(credential);
+    setUser(decoded);
+    window.localStorage.setItem(USER_STORAGE_KEY_GOOGLE, JSON.stringify(decoded));
+    setIsGuest(false);
+    sessionStorage.removeItem('isGuest');
   };
   
   const signInWithPassword = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // onAuthStateChange will handle setting the user
   };
 
   const signUpWithPassword = async (email: string, password: string) => {
@@ -97,29 +104,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const loginAsGuest = () => {
-    if (typeof window !== 'undefined') {
-        sessionStorage.setItem('isGuest', 'true');
-        window.localStorage.removeItem(USER_STORAGE_KEY);
-    }
+    supabase.auth.signOut(); // Ensure no sessions are active
+    window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
+    sessionStorage.setItem('isGuest', 'true');
     setUser(null);
     setIsGuest(true);
-    // Ensure we are signed out of supabase
-    supabase.auth.signOut();
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('isGuest');
-      if (window.google?.accounts) {
-        window.google.accounts.id.disableAutoSelect();
-      }
+    await supabase.auth.signOut(); // This will trigger onAuthStateChange
+    window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE); // Clear Google user
+    sessionStorage.removeItem('isGuest'); // Clear guest status
+    if (window.google?.accounts) {
+      window.google.accounts.id.disableAutoSelect();
     }
-    // onAuthStateChange will clear user state
+    setUser(null);
     setIsGuest(false);
   };
 
-  // Render a loading state to prevent flash of login page for authenticated users
   if (loading) {
     return (
         <div className="h-screen w-screen flex items-center justify-center">
