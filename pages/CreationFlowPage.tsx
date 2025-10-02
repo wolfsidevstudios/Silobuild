@@ -4,6 +4,7 @@ import { PlanReviewView, Plan } from '../components/PlanReviewView';
 import { GeneratingView } from '../components/GeneratingView';
 import { generatePlan, generateInitialCode } from '../services/geminiService';
 import { CodeFile } from '../types';
+import { ApiKeyModal } from '../components/ApiKeyModal';
 
 type CreationStep = 'prompt' | 'review' | 'generating' | 'error';
 
@@ -13,18 +14,35 @@ export const CreationFlowPage: React.FC = () => {
     const [plan, setPlan] = useState<Plan | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [generatedFiles, setGeneratedFiles] = useState<CodeFile[]>([]);
+    const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
-    const handlePromptSubmit = async (submittedPrompt: string) => {
-        setPrompt(submittedPrompt);
-        setStep('review'); // Show loading state on review page
+    const proceedWithPlanGeneration = async (currentPrompt: string) => {
+        setStep('review');
         setPlan(null);
         try {
-            const generatedPlan = await generatePlan(submittedPrompt);
+            const generatedPlan = await generatePlan(currentPrompt);
             setPlan(generatedPlan);
         } catch (error: any) {
             setErrorMessage(error.message || 'Failed to generate a plan.');
             setStep('error');
         }
+    };
+
+    const handlePromptSubmit = async (submittedPrompt: string) => {
+        setPrompt(submittedPrompt);
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey || apiKey.trim() === '') {
+            setIsApiKeyModalOpen(true);
+            return;
+        }
+        await proceedWithPlanGeneration(submittedPrompt);
+    };
+
+    const handleApiKeySave = async (apiKey: string) => {
+        localStorage.setItem('gemini_api_key', apiKey);
+        setIsApiKeyModalOpen(false);
+        // Now that key is saved, proceed with plan generation for the stored prompt
+        await proceedWithPlanGeneration(prompt);
     };
 
     const handlePlanApprove = async () => {
@@ -88,6 +106,10 @@ export const CreationFlowPage: React.FC = () => {
             style={backgroundStyle}
         >
             {renderContent()}
+            <ApiKeyModal
+                isOpen={isApiKeyModalOpen}
+                onSave={handleApiKeySave}
+            />
         </div>
     );
 };
