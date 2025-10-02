@@ -29,7 +29,7 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
                 </p>
 
                 <form onSubmit={handleSubmit} className="w-full">
-                    <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl p-4">
+                    <div className="bg-black/50 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-4">
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}

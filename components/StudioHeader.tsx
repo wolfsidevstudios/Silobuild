@@ -1,6 +1,12 @@
 import React from 'react';
 
-export const StudioHeader: React.FC = () => {
+interface StudioHeaderProps {
+    projectName: string;
+    onProjectNameChange: (name: string) => void;
+    onDeployClick: () => void;
+}
+
+export const StudioHeader: React.FC<StudioHeaderProps> = ({ projectName, onProjectNameChange, onDeployClick }) => {
   return (
     <header className="flex-shrink-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,12 +18,16 @@ export const StudioHeader: React.FC = () => {
             <div className="h-6 w-px bg-gray-700"></div>
             <input 
               type="text"
-              defaultValue="Untitled Project"
+              value={projectName}
+              onChange={(e) => onProjectNameChange(e.target.value)}
               className="bg-transparent text-white font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-2 py-1"
             />
           </div>
           <div className="flex items-center gap-4">
-            <button className="bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm">
+            <button 
+                onClick={onDeployClick}
+                className="bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm"
+            >
                 Deploy
             </button>
             <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-white font-bold">
