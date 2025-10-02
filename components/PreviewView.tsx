@@ -20,62 +20,90 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
     const [error, setError] = useState<string | null>(null);
     const shadowHostRef = useRef<HTMLDivElement>(null);
     const componentInstanceRef = useRef<any | null>(null);
+    const blobUrlsRef = useRef<string[]>([]);
 
     useEffect(() => {
         const hostElement = shadowHostRef.current;
         if (!hostElement) return;
 
+        // Cleanup previous render before starting a new one
+        if (componentInstanceRef.current) {
+            try { componentInstanceRef.current.$destroy(); } catch (e) { /* ignore */ }
+            componentInstanceRef.current = null;
+        }
+        blobUrlsRef.current.forEach(URL.revokeObjectURL);
+        blobUrlsRef.current = [];
+        
         let shadowRoot = hostElement.shadowRoot;
         if (!shadowRoot) {
             shadowRoot = hostElement.attachShadow({ mode: 'open' });
         }
-
-        if (componentInstanceRef.current) {
-            try {
-                componentInstanceRef.current.$destroy();
-            } catch (e) {
-                console.warn("Error destroying Svelte component:", e);
-            }
-            componentInstanceRef.current = null;
-        }
         shadowRoot.innerHTML = '';
         setError(null);
 
-        const appSvelte = files.find(f => f.name === 'App.svelte');
-        if (!appSvelte || !appSvelte.content) {
-            return;
-        }
-
         const compileAndRun = async () => {
+            if (!shadowRoot) return;
+
             try {
                 if (typeof window.svelte === 'undefined' || typeof window.svelte.compile !== 'function') {
-                    throw new Error("Svelte compiler (window.svelte.compile) is not available. Check index.html for the compiler script tag.");
+                    throw new Error("Svelte compiler (window.svelte.compile) is not available.");
                 }
 
-                const { js, css } = window.svelte.compile(appSvelte.content, {
-                    generate: 'dom',
-                });
+                const svelteFiles = files.filter(f => f.name.endsWith('.svelte'));
+                if (svelteFiles.length === 0) return;
 
-                if (css.code) {
+                const appSvelteFile = svelteFiles.find(f => f.name === 'App.svelte');
+                if (!appSvelteFile) {
+                    throw new Error("Entry component 'App.svelte' not found.");
+                }
+
+                const componentUrlMap = new Map<string, string>();
+                let combinedCss = '';
+                const newBlobUrls: string[] = [];
+
+                // Compile all dependency Svelte components first
+                for (const file of svelteFiles) {
+                    if (file.name === 'App.svelte') continue;
+
+                    // In a more advanced version, we would recursively resolve imports here too.
+                    const { js, css } = window.svelte.compile(file.content, { generate: 'dom' });
+                    if (css && css.code) combinedCss += css.code;
+                    
+                    const blob = new Blob([js.code], { type: 'application/javascript' });
+                    const url = URL.createObjectURL(blob);
+                    newBlobUrls.push(url);
+                    componentUrlMap.set(file.name, url);
+                }
+
+                // Process the main App.svelte file, replacing imports with blob URLs
+                let processedAppContent = appSvelteFile.content;
+                for (const [fileName, url] of componentUrlMap.entries()) {
+                    const importRegex = new RegExp(`(import\\s+.*\\s+from\\s+)['"](.\\/)?${fileName}['"]`, 'g');
+                    processedAppContent = processedAppContent.replace(importRegex, `$1'${url}'`);
+                }
+                
+                // Compile the processed App.svelte
+                const { js: appJs, css: appCss } = window.svelte.compile(processedAppContent, { generate: 'dom' });
+                if (appCss && appCss.code) combinedCss += appCss.code;
+
+                // Add all CSS to the shadow DOM
+                if (combinedCss) {
                     const styleEl = document.createElement('style');
-                    styleEl.textContent = css.code;
+                    styleEl.textContent = combinedCss;
                     shadowRoot.appendChild(styleEl);
                 }
 
                 const mountPoint = document.createElement('div');
                 shadowRoot.appendChild(mountPoint);
-                
-                const url = `data:text/javascript;base64,${btoa(js.code)}`;
-                const module = await import(/* @vite-ignore */ url);
-                
-                if (!module.default) {
-                    throw new Error("Compiled Svelte module is missing a default export.");
-                }
-                const SvelteComponent = module.default;
 
-                componentInstanceRef.current = new SvelteComponent({
-                    target: mountPoint,
-                });
+                const appUrl = `data:text/javascript;base64,${btoa(appJs.code)}`;
+                const module = await import(/* @vite-ignore */ appUrl);
+                
+                if (!module.default) throw new Error("Compiled 'App.svelte' is missing a default export.");
+                
+                const SvelteComponent = module.default;
+                componentInstanceRef.current = new SvelteComponent({ target: mountPoint });
+                blobUrlsRef.current = newBlobUrls; // Store URLs for future cleanup
 
             } catch (e: any) {
                 console.error("Svelte Preview Error:", e);
@@ -85,15 +113,12 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
 
         compileAndRun();
 
+        // The main cleanup function is implicitly returned by useEffect
         return () => {
             if (componentInstanceRef.current) {
-                try {
-                    componentInstanceRef.current.$destroy();
-                } catch (e) {
-                     console.warn("Error destroying Svelte component on cleanup:", e);
-                }
-                componentInstanceRef.current = null;
+                try { componentInstanceRef.current.$destroy(); } catch (e) { /* ignore */ }
             }
+            blobUrlsRef.current.forEach(URL.revokeObjectURL);
         };
 
     }, [files]);
