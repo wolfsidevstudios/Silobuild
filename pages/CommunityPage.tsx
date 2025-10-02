@@ -24,6 +24,14 @@ const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: (
         }
     };
 
+    const handleContact = () => {
+        if (project.contact_info) {
+            alert(`Contact the seller to purchase this prompt:\n\n${project.contact_info}`);
+        } else {
+            alert("The seller has not provided contact information.");
+        }
+    };
+
     if (!project.preview_content) {
         return (
              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -48,7 +56,12 @@ const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: (
                 </div>
                 <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white grid grid-cols-1 md:grid-cols-3 items-center gap-4">
                     <div className="col-span-1 md:col-span-2">
-                         <h3 className="font-bold text-lg text-gray-900 truncate">{project.name}</h3>
+                         <div className="flex items-center gap-3">
+                             <h3 className="font-bold text-lg text-gray-900 truncate">{project.name}</h3>
+                             {project.is_paid && (
+                                <span className="flex-shrink-0 text-[10px] font-bold bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full">PROMPT FOR SALE</span>
+                             )}
+                         </div>
                          <p className="text-sm text-gray-600 mt-1 line-clamp-1">{project.description}</p>
                          <div className="flex items-center gap-2 mt-2">
                             <img src={project.author_image_url || 'https://www.gravatar.com/avatar/?d=mp'} alt={project.author_name} className="w-6 h-6 rounded-full" />
@@ -60,9 +73,15 @@ const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: (
                         <button onClick={handleCopy} className="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
                             {copied ? 'Copied!' : 'Copy Link'}
                         </button>
-                        <button onClick={handleRemix} className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
-                            Remix App
-                        </button>
+                        {project.is_paid ? (
+                            <button onClick={handleContact} className="px-4 py-2 text-sm font-semibold bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors">
+                                Contact Seller
+                            </button>
+                        ) : (
+                            <button onClick={handleRemix} className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                                Remix App
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -74,8 +93,13 @@ const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: (
 const CommunityProjectCard: React.FC<{ project: CommunityProject; onOpen: () => void; }> = ({ project, onOpen }) => {
     return (
         <div className="group cursor-pointer" onClick={onOpen}>
-            <div className="aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 group-hover:shadow-xl group-hover:border-blue-300">
+            <div className="relative aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 group-hover:shadow-xl group-hover:border-blue-300">
                 <img src={project.preview_image_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                {project.is_paid && (
+                    <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                        PROMPT FOR SALE
+                    </div>
+                )}
             </div>
             <div className="mt-3 px-1">
                  <h3 className="font-bold text-gray-900 truncate">{project.name}</h3>

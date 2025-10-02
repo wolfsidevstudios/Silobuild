@@ -688,7 +688,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
   };
 
-  const handlePublishToCommunity = async (name: string, description: string, imageDataUrl: string) => {
+  const handlePublishToCommunity = async (name: string, description: string, imageDataUrl: string, prompt: string, isPaid: boolean, contactInfo: string) => {
     if (!currentProject || !user || !currentProject.previewFile) {
         setCommunityPublishError("Missing project data, user info, or preview file.");
         return;
@@ -716,13 +716,15 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         const projectToPublish = {
             name,
             description,
-            prompt: [...messages].reverse().find(m => m.role === 'user')?.content || 'No prompt found.',
+            prompt,
             preview_image_url: urlData.publicUrl,
             author_name: user.name,
             author_image_url: user.picture,
             project_id: currentProject.id,
             user_id: user.sub,
             preview_content: currentProject.previewFile.content,
+            is_paid: isPaid,
+            contact_info: isPaid ? contactInfo : null,
         };
 
         const { data: insertData, error: insertError } = await supabase
@@ -903,7 +905,16 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       <VercelDeployModal isOpen={isVercelDeployModalOpen} onClose={() => { setIsVercelDeployModalOpen(false); setVercelDeploymentError(null); }} onDeploy={handleVercelDeploy} isDeploying={isVercelDeploying} initialProjectName={currentProject?.name} initialToken={settings.vercelPat} deploymentError={vercelDeploymentError} />
       <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
       <VersionHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={currentProject?.versionHistory || []} onRestore={handleRestoreVersion} />
-      <PublishToCommunityModal isOpen={isCommunityPublishModalOpen} onClose={() => setIsCommunityPublishModalOpen(false)} onPublish={handlePublishToCommunity} isPublishing={isPublishingToCommunity} projectName={currentProject?.name || ''} previewContent={currentProject?.previewFile?.content || ''} publishError={communityPublishError} />
+      <PublishToCommunityModal 
+        isOpen={isCommunityPublishModalOpen} 
+        onClose={() => setIsCommunityPublishModalOpen(false)} 
+        onPublish={handlePublishToCommunity} 
+        isPublishing={isPublishingToCommunity} 
+        projectName={currentProject?.name || ''} 
+        previewContent={currentProject?.previewFile?.content || ''}
+        initialPrompt={[...messages].reverse().find(m => m.role === 'user')?.content || ''}
+        publishError={communityPublishError} 
+      />
       <ShareUrlModal isOpen={!!shareUrl} onClose={() => setShareUrl(null)} url={shareUrl || ''} />
     </div>
   );

@@ -208,4 +208,6 @@ export interface CommunityProject {
   author_image_url?: string;
   project_id: string;
   preview_content?: string;
+  is_paid?: boolean;
+  contact_info?: string;
 }
