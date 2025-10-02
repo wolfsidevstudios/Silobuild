@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CodeFile } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const systemInstruction = `You are an expert web developer specializing in React and Tailwind CSS. 
 Your task is to generate complete, production-ready code for a single-file React component based on the user's prompt. 
 The user is in an online editor, so you must not presume they have a complex setup.
@@ -38,9 +36,22 @@ interface GeminiResponse {
 }
 
 export const generateCode = async (prompt: string): Promise<GeminiResponse> => {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    const modelName = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
+
+    if (!apiKey) {
+        throw new Error("Gemini API Key not found. Please set it in the Settings page.");
+    }
+    
+    if (modelName !== 'gemini-2.5-flash' && modelName !== 'gemini-2.5-pro') {
+        throw new Error(`Unsupported model: ${modelName}. Please select a valid model in Settings.`);
+    }
+
     try {
+        const ai = new GoogleGenAI({ apiKey });
+
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: modelName,
             contents: prompt,
             config: {
                 systemInstruction,
@@ -59,6 +70,9 @@ export const generateCode = async (prompt: string): Promise<GeminiResponse> => {
         return parsedResponse;
     } catch (error) {
         console.error("Error generating code:", error);
-        throw new Error("Failed to generate code. Please check the console for details.");
+        if (error instanceof Error && error.message.includes('API key not valid')) {
+             throw new Error("Your Gemini API Key is not valid. Please check it in the Settings page.");
+        }
+        throw new Error("Failed to generate code. Please check your API Key and network connection.");
     }
 };
