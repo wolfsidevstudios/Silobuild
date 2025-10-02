@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { DecodedCredential } from '../types';
 import { jwtDecode } from 'jwt-decode';
+import { supabase } from '../services/supabaseClient';
 
 interface AuthContextType {
   user: DecodedCredential | null;
@@ -16,20 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_STORAGE_KEY = 'ai-app-builder-user';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<DecodedCredential | null>(() => {
-    // On initial load, try to read the user from local storage.
-    try {
-      if (typeof window !== 'undefined') {
-        const item = window.localStorage.getItem(USER_STORAGE_KEY);
-        return item ? JSON.parse(item) : null;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error reading user from local storage", error);
-      return null;
-    }
-  });
-
+  const [user, setUser] = useState<DecodedCredential | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('isGuest') === 'true';
@@ -37,24 +25,59 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   });
 
-  const login = (credential: string) => {
-    try {
-      const decoded: DecodedCredential = jwtDecode(credential);
-      // Persist user to local storage and update state
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.provider_token) {
+        try {
+          const decoded: DecodedCredential = jwtDecode(session.provider_token);
+          setUser(decoded);
+          window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
+          setIsGuest(false);
+          sessionStorage.removeItem('isGuest');
+        } catch (error) {
+          console.error("Failed to decode JWT from session:", error);
+          setUser(null);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        window.localStorage.removeItem(USER_STORAGE_KEY);
+        setIsGuest(false);
         sessionStorage.removeItem('isGuest');
       }
-      setUser(decoded);
-      setIsGuest(false);
-    } catch (error) {
-      console.error("Failed to decode JWT:", error);
-      // Clear any invalid user data
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(USER_STORAGE_KEY);
+    });
+
+    // Check initial session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.provider_token) {
+         try {
+            const decoded: DecodedCredential = jwtDecode(session.provider_token);
+            setUser(decoded);
+            window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
+        } catch (error) {
+            console.error("Failed to decode JWT from initial session:", error);
+            setUser(null);
+        }
       }
-      setUser(null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+
+  const login = async (credential: string) => {
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: credential,
+    });
+
+    if (error) {
+      console.error("Supabase sign-in error:", error);
+      // The onAuthStateChange handler will eventually receive a SIGNED_OUT event if login fails,
+      // which will clear the user state.
     }
+    // On successful login, onAuthStateChange will fire and update the user state.
   };
 
   const loginAsGuest = () => {
@@ -64,17 +87,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     setUser(null);
     setIsGuest(true);
+    supabase.auth.signOut(); // Ensure no Supabase session while in guest mode.
   };
 
-  const logout = () => {
-    // Clear user from local storage and state
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(USER_STORAGE_KEY);
-      sessionStorage.removeItem('isGuest');
-    }
-    setUser(null);
-    setIsGuest(false);
-    // You might also want to call google.accounts.id.disableAutoSelect() here
+  const logout = async () => {
+    await supabase.auth.signOut();
+    // The onAuthStateChange handler will clear the user state.
   };
 
   return (

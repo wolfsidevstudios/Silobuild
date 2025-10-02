@@ -698,11 +698,16 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setCommunityPublishError(null);
 
     try {
+        const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+        if (!supabaseUser) {
+            throw new Error("You must be signed in to publish to the community.");
+        }
+
         const res = await fetch(imageDataUrl);
         const blob = await res.blob();
         const file = new File([blob], 'preview.png', { type: 'image/png' });
         
-        const filePath = `${user.sub}/${currentProject.id}-${Date.now()}.png`;
+        const filePath = `${supabaseUser.id}/${currentProject.id}-${Date.now()}.png`;
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('project-previews')
             .upload(filePath, file);
@@ -721,7 +726,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             author_name: user.name,
             author_image_url: user.picture,
             project_id: currentProject.id,
-            user_id: user.sub,
+            user_id: supabaseUser.id,
             preview_content: currentProject.previewFile.content,
         };
 
