@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ChatIcon, LayoutIcon, MobileIcon, DownloadIcon, DatabaseIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, NetlifyIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon, AgentIcon, CloudUploadIcon } from '../components/icons';
+import { LayoutIcon, DownloadIcon, SparklesIcon, CodeIcon, ChevronDownIcon, SupabaseLogo, StripeLogo, GithubIcon, GeminiLogo, NetlifyIcon, PaintBrushIcon, UploadIcon, CheckIcon, UsersIcon, HelpCircleIcon, CloseIcon, BugIcon, AgentIcon, CloudUploadIcon } from '../components/icons';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Settings } from '../types';
+import { Settings, CommunityProject } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
 import { SupabaseAuth } from '../components/SupabaseAuth';
+import { supabase } from '../services/supabaseClient';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -162,12 +163,53 @@ const HelpBot: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     );
 };
 
+const CommunityProjectCard: React.FC<{ project: CommunityProject; }> = ({ project }) => {
+    return (
+        <a href={`#/community/app/${project.id}`} className="group cursor-pointer">
+            <div className="relative aspect-[16/9] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 transition-all duration-300 group-hover:shadow-xl group-hover:border-blue-300">
+                <img src={project.preview_image_url} alt={project.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                {project.is_paid && (
+                    <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
+                        PROMPT FOR SALE
+                    </div>
+                )}
+            </div>
+            <div className="mt-3 px-1">
+                 <h3 className="font-bold text-gray-900 truncate">{project.name}</h3>
+                 <div className="flex items-center gap-2 mt-1">
+                    <img src={project.author_image_url || 'https://www.gravatar.com/avatar/?d=mp'} alt={project.author_name} className="w-5 h-5 rounded-full" />
+                    <span className="text-xs text-gray-500">by {project.author_name}</span>
+                 </div>
+            </div>
+        </a>
+    );
+};
+
 
 export const LoginPage: React.FC = () => {
   const { user, loginWithGoogle, isGuest, loginAsGuest } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [isBotOpen, setIsBotOpen] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+  const [communityProjects, setCommunityProjects] = useState<CommunityProject[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+        setLoadingProjects(true);
+        const { data, error } = await supabase
+            .from('community_projects')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+        if (!error && data) {
+            setCommunityProjects(data);
+        }
+        setLoadingProjects(false);
+    };
+    fetchProjects();
+  }, []);
 
   useEffect(() => {
     if (user || isGuest) {
@@ -285,7 +327,7 @@ export const LoginPage: React.FC = () => {
 
                                 <div className="relative flex py-5 items-center">
                                     <div className="flex-grow border-t border-gray-300"></div>
-                                    <span className="flex-shrink mx-4 text-gray-400 text-xs">OR</span>
+                                    <span className="flex-shrink mx-4 text-gray-400 text-xs">OR CONTINUE WITH</span>
                                     <div className="flex-grow border-t border-gray-300"></div>
                                 </div>
 
@@ -392,20 +434,25 @@ export const LoginPage: React.FC = () => {
                 </div>
             </section>
 
-            <section id="features" className="py-20 bg-transparent border-y border-gray-200">
+            <section id="community-gallery" className="py-20 bg-transparent border-y border-gray-200">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h3 className="text-4xl font-bold">A New Way to Build Software</h3>
-                        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">Everything you need to go from concept to code, powered by AI.</p>
+                        <h3 className="text-4xl font-bold">Fresh from the Community</h3>
+                        <p className="text-gray-600 mt-2 max-w-2xl mx-auto">Explore what others are building with Silo Build. Get inspired and remix any project.</p>
                     </div>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                        <FeatureCard icon={<SparklesIcon />} title="AI-Powered Generation" description="Just describe the app you want, and watch as the AI scaffolds a complete multi-file React application with TypeScript." />
-                        <FeatureCard icon={<ChatIcon />} title="Conversational Refinement" description="Your app isn't static. Chat with the AI to make changes, add features, or fix bugs, iterating as you go." />
-                        <FeatureCard icon={<LayoutIcon />} title="Live Code & Preview" description="See your generated code and a live, interactive preview of your app side-by-side, updating in real-time." />
-                        <FeatureCard icon={<AgentIcon />} title="Silo AI Integration" description="Incorporate generative AI into your app. Prompt for a chatbot, provide a Gemini API key, and Codepilot will build it in for client-side use." />
-                        <FeatureCard icon={<MobileIcon />} title="PWA-Ready by Default" description="Every app is generated as a Progressive Web App, complete with a manifest and service worker for offline capabilities." />
-                        <FeatureCard icon={<DownloadIcon />} title="Full Project Download" description="Receive a complete project with a logical file structure. Download a ZIP file and you're ready to run locally." />
-                        <FeatureCard icon={<DatabaseIcon />} title="Service Integrations" description="The AI can automatically integrate with services like Supabase and Stripe if you provide your keys, wiring them up for you." />
+                    {loadingProjects ? (
+                        <div className="flex justify-center"><Spinner className="w-8 h-8"/></div>
+                    ) : (
+                        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                            {communityProjects.map(project => (
+                                <CommunityProjectCard key={project.id} project={project} />
+                            ))}
+                        </div>
+                    )}
+                    <div className="text-center mt-12">
+                        <a href="#/dashboard/community" className="text-blue-600 font-semibold hover:underline">
+                            Explore all community projects &rarr;
+                        </a>
                     </div>
                 </div>
             </section>
