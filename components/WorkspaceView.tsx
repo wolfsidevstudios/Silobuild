@@ -67,8 +67,12 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files }) => {
 
     return (
         <div className="flex-1 flex flex-col bg-gray-900 min-h-0">
-            <div className="flex-shrink-0 border-b border-gray-800 px-4">
-                <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 border-b border-gray-800 flex justify-center p-2">
+                <div className="relative flex items-center bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/10">
+                    {/* The sliding white pill */}
+                    <div 
+                        className={`absolute top-1 left-1 h-[calc(100%-8px)] w-28 bg-white rounded-full shadow-lg transform transition-transform duration-300 ease-in-out ${activeTab === 'preview' ? 'translate-x-full' : 'translate-x-0'}`}
+                    ></div>
                     <TabButton 
                         icon={<CodeBracketIcon className="w-5 h-5"/>} 
                         label="Code"
@@ -93,7 +97,7 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files }) => {
 const TabButton: React.FC<{icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void}> = ({ icon, label, isActive, onClick }) => (
     <button 
         onClick={onClick}
-        className={`flex items-center gap-2 py-3 px-2 border-b-2 text-sm font-medium transition-colors ${isActive ? 'border-blue-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}
+        className={`relative z-10 flex w-28 justify-center items-center gap-2 py-2 px-4 rounded-full text-sm font-medium transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-opacity-75 ${isActive ? 'text-black' : 'text-gray-300 hover:text-white'}`}
     >
         {icon}
         {label}
