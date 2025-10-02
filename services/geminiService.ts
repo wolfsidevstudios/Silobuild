@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret, AuthConfig, ChatMessage } from "../types";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret, AuthConfig, ChatMessage, AiModel } from "../types";
 
 const GOOGLE_SIGN_IN_INSTRUCTION = `
 --- GOOGLE SIGN-IN INTEGRATION ---
@@ -177,8 +177,6 @@ const DEPRECATION_WARNING = `
 `;
 
 const SILO_AI_INSTRUCTION_SHARED_LOGIC = `
-${DEPRECATION_WARNING}
-
 If the user asks for an AI-powered feature (like a chatbot, summarizer, etc.) and you have requested and received a 'geminiApiKey', you MUST generate functional code that uses the '@google/genai' library by following the **CORRECT** usage pattern described above.
 
 **Core Logic (for all frameworks):**
@@ -973,7 +971,64 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += GOOGLE_SIGN_IN_INSTRUCTION;
   }
   
+  // Conditionally add Gemini-specific warnings
+  if (settings.model?.startsWith('gemini')) {
+      instruction += DEPRECATION_WARNING;
+  }
+
   return instruction;
+};
+
+// --- Generic Streaming Function ---
+const processStream = async (
+  stream: ReadableStream<Uint8Array>,
+  onUpdate: (update: any) => void,
+  chunkParser: (line: string) => string | null
+) => {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    
+    // Process buffer line by line for SSE
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || ''; // Keep the last partial line in buffer
+
+    for (const line of lines) {
+      const content = chunkParser(line);
+      if (content) {
+        // Process the content using the same JSON parsing logic as Gemini
+        let jsonBuffer = content;
+        let newlineIndex;
+        while ((newlineIndex = jsonBuffer.indexOf('\n')) !== -1) {
+          const jsonLine = jsonBuffer.substring(0, newlineIndex).trim();
+          jsonBuffer = jsonBuffer.substring(newlineIndex + 1);
+
+          if (jsonLine.startsWith('{') && jsonLine.endsWith('}')) {
+            try {
+              const update = JSON.parse(jsonLine);
+              onUpdate(update);
+            } catch (e) {
+              console.warn('Failed to parse streaming JSON line:', jsonLine, e);
+            }
+          }
+        }
+         if (jsonBuffer.trim().startsWith('{') && jsonBuffer.trim().endsWith('}')) {
+           try {
+              const update = JSON.parse(jsonBuffer.trim());
+              onUpdate(update);
+            } catch (e) {
+              console.warn('Failed to parse final streaming JSON line:', jsonBuffer.trim(), e);
+            }
+        }
+      }
+    }
+  }
 };
 
 
@@ -991,13 +1046,7 @@ export const generateAppStream = (
 ): Promise<void> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const apiKey = settings.geminiApiKey || process.env.API_KEY;
-      if (!apiKey) {
-        reject(new Error("Gemini API key is not configured. Please add it in the Settings page."));
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
+      const model = settings.model || 'gemini-2.5-flash';
       const isEditing = !!existingFiles && existingFiles.length > 0;
       const systemInstruction = createSystemInstruction(prompt, settings, isEditing, techStack, customCredentials, authConfig);
       
@@ -1010,7 +1059,9 @@ export const generateAppStream = (
           userPromptText = `Based on the instructions above, please fulfill the following user request:\n\n${prompt}`;
       }
       
-      if (appName || appIcon) {
+      // ... [rest of the prompt customization logic remains the same]
+      
+       if (appName || appIcon) {
         userPromptText += `\n\n--- REQUIRED APP CUSTOMIZATION ---`;
         if (appName) {
           if (techStack === 'react') {
@@ -1074,75 +1125,129 @@ export const generateAppStream = (
         userPromptText += "\n------------------------------------";
       }
 
-      let userContents: string | { parts: any[] };
 
-      if (imageData) {
-        const [meta, base64Data] = imageData.split(',');
-        const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+      if (model.startsWith('gpt')) {
+        // --- OpenAI Implementation ---
+        const apiKey = settings.openaiApiKey || process.env.OPENAI_API_KEY;
+        if (!apiKey) throw new Error("OpenAI API key is not configured.");
         
-        userContents = {
-          parts: [
-            { text: userPromptText },
-            { inlineData: { mimeType, data: base64Data } }
-          ]
-        };
-      } else {
-        userContents = userPromptText;
-      }
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'gpt-4o',
+                messages: [{ role: 'system', content: systemInstruction }, { role: 'user', content: userPromptText }],
+                stream: true,
+            }),
+        });
+
+        if (!response.ok || !response.body) throw new Error(`OpenAI API error: ${response.statusText}`);
+        
+        let contentBuffer = '';
+        await processStream(response.body, onUpdate, (line) => {
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            if (data === '[DONE]') return null;
+            try {
+              const chunk = JSON.parse(data);
+              const content = chunk.choices[0]?.delta?.content;
+              if (content) {
+                contentBuffer += content;
+                if(contentBuffer.includes('\n')) {
+                    const parts = contentBuffer.split('\n');
+                    const processable = parts.slice(0, -1).join('\n');
+                    contentBuffer = parts.slice(-1)[0];
+                    return processable;
+                }
+              }
+            } catch (e) { /* ignore parsing errors */ }
+          }
+          return null;
+        });
 
 
-      const responseStream = await ai.models.generateContentStream({
-        model: settings.model || "gemini-2.5-flash",
-        contents: userContents,
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 0.2,
-        },
-      });
+      } else if (model.startsWith('claude')) {
+        // --- Anthropic Implementation ---
+        const apiKey = settings.anthropicApiKey || process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) throw new Error("Anthropic API key is not configured.");
+        
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-3-sonnet-20240229',
+                system: systemInstruction,
+                messages: [{ role: 'user', content: userPromptText }],
+                max_tokens: 4096,
+                stream: true,
+            }),
+        });
 
-      let buffer = '';
-      for await (const chunk of responseStream) {
-        buffer += chunk.text;
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-          const line = buffer.substring(0, newlineIndex).trim();
-          buffer = buffer.substring(newlineIndex + 1);
-
-          if (line) {
-            const cleanedLine = line.replace(/^```json/, '').replace(/```$/, '').trim();
-            if (cleanedLine.startsWith('{') && cleanedLine.endsWith('}')) {
+        if (!response.ok || !response.body) throw new Error(`Anthropic API error: ${response.statusText}`);
+        
+        let contentBuffer = '';
+        await processStream(response.body, onUpdate, (line) => {
+            if (line.startsWith('data: ')) {
                 try {
-                    const update = JSON.parse(cleanedLine);
-                    onUpdate(update);
-                } catch (e) {
-                    console.warn('Failed to parse streaming JSON line:', cleanedLine, e);
+                    const chunk = JSON.parse(line.substring(6));
+                    if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+                        const content = chunk.delta.text;
+                        contentBuffer += content;
+                        if(contentBuffer.includes('\n')) {
+                            const parts = contentBuffer.split('\n');
+                            const processable = parts.slice(0, -1).join('\n');
+                            contentBuffer = parts.slice(-1)[0];
+                            return processable;
+                        }
+                    }
+                } catch(e) { /* ignore */ }
+            }
+            return null;
+        });
+
+      } else {
+        // --- Gemini Implementation (Default) ---
+        const apiKey = settings.geminiApiKey || process.env.API_KEY;
+        if (!apiKey) throw new Error("Gemini API key is not configured.");
+        const ai = new GoogleGenAI({ apiKey });
+        
+        let userContents: string | { parts: any[] };
+        if (imageData) {
+            const [meta, base64Data] = imageData.split(',');
+            const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+            userContents = { parts: [{ text: userPromptText }, { inlineData: { mimeType, data: base64Data } }] };
+        } else {
+            userContents = userPromptText;
+        }
+
+        const responseStream = await ai.models.generateContentStream({
+            model: model,
+            contents: userContents,
+            config: { systemInstruction: systemInstruction, temperature: 0.2 },
+        });
+
+        let buffer = '';
+        for await (const chunk of responseStream) {
+            buffer += chunk.text;
+            let newlineIndex;
+            while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+                const line = buffer.substring(0, newlineIndex).trim();
+                buffer = buffer.substring(newlineIndex + 1);
+                if (line.startsWith('{') && line.endsWith('}')) {
+                    try { onUpdate(JSON.parse(line)); } catch (e) { console.warn('Failed to parse streaming JSON line:', line, e); }
                 }
             }
-          }
+        }
+        if (buffer.trim().startsWith('{') && buffer.trim().endsWith('}')) {
+            try { onUpdate(JSON.parse(buffer.trim())); } catch (e) { console.warn('Failed to parse final streaming JSON line:', buffer.trim(), e); }
         }
       }
 
-      if (buffer.trim()) {
-        const finalLine = buffer.trim();
-        const cleanedLine = finalLine.replace(/^```json/, '').replace(/```$/, '').trim();
-         if (cleanedLine.startsWith('{') && cleanedLine.endsWith('}')) {
-           try {
-              const update = JSON.parse(cleanedLine);
-              onUpdate(update);
-            } catch (e) {
-              console.warn('Failed to parse final streaming JSON line:', cleanedLine, e);
-            }
-        }
-      }
       resolve();
     } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      if (error instanceof Error && error.message.includes('API key not valid')) {
-          reject(new Error("The configured Gemini API key is invalid. Please check it in the Settings page or your environment configuration."));
-      } else {
-          const detailedError = error instanceof Error ? error.message : String(error);
-          reject(new Error(`Failed to get a valid response from the AI model. Please check your prompt and API key. Details: ${detailedError}`));
-      }
+      console.error("Error calling AI API:", error);
+      const detailedError = error instanceof Error ? error.message : String(error);
+      reject(new Error(`Failed to get a valid response from the AI model. Details: ${detailedError}`));
     }
   });
 };

@@ -35,7 +35,7 @@ const initialSettings: Settings = {
 // --- AUTH COMPONENTS ---
 
 const MobileLoginPage: React.FC = () => {
-    const { login, loginAsGuest } = useAuth();
+    const { loginWithGoogle, loginAsGuest } = useAuth();
     const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -44,7 +44,7 @@ const MobileLoginPage: React.FC = () => {
                 client_id: GOOGLE_CLIENT_ID,
                 callback: (response) => {
                     if (response.credential) {
-                        login(response.credential);
+                        loginWithGoogle(response.credential);
                     }
                 },
             });
@@ -58,7 +58,7 @@ const MobileLoginPage: React.FC = () => {
             }
             window.google.accounts.id.prompt();
         }
-    }, [login]);
+    }, [loginWithGoogle]);
 
     return (
         <div className="h-screen w-screen bg-gray-50 flex flex-col justify-center items-center p-4">

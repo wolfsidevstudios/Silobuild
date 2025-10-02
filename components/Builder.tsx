@@ -29,6 +29,8 @@ import { useAuth } from '../context/AuthContext';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
+  openaiApiKey: '',
+  anthropicApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',
@@ -241,6 +243,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         }
         
         const now = new Date().toISOString();
+        const currentProjects = projects;
 
         if (!currentProject) { // This was a new project creation
             const newProject: Project = {
@@ -257,7 +260,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 versionHistory: [],
             };
             setCurrentProject(newProject);
-            setProjects([newProject, ...projects]);
+            setProjects([newProject, ...currentProjects]);
             setMultiFileCode(newProject.files);
             setPreviewFile(newProject.previewFile);
             setDeployments(newProject.deployments);
@@ -282,7 +285,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setMultiFileCode(tempFiles);
             setPreviewFile(tempPreviewFile);
             setCurrentProject(updatedProject);
-            setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+            setProjects(currentProjects.map(p => p.id === updatedProject.id ? updatedProject : p));
             setMessages(prev => [...prev, { role: 'model', content: "✅ I've applied the changes. This new version has been saved automatically.", thoughts: thoughts }]);
         }
 

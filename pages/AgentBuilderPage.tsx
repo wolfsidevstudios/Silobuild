@@ -11,6 +11,8 @@ import { useUsageLimit } from '../hooks/useUsageLimit';
 // FIX: Add missing 'netlifyPat' property to satisfy the Settings type.
 const initialSettings: Settings = {
   geminiApiKey: '',
+  openaiApiKey: '',
+  anthropicApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',

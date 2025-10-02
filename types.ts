@@ -10,7 +10,7 @@ export type ViewMode = 'CODE' | 'PREVIEW';
 
 export type TechStack = 'react' | 'html' | 'agent' | 'vue' | 'svelte' | 'nodejs' | 'react-native' | 'infinity';
 
-export type GeminiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro';
+export type AiModel = 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gpt-4o' | 'claude-3-sonnet-20240229';
 
 export interface GeneratedFile {
   path: string;
@@ -44,6 +44,8 @@ export interface Secret {
 
 export interface Settings {
   geminiApiKey: string;
+  openaiApiKey?: string;
+  anthropicApiKey?: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
   stripePublicKey: string;
@@ -52,7 +54,7 @@ export interface Settings {
   netlifyPat: string;
   vercelPat?: string;
   googleClientId?: string;
-  model?: GeminiModel;
+  model?: AiModel;
   secrets?: Secret[];
 }
 

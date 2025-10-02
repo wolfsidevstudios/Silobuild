@@ -12,6 +12,8 @@ const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.goo
 
 const initialSettings: Settings = {
   geminiApiKey: '',
+  openaiApiKey: '',
+  anthropicApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',
@@ -727,64 +729,4 @@ export const LoginPage: React.FC = () => {
 
             <section id="faq" className="py-20 bg-transparent">
                 <div className="container mx-auto px-6 max-w-4xl">
-                    <div className="text-center mb-12">
-                        <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
-                    </div>
-                    <div className="space-y-2">
-                        <FaqItem
-                            question="Where do I get a Google Gemini API key?"
-                            answer="You can get a Gemini API key from Google AI Studio. Visit the Google AI for Developers website, sign in with your Google account, and create a new API key in the dashboard."
-                        />
-                        <FaqItem
-                            question="Are my API keys and project data secure?"
-                            answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It is never sent to our servers, ensuring your information remains private and under your control."
-                        />
-                        <FaqItem
-                            question="How are my projects saved?"
-                            answer="Projects are saved directly in your browser's local storage. This means they are tied to the browser you are using. If you clear your browser's data or switch to a different browser or device, your projects will not be available."
-                        />
-                        <FaqItem
-                            question="What technology stacks can the AI generate?"
-                            answer="Silo Build supports generating applications using React, Vue, Svelte, and Node.js (with Express), all using TypeScript. It can also generate simple, single-file vanilla HTML, CSS, and JavaScript applications with Tailwind CSS."
-                        />
-                    </div>
-                </div>
-            </section>
-
-            <section id="cta" className="py-20 bg-transparent border-t border-gray-200">
-                <div className="container mx-auto px-6 text-center">
-                    <h2 className="text-4xl font-bold">Ready to Start Building?</h2>
-                    <p className="text-gray-600 mt-4 max-w-xl mx-auto">
-                        Sign up for free and turn your ideas into applications today. No credit card required.
-                    </p>
-                    <div className="mt-8">
-                         <a href="#/dashboard" className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-blue-700 transition-colors">
-                            Start Building for Free
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <footer className="bg-transparent border-t border-gray-200">
-            <div className="container mx-auto px-6 py-8 text-center text-sm text-gray-500">
-                <p>&copy; {new Date().getFullYear()} Silo Build. All rights reserved.</p>
-                <div className="mt-4 flex justify-center gap-4">
-                    <a href="#/terms" className="hover:underline">Terms of Service</a>
-                    <span>&middot;</span>
-                    <a href="#/privacy" className="hover:underline">Privacy Policy</a>
-                </div>
-            </div>
-        </footer>
-
-        <button 
-            onClick={() => setIsBotOpen(true)}
-            className="fixed bottom-5 right-5 w-16 h-16 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-700 transition-transform hover:scale-110"
-        >
-            <HelpCircleIcon className="w-8 h-8"/>
-        </button>
-        {isBotOpen && <HelpBot onClose={() => setIsBotOpen(false)} />}
-    </div>
-  );
-};
+                    

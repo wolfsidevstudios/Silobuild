@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Settings, GeminiModel, Secret } from '../types';
+import { Settings, AiModel, Secret } from '../types';
 import { IntegrationsIcon, GeminiLogo, VercelIcon, SupabaseLogo, StripeLogo, GithubIcon, NetlifyIcon, SaveIcon, KeyIcon, TrashIcon, SlackIcon, JiraIcon } from '../components/icons';
 import { showLocalNotification } from '../utils/projectUtils';
 import { getGitHubUser, getGitHubRepos } from '../services/githubService';
@@ -8,6 +8,8 @@ import { Spinner } from '../components/Spinner';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
+  openaiApiKey: '',
+  anthropicApiKey: '',
   supabaseUrl: '',
   supabaseAnonKey: '',
   stripePublicKey: '',
@@ -70,6 +72,12 @@ export const IntegrationsPage: React.FC = () => {
     const [githubRepos, setGithubRepos] = useState<any[] | null>(null);
     const [isLoadingRepos, setIsLoadingRepos] = useState(false);
 
+    const models: { id: AiModel, name: string }[] = [
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+        { id: 'gpt-4o', name: 'ChatGPT 4o' },
+        { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+    ];
 
     useEffect(() => {
         setLocalSettings(settings);
@@ -178,8 +186,30 @@ export const IntegrationsPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <IntegrationCard 
             icon={<GeminiLogo className="h-8"/>}
+            title="AI Model Configuration"
+            description="Select the core AI model for code generation and chat."
+        >
+            <div>
+                <label htmlFor="model-select" className="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
+                <select
+                    id="model-select"
+                    value={localSettings.model || 'gemini-2.5-flash'}
+                    onChange={(e) => handleChange('model', e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    {models.map(model => (
+                        <option key={model.id} value={model.id}>{model.name}</option>
+                    ))}
+                </select>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+                Make sure you have provided the corresponding API key for the model you select.
+            </p>
+        </IntegrationCard>
+         <IntegrationCard 
+            icon={<GeminiLogo className="h-8"/>}
             title="Google Gemini"
-            description="The core AI model that powers code generation and chat."
+            description="API key for all Google Gemini models."
         >
              <SettingsInput 
                 label="Gemini API Key"
@@ -187,39 +217,30 @@ export const IntegrationsPage: React.FC = () => {
                 onChange={(e) => handleChange('geminiApiKey', e.target.value)}
                 placeholder="Enter your Gemini API Key"
             />
-            <div className="pt-4 mt-4 border-t border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Model Selection</label>
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <label className="flex items-start sm:items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 flex-1">
-                        <input
-                            type="radio"
-                            name="gemini-model"
-                            value="gemini-2.5-flash"
-                            checked={localSettings.model === 'gemini-2.5-flash' || !localSettings.model}
-                            onChange={() => handleChange('model', 'gemini-2.5-flash')}
-                            className="h-4 w-4 mt-1 sm:mt-0 text-blue-600 border-gray-300 focus:ring-blue-500"
-                        />
-                        <div>
-                            <span className="text-sm font-medium text-gray-800">Gemini 2.5 Flash</span>
-                            <p className="text-xs text-gray-500">Fast and cost-effective for most tasks.</p>
-                        </div>
-                    </label>
-                    <label className="flex items-start sm:items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 flex-1">
-                        <input
-                            type="radio"
-                            name="gemini-model"
-                            value="gemini-2.5-pro"
-                            checked={localSettings.model === 'gemini-2.5-pro'}
-                            onChange={() => handleChange('model', 'gemini-2.5-pro')}
-                            className="h-4 w-4 mt-1 sm:mt-0 text-blue-600 border-gray-300 focus:ring-blue-500"
-                        />
-                        <div>
-                            <span className="text-sm font-medium text-gray-800">Gemini 2.5 Pro</span>
-                            <p className="text-xs text-gray-500">Highest capability for complex tasks.</p>
-                        </div>
-                    </label>
-                </div>
-            </div>
+        </IntegrationCard>
+        <IntegrationCard 
+            icon={<span className="font-bold text-xl">OpenAI</span>}
+            title="OpenAI (ChatGPT)"
+            description="API key for all OpenAI models, like GPT-4o."
+        >
+             <SettingsInput 
+                label="OpenAI API Key"
+                value={localSettings.openaiApiKey || ''}
+                onChange={(e) => handleChange('openaiApiKey', e.target.value)}
+                placeholder="Enter your OpenAI API Key"
+            />
+        </IntegrationCard>
+        <IntegrationCard 
+            icon={<span className="font-bold text-xl">Anthropic</span>}
+            title="Anthropic (Claude)"
+            description="API key for all Anthropic models, like Claude 3 Sonnet."
+        >
+             <SettingsInput 
+                label="Anthropic API Key"
+                value={localSettings.anthropicApiKey || ''}
+                onChange={(e) => handleChange('anthropicApiKey', e.target.value)}
+                placeholder="Enter your Anthropic API Key"
+            />
         </IntegrationCard>
         <IntegrationCard
             icon={<img src="https://www.svgrepo.com/show/355037/google.svg" className="h-7 w-7" alt="Google Logo"/>}

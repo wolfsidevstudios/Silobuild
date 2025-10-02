@@ -46,41 +46,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   useEffect(() => {
-    const getInitialUser = async () => {
-      // Check for active Supabase session first
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(mapSupabaseUserToCredential(session.user as SupabaseUser));
-      } else {
-        // If no Supabase session, check for a stored Google user
-        const storedGoogleUser = window.localStorage.getItem(USER_STORAGE_KEY_GOOGLE);
-        if (storedGoogleUser) {
-          try {
-            setUser(JSON.parse(storedGoogleUser));
-          } catch (e) {
-            window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
-          }
-        }
-      }
-      setLoading(false);
-    };
-
-    getInitialUser();
-
-    // Listen for Supabase auth state changes
+    setLoading(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // This listener is called once on mount with the initial session.
       if (session?.user) {
-        // A Supabase session takes precedence
         setUser(mapSupabaseUserToCredential(session.user as SupabaseUser));
         window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
         setIsGuest(false);
         sessionStorage.removeItem('isGuest');
+      } else {
+        // No Supabase session, check for our own Google session in localStorage
+        const storedGoogleUser = window.localStorage.getItem(USER_STORAGE_KEY_GOOGLE);
+        if (storedGoogleUser) {
+          try {
+            setUser(JSON.parse(storedGoogleUser));
+            setIsGuest(false); // Make sure guest is false
+            sessionStorage.removeItem('isGuest');
+          } catch (e) {
+            window.localStorage.removeItem(USER_STORAGE_KEY_GOOGLE);
+            setUser(null);
+          }
+        } else {
+          // No user found anywhere. Guest status is preserved from sessionStorage.
+          setUser(null);
+        }
       }
-      // Note: We don't handle the 'else' case (sign-out) here,
-      // as the explicit logout function is the source of truth for clearing all user states.
+      setLoading(false); // Set loading to false once we have a definitive session status
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const loginWithGoogle = (credential: string) => {
