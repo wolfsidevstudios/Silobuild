@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { UsersIcon } from '../components/icons';
+import { UsersIcon, FileIcon } from '../components/icons';
 import { supabase } from '../services/supabaseClient';
-import { CommunityProject } from '../types';
+import { CommunityProject, UserPost } from '../types';
 import { Spinner } from '../components/Spinner';
 import { timeAgo } from '../utils/projectUtils';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: () => void }> = ({ project, onClose }) => {
     const [copied, setCopied] = useState(false);
@@ -89,7 +90,6 @@ const CommunityAppPreviewModal: React.FC<{ project: CommunityProject; onClose: (
     );
 };
 
-
 const CommunityProjectCard: React.FC<{ project: CommunityProject; onOpen: () => void; }> = ({ project, onOpen }) => {
     return (
         <div className="group cursor-pointer" onClick={onOpen}>
@@ -112,13 +112,43 @@ const CommunityProjectCard: React.FC<{ project: CommunityProject; onOpen: () => 
     );
 };
 
+const PostCard: React.FC<{ post: UserPost }> = ({ post }) => {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center gap-3 mb-3">
+                <img src={post.authorImageUrl || 'https://www.gravatar.com/avatar/?d=mp'} alt={post.authorName} className="w-9 h-9 rounded-full" />
+                <div>
+                    <p className="font-semibold text-sm">{post.authorName}</p>
+                    <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
+                </div>
+            </div>
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.content}</p>
+            {post.projectId && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                    <a href={`#/project/${post.projectId}`} className="flex items-center gap-3 bg-gray-50 p-2 rounded-md border border-gray-200 hover:bg-gray-100">
+                        <div className="w-8 h-8 rounded-md bg-gray-200 flex-shrink-0 flex items-center justify-center border border-gray-300">
+                            {post.projectIcon ? <img src={post.projectIcon} alt="" className="w-full h-full object-cover rounded-sm"/> : <FileIcon className="w-4 h-4 text-gray-400" />}
+                        </div>
+                        <div>
+                           <p className="text-xs text-gray-500">Attached Project</p>
+                           <p className="text-sm font-medium truncate">{post.projectName}</p>
+                        </div>
+                    </a>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 export const CommunityPage: React.FC = () => {
     const [projects, setProjects] = useState<CommunityProject[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedProject, setSelectedProject] = useState<CommunityProject | null>(null);
-
+    const [posts] = useLocalStorage<UserPost[]>('silo-build-posts', []);
+    
+    const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -141,12 +171,22 @@ export const CommunityPage: React.FC = () => {
 
     return (
         <div className="p-8">
-            <div className="w-full bg-white rounded-3xl p-8 md:p-12 mb-8 border border-gray-200 shadow-sm">
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">Silo Community</h1>
-                <p className="mt-2 text-lg text-gray-600 max-w-2xl">
+            <div className="w-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl p-8 md:p-12 mb-12 shadow-lg">
+                <h1 className="text-4xl md:text-5xl font-bold text-white">Silo Community</h1>
+                <p className="mt-2 text-lg text-purple-100 max-w-2xl">
                     Explore, discover, and remix amazing projects built by developers just like you.
                 </p>
             </div>
+            
+            {sortedPosts.length > 0 && (
+                <div className="mb-12">
+                    <h2 className="text-3xl font-bold mb-6">Community Feed</h2>
+                     <div className="max-w-2xl mx-auto space-y-6">
+                        {sortedPosts.map(post => <PostCard key={post.id} post={post} />)}
+                    </div>
+                </div>
+            )}
+
 
             <div className="flex items-center gap-3 mb-6">
                 <UsersIcon className="w-8 h-8 text-blue-500" />

@@ -142,12 +142,20 @@ export const PublishToCommunityModal: React.FC<PublishToCommunityModalProps> = (
                 </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Listing Type</label>
-                     <div className="flex items-center gap-4 mb-2">
-                        <label className="flex items-center gap-2 text-sm"><input type="radio" name="listing" value="free" checked={listingType === 'free'} onChange={() => setListingType('free')} className="h-4 w-4" /> Free & Remixable</label>
-                        <label className="flex items-center gap-2 text-sm"><input type="radio" name="listing" value="paid" checked={listingType === 'paid'} onChange={() => setListingType('paid')} className="h-4 w-4" /> Prompt for Sale</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button type="button" onClick={() => setListingType('free')} className={`p-4 rounded-lg border-2 text-left transition-colors ${listingType === 'free' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white hover:bg-gray-50'}`}>
+                            <span className="text-xl">🎁</span>
+                            <h4 className="font-bold mt-1">Free & Remixable</h4>
+                            <p className="text-xs text-gray-600 mt-1">Share your prompt freely with the community.</p>
+                        </button>
+                        <button type="button" onClick={() => setListingType('paid')} className={`p-4 rounded-lg border-2 text-left transition-colors ${listingType === 'paid' ? 'border-blue-600 bg-blue-50' : 'border-gray-300 bg-white hover:bg-gray-50'}`}>
+                            <span className="text-xl">💰</span>
+                            <h4 className="font-bold mt-1">Prompt for Sale</h4>
+                            <p className="text-xs text-gray-600 mt-1">Users will see your contact info to purchase.</p>
+                        </button>
                     </div>
                     {listingType === 'paid' && (
-                        <div>
+                        <div className="mt-4">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Contact Info</label>
                             <input type="text" value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} placeholder="Your email, Twitter, etc." className="w-full bg-gray-50 border border-gray-300 rounded-full px-3 py-2 text-sm" />
                             <p className="text-xs text-gray-500 mt-1">Provide a way for interested buyers to contact you.</p>

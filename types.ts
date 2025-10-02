@@ -211,3 +211,24 @@ export interface CommunityProject {
   is_paid?: boolean;
   contact_info?: string;
 }
+
+// New types for Profile Page
+export interface UserProfileData {
+  userId: string;
+  username?: string;
+  displayName: string;
+  profilePictureUrl?: string;
+  bannerImageUrl?: string;
+}
+
+export interface UserPost {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorImageUrl?: string;
+  content: string;
+  projectId?: string;
+  projectName?: string;
+  projectIcon?: string | null;
+  createdAt: string;
+}

@@ -5,7 +5,7 @@ import { DatabasePage } from './DatabasePage';
 import { SettingsPage } from './SettingsPage';
 import { PromptLibraryPage } from './PromptLibraryPage';
 import { BetaProgramPage } from './BetaProgramPage';
-import { TeamsPage } from './TeamsPage';
+import { ProfilePage } from './ProfilePage';
 import { AgentProjectsPage } from './AgentProjectsPage';
 import { DeploymentsPage } from './DeploymentsPage';
 import { HelpPage } from './HelpPage';
@@ -51,8 +51,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     if (route.startsWith('#/dashboard/database')) {
       return <DatabasePage />;
     }
-     if (route.startsWith('#/dashboard/teams')) {
-      return <TeamsPage />;
+     if (route.startsWith('#/dashboard/profile')) {
+      return <ProfilePage />;
     }
     if (route.startsWith('#/dashboard/integrations')) {
         return <IntegrationsPage />;

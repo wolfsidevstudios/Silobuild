@@ -1,5 +1,5 @@
 import React from 'react';
-import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon, KeyIcon } from './icons';
+import { DatabaseIcon, HomeIcon, SettingsIcon, PlusIcon, SparklesIcon, BugIcon, PaintBrushIcon, UsersIcon, UserIcon, AgentIcon, CloudUploadIcon, HelpCircleIcon, BetaIcon, IntegrationsIcon, KeyIcon } from './icons';
 import { UserProfile } from './UserProfile';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUsageLimit } from '../hooks/useUsageLimit';
@@ -94,7 +94,7 @@ export const Sidebar: React.FC = () => {
         <SidebarNavLink href="#/dashboard/prompt-library" icon={<SparklesIcon />} label="Prompt Library" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/database" icon={<DatabaseIcon />} label="Database" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/auth" icon={<KeyIcon />} label="Auth" isCollapsed={isCollapsed} />
-        <SidebarNavLink href="#/dashboard/teams" icon={<UsersIcon />} label="Teams" isCollapsed={isCollapsed} />
+        <SidebarNavLink href="#/dashboard/profile" icon={<UserIcon />} label="Profile" isCollapsed={isCollapsed} />
         <SidebarNavLink href="#/dashboard/integrations" icon={<IntegrationsIcon />} label="Integrations" isCollapsed={isCollapsed} />
         
         {isBetaMember && (
