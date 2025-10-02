@@ -20,7 +20,29 @@ export const BuilderPage: React.FC = () => {
 
     // Effect for loading project on initial mount
     useEffect(() => {
-        // 1. Try to load from autosave
+        // 1. Prioritize loading from creation flow (signifies a new project)
+        const initialFilesJson = sessionStorage.getItem('initial_files');
+        if (initialFilesJson) {
+            try {
+                const initialFiles = JSON.parse(initialFilesJson);
+                setFiles(initialFiles);
+                setMessages(initialMessages);
+                
+                // This is a new project, so clear any old autosaved project
+                localStorage.removeItem(AUTOSAVE_KEY);
+                
+                // Clear the sessionStorage item so it's not reused on refresh
+                sessionStorage.removeItem('initial_files');
+                
+                return; // New project loaded, exit.
+            } catch (e) {
+                console.error("Failed to parse initial files from sessionStorage", e);
+                // Clear potentially corrupted data
+                sessionStorage.removeItem('initial_files');
+            }
+        }
+
+        // 2. If not a new project, try to load from autosave
         const savedProjectJson = localStorage.getItem(AUTOSAVE_KEY);
         if (savedProjectJson) {
             try {
@@ -28,30 +50,15 @@ export const BuilderPage: React.FC = () => {
                 if (savedProject.files && savedProject.messages) {
                     setFiles(savedProject.files);
                     setMessages(savedProject.messages);
-                    return; // Project loaded, exit
+                    return; // Project loaded from autosave, exit
                 }
             } catch (e) {
                 console.error("Failed to parse autosaved project from localStorage", e);
                 localStorage.removeItem(AUTOSAVE_KEY); // Clear corrupted data
             }
         }
-
-        // 2. If no autosave, try to load from creation flow (sessionStorage)
-        const initialFilesJson = sessionStorage.getItem('initial_files');
-        if (initialFilesJson) {
-            try {
-                const initialFiles = JSON.parse(initialFilesJson);
-                setFiles(initialFiles);
-                setMessages(initialMessages);
-                // Clear the storage so it's not reused on refresh
-                sessionStorage.removeItem('initial_files');
-                return; // New project loaded, exit
-            } catch (e) {
-                console.error("Failed to parse initial files from sessionStorage", e);
-            }
-        }
         
-        // 3. Fallback for direct navigation or if state is lost
+        // 3. Fallback for direct navigation or if all state is lost
         setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
     }, []);
 
