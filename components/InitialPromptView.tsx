@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusIcon, SunIcon } from './icons';
+import { PlusIcon, SunIcon, ArrowUpIcon } from './icons';
 import { Spinner } from './Spinner';
 
 interface InitialPromptViewProps {
@@ -52,15 +52,12 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
                             </div>
                             <button
                                 type="submit"
-                                className="h-10 w-10 flex items-center justify-center bg-blue-600 hover:bg-blue-500 rounded-full text-white disabled:bg-blue-800 disabled:cursor-wait"
+                                className="h-10 w-10 flex items-center justify-center bg-white hover:bg-gray-200 rounded-full text-black disabled:bg-gray-300 disabled:cursor-wait"
                                 disabled={isLoading || !prompt.trim()}
                                 aria-label="Submit prompt"
                             >
-                                {isLoading ? <Spinner className="w-5 h-5" /> : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                                        <path d="M12 4L12 15M12 4L16 8M12 4L8 8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        <path d="M4 12L4 20C4 20.5523 4.44772 21 5 21L19 21C19.5523 21 20 20.5523 20 20L20 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
+                                {isLoading ? <Spinner className="w-5 h-5 !text-black" /> : (
+                                    <ArrowUpIcon className="w-5 h-5" />
                                 )}
                             </button>
                         </div>

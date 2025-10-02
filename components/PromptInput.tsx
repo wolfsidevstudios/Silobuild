@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SendIcon } from './icons';
+import { ArrowUpIcon } from './icons';
 import { Spinner } from './Spinner';
 
 interface PromptInputProps {
@@ -36,11 +36,11 @@ export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading }) =
                 />
                 <button 
                     type="submit"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-blue-800 disabled:cursor-not-allowed"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white hover:bg-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     aria-label="Send prompt"
                     disabled={isLoading || !prompt.trim()}
                 >
-                    {isLoading ? <Spinner className="w-5 h-5" /> : <SendIcon className="w-5 h-5" />}
+                    {isLoading ? <Spinner className="w-5 h-5 !text-black" /> : <ArrowUpIcon className="w-5 h-5" />}
                 </button>
             </form>
         </div>
