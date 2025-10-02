@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProjectsIcon, SettingsIcon, MenuIcon, ChevronLeftIcon } from './icons';
+import { ProjectsIcon, SettingsIcon, MenuIcon, ChevronLeftIcon, NewsIcon } from './icons';
 
 interface NavLinkProps {
     href: string;
@@ -52,6 +52,13 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle
                     icon={<ProjectsIcon className="w-6 h-6 flex-shrink-0" />} 
                     label="Projects" 
                     isActive={activeRoute.startsWith('#/projects') || activeRoute === '#/' || activeRoute === ''}
+                    isCollapsed={isCollapsed}
+                />
+                <NavLink 
+                    href="#/news" 
+                    icon={<NewsIcon className="w-6 h-6 flex-shrink-0" />} 
+                    label="News" 
+                    isActive={activeRoute.startsWith('#/news')}
                     isCollapsed={isCollapsed}
                 />
                 <NavLink 

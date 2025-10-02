@@ -6,6 +6,7 @@ import { BuilderPage } from './pages/BuilderPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DashboardLayout } from './pages/DashboardLayout';
 import { CreationFlowPage } from './pages/CreationFlowPage';
+import { NewsPage } from './pages/NewsPage';
 
 export const App: React.FC = () => {
   const [route, setRoute] = useState(window.location.hash);
@@ -30,6 +31,9 @@ export const App: React.FC = () => {
     }
     if (route.startsWith('#/create')) {
         return <CreationFlowPage />;
+    }
+    if (route.startsWith('#/news')) {
+      return <DashboardLayout><NewsPage /></DashboardLayout>;
     }
     if (route.startsWith('#/projects')) {
       return <DashboardLayout><ProjectsPage /></DashboardLayout>;
