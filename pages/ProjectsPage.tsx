@@ -149,11 +149,14 @@ const InfinityIcon: React.FC = () => (
     </svg>
 );
 
+type SortOption = 'updatedAt:desc' | 'updatedAt:asc' | 'createdAt:desc' | 'createdAt:asc' | 'name:asc' | 'name:desc';
+
 export const ProjectsPage: React.FC = () => {
   const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>('updatedAt:desc');
   const { isBlocked, recordUsage, limit } = useUsageLimit();
 
   const deleteProject = (projectId: string) => {
@@ -204,18 +207,38 @@ export const ProjectsPage: React.FC = () => {
     }
   };
   
-  const filteredProjects = useMemo(() => {
-    return projects.filter(p => p.stack !== 'agent' && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [projects, searchTerm]);
+  const filteredAndSortedProjects = useMemo(() => {
+    const filtered = projects.filter(p => p.stack !== 'agent' && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    return filtered.sort((a, b) => {
+        const [key, direction] = sortOption.split(':');
+
+        switch (key) {
+            case 'name':
+                return direction === 'asc'
+                    ? a.name.localeCompare(b.name)
+                    : b.name.localeCompare(a.name);
+            case 'createdAt':
+                return direction === 'desc'
+                    ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            case 'updatedAt':
+            default:
+                const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+                const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+                return direction === 'desc' ? dateB - dateA : dateA - dateB;
+        }
+    });
+  }, [projects, searchTerm, sortOption]);
 
   const { personalProjects, teamProjects } = useMemo(() => {
-    const personal = filteredProjects.filter(p => !p.teamId);
+    const personal = filteredAndSortedProjects.filter(p => !p.teamId);
     const teamBased = teams.map(team => ({
         ...team,
-        projects: filteredProjects.filter(p => p.teamId === team.id)
+        projects: filteredAndSortedProjects.filter(p => p.teamId === team.id)
     })).filter(team => team.projects.length > 0);
     return { personalProjects: personal, teamProjects: teamBased };
-  }, [filteredProjects, teams]);
+  }, [filteredAndSortedProjects, teams]);
 
 
   return (
@@ -238,7 +261,7 @@ export const ProjectsPage: React.FC = () => {
         </div>
       </div>
       
-       <div className="mb-8">
+       <div className="mb-8 flex flex-wrap items-center gap-4">
             <input
                 type="text"
                 placeholder="Search projects..."
@@ -246,6 +269,27 @@ export const ProjectsPage: React.FC = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="w-full max-w-sm bg-white border border-gray-300 rounded-full p-2.5 px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <div className="relative">
+                <label htmlFor="sort-select" className="sr-only">Sort projects by</label>
+                <select
+                    id="sort-select"
+                    value={sortOption}
+                    onChange={e => setSortOption(e.target.value as SortOption)}
+                    className="bg-white border border-gray-300 rounded-full p-2.5 pl-4 pr-10 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                >
+                    <option value="updatedAt:desc">Last Updated (Newest)</option>
+                    <option value="updatedAt:asc">Last Updated (Oldest)</option>
+                    <option value="createdAt:desc">Date Created (Newest)</option>
+                    <option value="createdAt:asc">Date Created (Oldest)</option>
+                    <option value="name:asc">Name (A-Z)</option>
+                    <option value="name:desc">Name (Z-A)</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                    </svg>
+                </div>
+            </div>
         </div>
 
       {projects.filter(p => p.stack !== 'agent').length === 0 ? (

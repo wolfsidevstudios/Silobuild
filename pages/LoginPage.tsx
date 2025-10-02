@@ -729,4 +729,47 @@ export const LoginPage: React.FC = () => {
 
             <section id="faq" className="py-20 bg-transparent">
                 <div className="container mx-auto px-6 max-w-4xl">
-                    
+                    <div className="text-center mb-12">
+                        <h3 className="text-4xl font-bold">Frequently Asked Questions</h3>
+                    </div>
+                    <div className="space-y-2">
+                        <FaqItem
+                            question="Where do I get a Google Gemini API key?"
+                            answer="You can get a Gemini API key from Google AI Studio. Visit the Google AI for Developers website, sign in with your Google account, and create a new API key in the dashboard."
+                        />
+                        <FaqItem
+                            question="Are my API keys and project data secure?"
+                            answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It is never sent to our servers, ensuring your information remains private and under your control."
+                        />
+                        <FaqItem
+                            question="How are my projects saved?"
+                            answer="Projects are saved directly in your browser's local storage. This means they are tied to the browser you are using. If you clear your browser data or switch to a different browser or device, your projects will not be available."
+                        />
+                         <FaqItem
+                            question="Can I use the generated code for commercial projects?"
+                            answer="Absolutely. You own the code that's generated. You are free to use it for any purpose, personal or commercial, without any restrictions from us."
+                        />
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer className="bg-white border-t border-gray-200">
+            <div className="container mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
+                <p>&copy; {new Date().getFullYear()} Silo Build. All rights reserved.</p>
+                <div className="flex gap-4 mt-4 sm:mt-0">
+                    <a href="#/terms" className="hover:text-gray-800">Terms</a>
+                    <a href="#/privacy" className="hover:text-gray-800">Privacy</a>
+                </div>
+            </div>
+        </footer>
+        <button
+            onClick={() => setIsBotOpen(p => !p)}
+            className="fixed bottom-5 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-transform hover:scale-110"
+        >
+            <HelpCircleIcon className="w-7 h-7" />
+        </button>
+        {isBotOpen && <HelpBot onClose={() => setIsBotOpen(false)} />}
+    </div>
+  );
+};
