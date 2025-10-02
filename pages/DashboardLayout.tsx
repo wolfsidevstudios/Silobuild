@@ -10,7 +10,7 @@ import { AgentProjectsPage } from './AgentProjectsPage';
 import { DeploymentsPage } from './DeploymentsPage';
 import { HelpPage } from './HelpPage';
 import { IntegrationsPage } from './IntegrationsPage';
-import { InspirationPage } from './InspirationPage';
+import { CommunityPage } from './CommunityPage';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SiloAiAnnouncementModal } from '../components/SiloAiAnnouncementModal';
 import { AuthPage } from './AuthPage';
@@ -60,8 +60,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ route }) => {
     if (route.startsWith('#/dashboard/auth')) {
         return <AuthPage />;
     }
-    if (route.startsWith('#/dashboard/assist')) {
-        return <InspirationPage />;
+    if (route.startsWith('#/dashboard/community')) {
+        return <CommunityPage />;
     }
     if (route.startsWith('#/dashboard/deployments')) {
         return <DeploymentsPage />;
