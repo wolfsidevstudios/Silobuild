@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StudioHeader } from '../components/StudioHeader';
 import { ChatView } from '../components/ChatView';
 import { PromptInput } from '../components/PromptInput';
 import { WorkspaceView } from '../components/WorkspaceView';
-import { generateCode } from '../services/geminiService';
+import { generateInitialCode, modifyCode } from '../services/geminiService';
 import { ChatMessage, CodeFile } from '../types';
 
 const initialMessages: ChatMessage[] = [
-    { author: 'ai', message: "Hello! I'm here to help you build. What component should we create first?" },
+    { author: 'ai', message: "Your project is ready! Let me know what changes you'd like to make." },
 ];
 
 export const BuilderPage: React.FC = () => {
-    const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [files, setFiles] = useState<CodeFile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        // Load initial files passed from the creation flow
+        const state = window.history.state;
+        if (state && state.files) {
+            setFiles(state.files);
+            setMessages(initialMessages);
+        } else {
+             setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
+        }
+    }, []);
 
     const handleSendPrompt = async (prompt: string) => {
         setIsLoading(true);
@@ -21,7 +32,10 @@ export const BuilderPage: React.FC = () => {
         setMessages(prev => [...prev, newUserMessage]);
 
         try {
-            const result = await generateCode(prompt);
+            const result = files.length > 0
+                ? await modifyCode(prompt, files)
+                : await generateInitialCode(prompt);
+
             const newAiMessage: ChatMessage = { author: 'ai', message: result.thought };
             setMessages(prev => [...prev, newAiMessage]);
             setFiles(result.files);

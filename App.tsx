@@ -5,6 +5,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { BuilderPage } from './pages/BuilderPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DashboardLayout } from './pages/DashboardLayout';
+import { CreationFlowPage } from './pages/CreationFlowPage';
 
 export const App: React.FC = () => {
   const [route, setRoute] = useState(window.location.hash);
@@ -26,6 +27,9 @@ export const App: React.FC = () => {
     }
     if (route.startsWith('#/builder')) {
         return <BuilderPage />;
+    }
+    if (route.startsWith('#/create')) {
+        return <CreationFlowPage />;
     }
     if (route.startsWith('#/projects')) {
       return <DashboardLayout><ProjectsPage /></DashboardLayout>;

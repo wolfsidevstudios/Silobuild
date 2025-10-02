@@ -20,6 +20,31 @@
         background-color: #030712;
         color: #f9fafb;
       }
+      .blob {
+        background: linear-gradient(
+          45deg,
+          #6366f1,
+          #a855f7,
+          #ec4899,
+          #3b82f6
+        );
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite, blob-pulse 10s ease-in-out infinite;
+        filter: blur(70px);
+        border-radius: 50%;
+      }
+
+      @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes blob-pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
     </style>
     <script type="importmap">
 {
