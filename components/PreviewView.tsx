@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CodeFile } from '../types';
 
 declare global {
-    var Babel: any;
+    var svelte: any;
 }
 
 interface PreviewViewProps {
@@ -17,44 +17,85 @@ const PreviewError: React.FC<{ error: string }> = ({ error }) => (
 )
 
 export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
-    const [Component, setComponent] = useState<React.FC | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const shadowHostRef = useRef<HTMLDivElement>(null);
+    const componentInstanceRef = useRef<any | null>(null);
 
     useEffect(() => {
-        const indexTsx = files.find(f => f.name === 'index.tsx');
+        const hostElement = shadowHostRef.current;
+        if (!hostElement) return;
 
-        if (!indexTsx || !indexTsx.content) {
-            setComponent(null);
-            setError(null);
+        let shadowRoot = hostElement.shadowRoot;
+        if (!shadowRoot) {
+            shadowRoot = hostElement.attachShadow({ mode: 'open' });
+        }
+
+        if (componentInstanceRef.current) {
+            try {
+                componentInstanceRef.current.$destroy();
+            } catch (e) {
+                console.warn("Error destroying Svelte component:", e);
+            }
+            componentInstanceRef.current = null;
+        }
+        shadowRoot.innerHTML = '';
+        setError(null);
+
+        const appSvelte = files.find(f => f.name === 'App.svelte');
+        if (!appSvelte || !appSvelte.content) {
             return;
         }
 
-        try {
-            const transformedCode = window.Babel.transform(indexTsx.content, {
-                presets: ['react'],
-                plugins: [],
-            }).code;
+        const compileAndRun = async () => {
+            try {
+                if (typeof window.svelte === 'undefined' || typeof window.svelte.compile !== 'function') {
+                    throw new Error("Svelte compiler (window.svelte.compile) is not available. Check index.html for the compiler script tag.");
+                }
 
-            const exports: { default?: React.FC } = {};
-            const require = (name: string) => {
-                if (name === 'react') return React;
-                throw new Error(`Cannot find module '${name}'`);
-            };
+                const { js, css } = window.svelte.compile(appSvelte.content, {
+                    generate: 'dom',
+                });
 
-            const func = new Function('require', 'exports', transformedCode);
-            func(require, exports);
+                if (css.code) {
+                    const styleEl = document.createElement('style');
+                    styleEl.textContent = css.code;
+                    shadowRoot.appendChild(styleEl);
+                }
 
-            if (exports.default && typeof exports.default === 'function') {
-                setComponent(() => exports.default!);
-                setError(null);
-            } else {
-                 throw new Error("No default export found in index.tsx. The AI must export a default React component.");
+                const mountPoint = document.createElement('div');
+                shadowRoot.appendChild(mountPoint);
+                
+                const url = `data:text/javascript;base64,${btoa(js.code)}`;
+                const module = await import(/* @vite-ignore */ url);
+                
+                if (!module.default) {
+                    throw new Error("Compiled Svelte module is missing a default export.");
+                }
+                const SvelteComponent = module.default;
+
+                componentInstanceRef.current = new SvelteComponent({
+                    target: mountPoint,
+                });
+
+            } catch (e: any) {
+                console.error("Svelte Preview Error:", e);
+                setError(e.message);
             }
-        } catch (e: any) {
-            console.error("Transpilation/Render Error:", e);
-            setError(e.message);
-            setComponent(null);
-        }
+        };
+
+        compileAndRun();
+
+        return () => {
+            if (componentInstanceRef.current) {
+                try {
+                    componentInstanceRef.current.$destroy();
+                } catch (e) {
+                     console.warn("Error destroying Svelte component on cleanup:", e);
+                }
+                componentInstanceRef.current = null;
+            }
+        };
+
     }, [files]);
     
 
@@ -78,11 +119,11 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
                 {/* Content */}
                 <div className="flex-1 bg-white text-gray-800 overflow-auto">
                     {error && <div className="p-4"><PreviewError error={error} /></div>}
-                    {!error && Component && <Component />}
-                    {!error && !Component && (
+                    <div ref={shadowHostRef} className="w-full h-full"></div>
+                    {!error && (!files.find(f => f.name.endsWith('.svelte'))) && (
                          <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
                             <h1 className="text-2xl font-bold text-gray-900">Live Preview</h1>
-                            <p className="mt-2 text-gray-600">Your generated component will appear here.</p>
+                            <p className="mt-2 text-gray-600">Your generated Svelte component will appear here.</p>
                         </div>
                     )}
                 </div>

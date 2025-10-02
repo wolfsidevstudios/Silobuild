@@ -17,7 +17,7 @@ const getApiClient = () => {
     return { ai, modelName };
 }
 
-const planSystemInstruction = `You are a principal software architect. Based on the user's prompt, create a high-level plan and a detailed to-do list for building the application using React and Tailwind CSS. The plan should be a short paragraph. The todo list should be a bulleted list of actionable steps.
+const planSystemInstruction = `You are a principal software architect. Based on the user's prompt, create a high-level plan and a detailed to-do list for building the application using Svelte and Tailwind CSS. The plan should be a short paragraph. The todo list should be a bulleted list of actionable steps.
 Your response must be a JSON object with two keys: 'plan' (a string) and 'todo' (an array of strings).`;
 
 const planResponseSchema = {
@@ -53,14 +53,19 @@ export const generatePlan = async (prompt: string): Promise<PlanResponse> => {
     }
 };
 
-const initialCodeSystemInstruction = `You are an expert web developer specializing in React and Tailwind CSS. 
-Your task is to generate complete, production-ready code for a single-file React component based on the user's prompt. 
+const initialCodeSystemInstruction = `You are an expert web developer specializing in Svelte and Tailwind CSS.
+Your task is to generate complete, production-ready code for a web application based on the user's prompt.
 The user is in an online editor, so you must not presume they have a complex setup.
 Your response must be a JSON object containing two keys: 'files' and 'thought'.
-- The 'files' key should be an array of objects, where each object has a 'name' (e.g., 'index.tsx', 'styles.css') and a 'content' (the code). 
+- The 'files' key should be an array of objects, where each object has a 'name' (e.g., 'App.svelte', 'styles.css', 'utils.js') and a 'content' (the code).
 - The 'thought' key should contain a friendly, conversational message explaining what you've created, as if you were a helpful AI assistant.
-Always generate a single self-contained component in 'index.tsx'. Do not create an 'App.tsx' or a 'main.tsx' unless specifically asked.
-The generated code should be runnable in a preview panel that renders the default export from 'index.tsx'.
+
+IMPORTANT CONSTRAINTS:
+1.  You must generate a root Svelte component named 'App.svelte'.
+2.  You are allowed to create multiple helper files (.js, .css), but you can only create ONE Svelte component file ('App.svelte'). Do not create any other '.svelte' files.
+3.  The 'App.svelte' component should be self-contained or import from the other generated JS/CSS files.
+4.  If you use Tailwind CSS, you must include the CDN script link within a <svelte:head> tag in App.svelte, like this: <svelte:head><script src="https://cdn.tailwindcss.com"></script></svelte:head>.
+5.  Do not generate a 'main.js' or 'index.html' file. The preview environment handles mounting 'App.svelte'.
 `;
 
 const codeResponseSchema = {
@@ -117,8 +122,11 @@ export const generateInitialCode = async (prompt: string): Promise<CodeGeneratio
     }
 };
 
-const modifyCodeSystemInstruction = `You are an expert web developer specializing in React and Tailwind CSS. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request.
+const modifyCodeSystemInstruction = `You are an expert web developer specializing in Svelte and Tailwind CSS. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request.
 Ensure you return the **complete, updated content for all files**, not just the changed parts.
+You must adhere to the constraint of having only ONE '.svelte' file ('App.svelte').
+If you use Tailwind CSS, ensure the CDN script tag is present in a <svelte:head> tag in App.svelte.
+
 Your response must be a JSON object containing two keys: 'files' and 'thought'.
 - The 'files' key should be an array of objects representing the full, updated state of all project files.
 - The 'thought' key should contain a friendly, conversational message explaining the changes you've made.`;

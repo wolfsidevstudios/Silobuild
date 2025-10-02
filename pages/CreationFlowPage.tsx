@@ -12,6 +12,7 @@ export const CreationFlowPage: React.FC = () => {
     const [prompt, setPrompt] = useState('');
     const [plan, setPlan] = useState<Plan | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [generatedFiles, setGeneratedFiles] = useState<CodeFile[]>([]);
 
     const handlePromptSubmit = async (submittedPrompt: string) => {
         setPrompt(submittedPrompt);
@@ -30,6 +31,7 @@ export const CreationFlowPage: React.FC = () => {
         setStep('generating');
         try {
             const result = await generateInitialCode(prompt);
+            setGeneratedFiles(result.files);
             // Simulate build time before redirect
             setTimeout(() => {
                 // Use history.pushState to pass data without putting it in the URL
@@ -60,7 +62,7 @@ export const CreationFlowPage: React.FC = () => {
             case 'review':
                 return <PlanReviewView plan={plan} onApprove={handlePlanApprove} onDecline={handlePlanDecline} />;
             case 'generating':
-                return <GeneratingView />;
+                return <GeneratingView files={generatedFiles} />;
             case 'error':
                  return (
                     <div className="text-center text-white">
