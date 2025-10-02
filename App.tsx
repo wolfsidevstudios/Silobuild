@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-// Fix: Corrected import paths
 import { LandingPage } from './pages/LoginPage';
-import { AuthPage } from './pages/ProjectsPage';
+import { AuthPage } from './pages/AuthPage';
+import { ProjectsPage } from './pages/ProjectsPage';
 
 export const App: React.FC = () => {
   const [route, setRoute] = useState(window.location.hash);
@@ -20,6 +20,9 @@ export const App: React.FC = () => {
   const renderPage = () => {
     if (route.startsWith('#/auth')) {
       return <AuthPage />;
+    }
+    if (route.startsWith('#/projects')) {
+      return <ProjectsPage />;
     }
     return <LandingPage />;
   };

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const AuthPage: React.FC = () => {
+export const ProjectsPage: React.FC = () => {
     return (
         <div className="p-8">
             <h1 className="text-2xl font-bold">Welcome to Silo Build</h1>
