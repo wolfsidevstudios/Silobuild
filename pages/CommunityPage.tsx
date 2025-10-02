@@ -141,6 +141,13 @@ export const CommunityPage: React.FC = () => {
 
     return (
         <div className="p-8">
+            <div className="w-full bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-8 md:p-12 text-white mb-8">
+                <h1 className="text-4xl md:text-5xl font-bold">Silo Community</h1>
+                <p className="mt-2 text-lg text-blue-100 max-w-2xl">
+                    Explore, discover, and remix amazing projects built by developers just like you.
+                </p>
+            </div>
+
             <div className="flex items-center gap-3 mb-6">
                 <UsersIcon className="w-8 h-8 text-blue-500" />
                 <h1 className="text-3xl font-bold">Community Showcase</h1>
