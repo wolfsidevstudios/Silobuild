@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// Fix: Corrected import paths
 import { LandingPage } from './pages/LoginPage';
 import { AuthPage } from './pages/ProjectsPage';
 

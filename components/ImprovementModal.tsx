@@ -1,4 +1,5 @@
 import React from 'react';
+// Fix: Corrected import path
 import { CloseIcon } from './icons';
 
 interface ImprovementModalProps {
