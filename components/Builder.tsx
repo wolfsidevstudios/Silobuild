@@ -257,7 +257,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 versionHistory: [],
             };
             setCurrentProject(newProject);
-            setProjects(prev => [newProject, ...prev]);
+            setProjects([newProject, ...projects]);
             setMultiFileCode(newProject.files);
             setPreviewFile(newProject.previewFile);
             setDeployments(newProject.deployments);
@@ -282,7 +282,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setMultiFileCode(tempFiles);
             setPreviewFile(tempPreviewFile);
             setCurrentProject(updatedProject);
-            setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+            setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
             setMessages(prev => [...prev, { role: 'model', content: "✅ I've applied the changes. This new version has been saved automatically.", thoughts: thoughts }]);
         }
 
@@ -306,7 +306,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             setIsLoading(false);
         }
     }
-  }, [techStack, settings, currentProject, multiFileCode, previewFile, setProjects, setSchema, recordUsage]);
+  }, [techStack, settings, currentProject, multiFileCode, previewFile, setProjects, setSchema, recordUsage, projects]);
 
   useEffect(() => {
     if (projectId) {
