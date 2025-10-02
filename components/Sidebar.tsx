@@ -58,7 +58,7 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <a href="#/dashboard" className="flex items-center gap-2 px-2" title="Silo Build">
             <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
-            {!isCollapsed && <span className="font-bold text-xl">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded-full">2.0</span></span>}
+            {!isCollapsed && <span className="font-bold text-xl">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded-full">2.5</span></span>}
         </a>
          <button 
             onClick={() => setIsCollapsed(!isCollapsed)} 

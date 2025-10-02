@@ -266,7 +266,7 @@ export const LoginPage: React.FC = () => {
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
                 <a href="#/" className="flex items-center gap-2">
                     <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-8 w-auto" />
-                    <span className="text-xl font-bold">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">2.0</span></span>
+                    <span className="text-xl font-bold">Silo Build <span className="text-xs align-top bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">2.5</span></span>
                 </a>
                 {user ? (
                     <div className="flex items-center gap-4">
@@ -288,11 +288,11 @@ export const LoginPage: React.FC = () => {
              <section className="pt-32 pb-20 text-center relative overflow-hidden">
                 <div className="container mx-auto px-6 relative">
                     <h1 className="text-5xl md:text-7xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-b from-gray-900 to-gray-600 leading-tight">
-                        Build with Codepilot v1.
+                        Build with Silo Code Pilot 1.5 Pro.
                     </h1>
                     <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-700 leading-tight">Powerful apps from a single prompt.</h2>
                     <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-10">
-                        Describe your app, and let Codepilot v1, our next-generation AI agent, generate complete, production-ready code in seconds. Experience a new era of AI-powered development.
+                        Describe your app, and let Silo Code Pilot 1.5 Pro, our next-generation AI agent, generate complete, production-ready code in seconds. Experience a new era of AI-powered development.
                     </p>
                     <div className="flex justify-center">
                         {user || isGuest ? (

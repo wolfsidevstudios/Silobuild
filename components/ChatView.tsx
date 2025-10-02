@@ -195,6 +195,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [modalThoughts, setModalThoughts] = useState<string | null>(null);
 
   const mainContentSpan = isIdeaMode ? 'col-span-1' : 'md:col-span-2';
+  const allFilesGenerated = generationPlan.length > 0 && generationPlan.every(filePath => generatedFilesProgress.includes(filePath));
 
   return (
     <div className={`flex-1 grid grid-cols-1 ${isIdeaMode ? '' : 'md:grid-cols-5'} gap-4 p-4 overflow-hidden`}>
@@ -239,10 +240,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <div className="max-w-md w-full p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none border border-gray-200 shadow-md">
                 <div className="flex items-center gap-2">
                   <Spinner />
-                  <span>{ isIdeaMode ? 'Thinking...' : 'Generating application...'}</span>
+                  <span>{ isIdeaMode ? 'Thinking...' : allFilesGenerated ? 'Verifying application...' : 'Generating application...'}</span>
                 </div>
                 { !isIdeaMode && generationSummary && <GenerationSummary summary={generationSummary} />}
                 { !isIdeaMode && <FileGenerationChecklist plan={generationPlan} progress={generatedFilesProgress} />}
+                { !isIdeaMode && allFilesGenerated && (
+                  <div className="border-t border-gray-200 mt-3 pt-3">
+                    <h4 className="text-xs font-semibold text-gray-500 mb-2">Finalizing:</h4>
+                    <div className="flex items-center gap-2 text-sm text-gray-800">
+                      <Spinner className="h-4 w-4" />
+                      <span>Silo Code Pilot is checking its work...</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

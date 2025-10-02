@@ -83,11 +83,11 @@ const App = () => {
 `;
 
 const createSystemInstruction = (prompt: string, settings: Settings, isEditing: boolean, techStack: TechStack, customCredentials?: Record<string, string>, authConfig?: AuthConfig): string => {
-  const WATERMARK_BADGE_HTML = `<a href="https://silobuild.dev" target="_blank" rel="noopener noreferrer" style="position: fixed; bottom: 16px; right: 16px; z-index: 1000; text-decoration: none;"><div style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1);">Built with ⚡️ Silo Build 2.0</div></a>`;
+  const WATERMARK_BADGE_HTML = `<a href="https://silobuild.dev" target="_blank" rel="noopener noreferrer" style="position: fixed; bottom: 16px; right: 16px; z-index: 1000; text-decoration: none;"><div style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 9999px; font-size: 12px; color: #333; border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.1);">Built with ⚡️ Silo Build 2.5</div></a>`;
 
   const VISUAL_APP_WATERMARK_INSTRUCTION = `
 --- WATERMARK REQUIREMENT ---
-ALL generated visual applications (React, Vue, Svelte, HTML, React Native Web Preview) MUST include a "Built with Silo Build 2.0" watermark badge.
+ALL generated visual applications (React, Vue, Svelte, HTML, React Native Web Preview) MUST include a "Built with Silo Build 2.5" watermark badge.
 - The badge MUST be an \`a\` tag wrapping a \`div\` tag.
 - It must be positioned in the bottom-right corner of the viewport.
 - You MUST use this exact HTML for the badge. It is self-contained and works with Tailwind CSS.
@@ -103,7 +103,7 @@ ${WATERMARK_BADGE_HTML}
 The generated README.md file MUST end with the following line, separated by a horizontal rule:
 
 ---
-[*Built with Silo Build 2.0*](https://silobuild.dev)
+[*Built with Silo Build 2.5*](https://silobuild.dev)
 `;
 
   const DATABASE_INSTRUCTION = `
@@ -579,7 +579,7 @@ Be creative! Make the simulated apps feel real and interesting. Generate plausib
   if (techStack === 'infinity') {
       instruction = INFINITY_APP_INSTRUCTION;
   } else if (techStack === 'html') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert web developer specializing in generating single-file HTML applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+      instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert web developer specializing in generating single-file HTML applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 You must stream your response as a sequence of JSON objects, each on a new line.
 
 First, you MUST output a 'summary' object with a brief, user-friendly description of the app you are about to generate (or the changes you are making), outlining the key features in a bulleted list.
@@ -611,8 +611,8 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
       instruction += SILO_AI_INSTRUCTION_HTML;
   } else if (techStack === 'vue') {
-    instruction = `You are Codepilot v1, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+    instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert Vue.js engineer specializing in generating and modifying fully functional, production-ready Vue 3 applications with TypeScript and the Composition API. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
@@ -688,8 +688,8 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += SILO_AI_INSTRUCTION_VUE;
 
   } else if (techStack === 'svelte') {
-    instruction = `You are Codepilot v1, a world-class AI agent and expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+    instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert Svelte engineer specializing in generating and modifying fully functional, production-ready Svelte 5 applications with TypeScript. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
@@ -755,8 +755,8 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html'.
     instruction += SILO_AI_INSTRUCTION_SVELTE;
 
   } else if (techStack === 'nodejs') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert backend developer specializing in generating simple and functional Node.js + Express.js applications. Your code MUST be of the highest quality: production-ready and complete.
-The code you generate MUST be complete and ready to run. Do not use placeholder comments.
+      instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert backend developer specializing in generating simple and functional Node.js + Express.js applications. Your code MUST be of the highest quality: production-ready and complete.
+The code you generate MUST be complete and ready to run. Do not use placeholder comments. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
@@ -810,8 +810,8 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
       instruction += WORKFLOW_INSTRUCTION;
       instruction += CREDENTIAL_REQUEST_INSTRUCTION;
   } else if (techStack === 'react-native') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo). Your code MUST be of the highest quality: production-ready, performant, and complete.
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+      instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert React Native engineer specializing in generating and modifying fully functional, standard React Native applications (NOT Expo). Your code MUST be of the highest quality: production-ready, performant, and complete.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
@@ -843,7 +843,7 @@ Ensure each JSON object is a single, complete line. Do not wrap your response in
 The generated README.md file MUST end with the following line, separated by a horizontal rule:
 
 ---
-[*Built with Silo Build 2.0*](https://silobuild.dev)
+[*Built with Silo Build 2.5*](https://silobuild.dev)
 `;
 
       instruction += `\n
@@ -894,8 +894,8 @@ The 'previewFile' is CRITICAL. It MUST be a single, self-contained 'index.html' 
     instruction += CREDENTIAL_REQUEST_INSTRUCTION;
     instruction += SILO_AI_INSTRUCTION_REACT;
   } else if (techStack === 'react') {
-      instruction = `You are Codepilot v1, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
-The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data.
+      instruction = `You are Silo Code Pilot 1.5 Pro, a world-class AI agent and expert React engineer specializing in generating and modifying fully functional, production-ready React TypeScript applications. Your code MUST be of the highest quality: production-ready, performant, accessible, and aesthetically pleasing.
+The code you generate MUST be complete and implement all requested features. Do not use placeholder comments or mock data. You should aim to generate a comprehensive and fully-featured application based on the user's prompt, generating as many lines of code as necessary to create a robust and complete solution.
 
 You must stream your response as a sequence of JSON objects, each on a new line.
 
@@ -1283,11 +1283,11 @@ export const generateHelpBotResponseStream = (
 
       const ai = new GoogleGenAI({ apiKey });
       
-      const systemInstruction = `You are a helpful and friendly AI assistant for "Silo Build 2.0", an application that lets users generate web apps from text prompts using an advanced AI agent called Codepilot v1.
+      const systemInstruction = `You are a helpful and friendly AI assistant for "Silo Build 2.5", an application that lets users generate web apps from text prompts using an advanced AI agent called Silo Code Pilot 1.5 Pro.
 Your role is to answer user questions about how to use the app, its features, and troubleshoot common issues.
 
-Key Features of Silo Build 2.0:
-- Users can generate multi-file applications (React, Vue, Svelte, Node.js) or single-file HTML apps using the powerful Codepilot v1 AI agent.
+Key Features of Silo Build 2.5:
+- Users can generate multi-file applications (React, Vue, Svelte, Node.js) or single-file HTML apps using the powerful Silo Code Pilot 1.5 Pro AI agent.
 - It has a chat interface for prompting, a code editor, and a live preview.
 - Users can save projects, which are stored in their browser's local storage.
 - Users can connect their own API keys (Gemini, Netlify, GitHub, Supabase, Stripe) in the Settings page. Keys are also stored locally.
