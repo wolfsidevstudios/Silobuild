@@ -16,12 +16,21 @@ export const BuilderPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // Load initial files passed from the creation flow
-        const state = window.history.state;
-        if (state && state.files) {
-            setFiles(state.files);
-            setMessages(initialMessages);
+        // Load initial files passed from the creation flow via sessionStorage
+        const initialFilesJson = sessionStorage.getItem('initial_files');
+        if (initialFilesJson) {
+            try {
+                const initialFiles = JSON.parse(initialFilesJson);
+                setFiles(initialFiles);
+                setMessages(initialMessages);
+                // Clear the storage so it's not reused on refresh
+                sessionStorage.removeItem('initial_files');
+            } catch (e) {
+                console.error("Failed to parse initial files from sessionStorage", e);
+                setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
+            }
         } else {
+             // Fallback for direct navigation or if state is lost
              setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
         }
     }, []);

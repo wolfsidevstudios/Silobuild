@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CodeFile } from '../types';
+import { Spinner } from './Spinner';
 
 const messages = [
     "Compiling components...",
@@ -55,14 +56,15 @@ export const GeneratingView: React.FC<GeneratingViewProps> = ({ files }) => {
                 <h1 className="text-4xl font-bold mb-4">Building Your App</h1>
                 <p className="text-lg text-gray-300 animate-pulse">{message}</p>
             </div>
-             <div className={`absolute bottom-10 z-10 text-center text-white transition-opacity duration-500 ${isCompleting ? 'opacity-0' : 'opacity-100'}`}>
+             <div className="absolute bottom-10 z-10 text-center text-white">
                 {files && files.length > 0 && (
-                     <>
-                        <p className="text-lg font-semibold">Generating...</p>
-                        <p className="text-gray-400 font-mono mt-1 transition-opacity duration-300" key={currentFileIndex}>
+                     <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                        <Spinner className="w-4 h-4 text-white" />
+                        <span className="text-sm text-gray-300">Generating:</span>
+                        <p className="text-sm text-white font-mono transition-opacity duration-300" key={currentFileIndex}>
                             {files[currentFileIndex].name}
                         </p>
-                    </>
+                    </div>
                 )}
             </div>
         </div>

@@ -34,8 +34,8 @@ export const CreationFlowPage: React.FC = () => {
             setGeneratedFiles(result.files);
             // Simulate build time before redirect
             setTimeout(() => {
-                // Use history.pushState to pass data without putting it in the URL
-                window.history.pushState({ files: result.files }, '', '#/builder');
+                // Store files in sessionStorage for the builder page to pick up
+                sessionStorage.setItem('initial_files', JSON.stringify(result.files));
                 window.location.hash = '#/builder';
             }, 2000); // Wait for explosion animation
         } catch (error: any) {
