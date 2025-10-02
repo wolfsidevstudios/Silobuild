@@ -4,7 +4,7 @@ import { PromptInput } from './PromptInput';
 import { ChatView } from './ChatView';
 import { WorkspaceView } from './WorkspaceView';
 import { PreviewView } from './PreviewView';
-import { generateAppStream } from '../services/geminiService';
+import { generateAppStream, generateSuggestions } from '../services/geminiService';
 import { createAndPushToRepo, pushToRepo } from '../services/githubService';
 import { AppMode, ChatMessage, GeneratedFile, ViewMode, Project, Settings, TechStack, Deployment, Team, Table, WorkflowDefinition, CredentialRequest, AuthConfig, Version } from '../types';
 import { Spinner } from './Spinner';
@@ -148,6 +148,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [generatedFilesProgress, setGeneratedFilesProgress] = useState<string[]>([]);
   const [generationSummary, setGenerationSummary] = useState<string | null>(null);
   const [pendingCredentialRequest, setPendingCredentialRequest] = useState<CredentialRequest | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
 
 
   const executeBuild = useCallback(async (buildPrompt: string, imageData?: string | null, customCredentials?: Record<string, string>, authConfigToUse?: AuthConfig) => {
@@ -176,6 +178,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setGenerationPlan([]);
     setGeneratedFilesProgress([]);
     setGenerationSummary(null);
+    setSuggestions([]);
 
     const filesForContext = currentProject ? multiFileCode : undefined;
     let credentialRequestReceived = false;
@@ -331,6 +334,30 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
     setIsInitialized(true);
   }, [projectId, projects]);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (multiFileCode.length > 0 && !isLoading && !isIdeaMode && currentProject) {
+        setIsGeneratingSuggestions(true);
+        try {
+          const newSuggestions = await generateSuggestions(multiFileCode, messages, settings);
+          setSuggestions(newSuggestions);
+        } catch (error) {
+          console.error("Failed to fetch suggestions:", error);
+          setSuggestions([]); // Clear on error
+        } finally {
+          setIsGeneratingSuggestions(false);
+        }
+      }
+    };
+    
+    // Fetch suggestions when loading stops (after a build)
+    if (!isLoading) {
+      // Use a timeout to avoid fetching on every minor state change and wait for UI to settle
+      const timer = setTimeout(fetchSuggestions, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, multiFileCode.length, currentProject]);
   
   const handleSaveProject = async (name: string, icon: string | null, createRepo: boolean, teamId: string | null) => {
     if (!name.trim() || !techStack || !currentProject) {
@@ -671,6 +698,12 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsHistoryModalOpen(false);
     }
   };
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    if (!isLoading) {
+      executeBuild(suggestion);
+    }
+  };
 
 
   if (!isInitialized) {
@@ -751,7 +784,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
                 <div className="relative w-full max-w-2xl">
                     {error && <div className="bg-red-100 border border-red-300 text-red-800 p-3 rounded-lg mb-4 text-sm" role="alert"><strong>Error:</strong> {error}</div>}
                      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-xl p-4">
-                        <textarea value={creationPrompt} onChange={(e) => setCreationPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if(creationPrompt.trim() && !isLoading) executeBuild(creationPrompt); } }} placeholder="e.g., a modern SaaS dashboard with charts and a data table" className="w-full h-32 bg-transparent resize-none text-gray-900 text-lg placeholder-gray-500 focus:outline-none p-2"/>
+                        <textarea value={creationPrompt} onChange={(e) => setCreationPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if(creationPrompt.trim() && !isLoading) executeBuild(creationPrompt); } }} placeholder="e.g., a modern SaaS dashboard with charts and a data table for user management" className="w-full h-32 bg-transparent resize-none text-gray-900 text-lg placeholder-gray-500 focus:outline-none p-2"/>
                         <button onClick={() => executeBuild(creationPrompt)} disabled={!creationPrompt.trim() || isLoading} className="absolute bottom-4 right-4 bg-blue-600 text-white rounded-full p-2.5 flex items-center justify-center transition-all duration-300 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"><UpArrowIcon className="w-6 h-6" /></button>
                     </div>
                      <div className="relative flex flex-col items-center justify-center gap-2 mt-6 text-sm">
@@ -782,7 +815,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       />
       <main className={`flex-1 flex flex-col overflow-hidden relative ${promptInputLayout === 'floating' ? 'pb-24' : ''}`}>
         {isPushing && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50"><Spinner className="h-10 w-10" /><span className="ml-2">Pushing...</span></div>}
-        {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} />}
+        {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} suggestions={suggestions} onSuggestionClick={handleSuggestionClick} isGeneratingSuggestions={isGeneratingSuggestions} />}
         {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
         {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
         {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} onRedeployNetlify={handleRedeployNetlify} onRedeployVercel={handleRedeployVercel} isRedeploying={isRedeploying} />}

@@ -11,6 +11,7 @@ interface PromptInputProps {
   layoutStyle?: 'floating' | 'inline';
   simple?: boolean;
   placeholder?: string;
+  initialValue?: string;
 }
 
 const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void }> = ({ icon, label, onClick }) => (
@@ -20,8 +21,8 @@ const PowerToolButton: React.FC<{ icon: React.ReactNode; label: string; onClick:
     </button>
 );
 
-export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt, layoutStyle = 'floating', simple = false, placeholder }) => {
-  const [prompt, setPrompt] = useState('');
+export const PromptInput: React.FC<PromptInputProps> = ({ onSend, isLoading, isAppGenerated, isIdeaMode, onToggleIdeaMode, isReadyToPrompt, layoutStyle = 'floating', simple = false, placeholder, initialValue = '' }) => {
+  const [prompt, setPrompt] = useState(initialValue);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);

@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+// FIX: The `Prompt` type is defined in `../data/prompts.ts`, not `../types.ts`.
 import { Project, Settings, TechStack, ChatMessage, GeneratedFile } from '../types';
 import { timeAgo } from '../utils/projectUtils';
-import { FileIcon, CloseIcon, SparklesIcon, HomeIcon, SettingsIcon, EyeIcon, ChatIcon, SaveIcon, DownloadIcon } from '../components/icons';
+import { FileIcon, CloseIcon, SparklesIcon, HomeIcon, SettingsIcon, EyeIcon, ChatIcon, SaveIcon, DownloadIcon, PlusIcon, HelpCircleIcon, ChevronDownIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
 import { generateAppStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
 import { PromptInput } from '../components/PromptInput';
 import { StackSelection } from '../components/StackSelection';
 import { GeminiLogo, GithubIcon, NetlifyIcon, SupabaseLogo, StripeLogo } from '../components/icons';
+import { prompts, Prompt } from '../data/prompts';
 
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
@@ -165,7 +167,7 @@ const MobileProjectsPage: React.FC<{ onProjectClick: (project: Project) => void 
 
 // --- BUILDER PAGE ---
 
-const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'settings') => void; }> = ({ setView }) => {
+const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'settings' | 'library' | 'help') => void; }> = ({ setView }) => {
     const [viewMode, setViewMode] = useState<'chat' | 'preview'>('chat');
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [multiFileCode, setMultiFileCode] = useState<GeneratedFile[]>([]);
@@ -177,12 +179,21 @@ const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'se
     const [settings] = useLocalStorage<Settings>('ai-app-builder-settings', initialSettings);
     const [projects, setProjects] = useLocalStorage<Project[]>('ai-app-builder-projects', []);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [initialPrompt, setInitialPrompt] = useState('');
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isLoading]);
+    
+    useEffect(() => {
+        const promptFromSession = sessionStorage.getItem('initialPrompt');
+        if (promptFromSession) {
+            setInitialPrompt(promptFromSession);
+            sessionStorage.removeItem('initialPrompt');
+        }
+    }, []);
 
-    const handleSend = useCallback(async (prompt: string) => {
+    const handleSend = useCallback(async (prompt: string, imageData?: string | null) => {
         const stackToUse = techStack;
         if (!stackToUse) {
             setError("Please select a technology stack first.");
@@ -201,7 +212,7 @@ const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'se
                 } else if (update.type === 'previewFile' && update.file) {
                     setPreviewFile(update.file);
                 }
-            }, stackToUse, isGenerated ? multiFileCode : undefined);
+            }, stackToUse, isGenerated ? multiFileCode : undefined, undefined, undefined, undefined, imageData);
 
             setMessages(prev => [...prev, { role: 'model', content: isGenerated ? 'I\'ve updated the app.' : 'App generated! Check the preview.' }]);
             setIsGenerated(true);
@@ -300,6 +311,7 @@ const MobileBuilderPage: React.FC<{ setView: (view: 'projects' | 'builder' | 'se
                         isIdeaMode={false}
                         onToggleIdeaMode={() => {}}
                         isReadyToPrompt={!!techStack}
+                        initialValue={initialPrompt}
                     />
                 </div>
             )}
@@ -463,14 +475,93 @@ const MobileSettingsPage: React.FC<{ onInstallClick: () => void; canInstall: boo
     );
 }
 
+// --- PROMPT LIBRARY PAGE ---
+const PromptCardMobile: React.FC<{ prompt: Prompt; onUse: (promptText: string) => void; }> = ({ prompt, onUse }) => {
+    return (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col justify-between">
+            <div>
+                <h3 className="font-bold text-gray-900">{prompt.title}</h3>
+                <p className="text-sm text-gray-600 mt-1">{prompt.description}</p>
+            </div>
+            <button
+                onClick={() => onUse(prompt.prompt)}
+                className="mt-4 w-full bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-blue-600 hover:text-white transition-colors"
+            >
+                Use this prompt
+            </button>
+        </div>
+    );
+};
+
+const MobilePromptLibraryPage: React.FC<{ onSelectPrompt: (prompt: string) => void; }> = ({ onSelectPrompt }) => {
+    const groupedPrompts = useMemo(() => {
+        return prompts.reduce((acc, prompt) => {
+            (acc[prompt.category] = acc[prompt.category] || []).push(prompt);
+            return acc;
+        }, {} as Record<string, Prompt[]>);
+    }, []);
+
+    const categoryOrder = ["Productivity & Business", "Utilities & Tools", "Backend & APIs", "Games & Entertainment", "UI Components & Landing Pages", "Data & APIs"];
+
+    return (
+        <div className="h-full flex flex-col bg-gray-50 pb-16">
+             <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 p-4 sticky top-0 z-10">
+                <h1 className="text-xl font-bold text-center">Prompt Library</h1>
+            </header>
+            <main className="flex-1 overflow-y-auto p-4 space-y-6">
+                {categoryOrder.map(category => (
+                    groupedPrompts[category] && <div key={category}>
+                        <h2 className="text-lg font-semibold mb-3">{category}</h2>
+                        <div className="grid grid-cols-1 gap-4">
+                            {groupedPrompts[category].map(prompt => (
+                                <PromptCardMobile key={prompt.title} prompt={prompt} onUse={onSelectPrompt} />
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </main>
+        </div>
+    );
+};
+
+// --- HELP PAGE ---
+const FaqItem: React.FC<{ question: string; answer: string }> = ({ question, answer }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="border-b border-gray-200 bg-white p-4 rounded-lg">
+            <button className="w-full flex justify-between items-center text-left" onClick={() => setIsOpen(!isOpen)}>
+                <span className="font-semibold text-gray-900">{question}</span>
+                <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isOpen && <div className="pt-3 text-gray-700 text-sm"><p>{answer}</p></div>}
+        </div>
+    );
+};
+
+const MobileHelpPage: React.FC = () => {
+    return (
+         <div className="h-full flex flex-col bg-gray-50 pb-16">
+             <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 p-4 sticky top-0 z-10">
+                <h1 className="text-xl font-bold text-center">Help & Support</h1>
+            </header>
+            <main className="flex-1 overflow-y-auto p-4 space-y-4">
+                 <FaqItem question="Where do I get a Google Gemini API key?" answer="You can get a Gemini API key from Google AI Studio. Visit the Google AI for Developers website, sign in with your Google account, and create a new API key in the dashboard." />
+                 <FaqItem question="Are my API keys and project data secure?" answer="Yes. All your data, including API keys and project files, is stored exclusively in your browser's local storage. It is never sent to our servers, ensuring your information remains private and under your control." />
+                 <FaqItem question="How are my projects saved?" answer="Projects are saved directly in your browser's local storage. This means they are tied to the browser you are using. If you clear your browser data or switch to a different browser or device, your projects will not be available." />
+                 <FaqItem question="What technology stacks can the AI generate?" answer="Silo Build supports generating applications using React, Vue, Svelte, and Node.js (with Express), all using TypeScript. It can also generate simple, single-file vanilla HTML, CSS, and JavaScript applications with Tailwind CSS." />
+            </main>
+        </div>
+    );
+};
+
 
 // --- MAIN APP ROUTER ---
 
-const BottomNavBar: React.FC<{ activeView: string; setView: (view: 'projects' | 'builder' | 'settings') => void; }> = ({ activeView, setView }) => {
-    const NavItem: React.FC<{ view: 'projects' | 'builder' | 'settings', icon: React.ReactNode, label: string }> = ({ view, icon, label }) => {
+const BottomNavBar: React.FC<{ activeView: string; setView: (view: 'projects' | 'builder' | 'settings' | 'library' | 'help') => void; }> = ({ activeView, setView }) => {
+    const NavItem: React.FC<{ view: 'projects' | 'builder' | 'settings' | 'library' | 'help', icon: React.ReactNode, label: string }> = ({ view, icon, label }) => {
         const isActive = activeView === view;
         return (
-            <button onClick={() => setView(view)} className={`flex flex-col items-center justify-center gap-1 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+            <button onClick={() => setView(view)} className={`flex flex-col items-center justify-center gap-1 w-full transition-colors ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
                 {icon}
                 <span className="text-xs font-medium">{label}</span>
             </button>
@@ -478,14 +569,11 @@ const BottomNavBar: React.FC<{ activeView: string; setView: (view: 'projects' | 
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-lg border-t border-gray-200 flex justify-around items-center z-20">
+        <div className="fixed bottom-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-lg border-t border-gray-200 grid grid-cols-5 items-center z-20">
             <NavItem view="projects" icon={<HomeIcon />} label="Projects" />
-            <button onClick={() => setView('builder')} className="flex flex-col items-center justify-center -mt-8">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center text-white shadow-lg">
-                    <SparklesIcon className="w-7 h-7" />
-                </div>
-                <span className="text-xs font-medium text-gray-700 mt-1">Create</span>
-            </button>
+            <NavItem view="library" icon={<SparklesIcon />} label="Library" />
+            <NavItem view="builder" icon={<PlusIcon />} label="Create" />
+            <NavItem view="help" icon={<HelpCircleIcon />} label="Help" />
             <NavItem view="settings" icon={<SettingsIcon />} label="Settings" />
         </div>
     );
@@ -493,7 +581,7 @@ const BottomNavBar: React.FC<{ activeView: string; setView: (view: 'projects' | 
 
 export const MobileApp: React.FC = () => {
     const { user, isGuest } = useAuth();
-    const [view, setView] = useState<'projects' | 'builder' | 'settings'>('projects');
+    const [view, setView] = useState<'projects' | 'builder' | 'settings' | 'library' | 'help'>('projects');
     const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
@@ -528,6 +616,8 @@ export const MobileApp: React.FC = () => {
         switch(view) {
             case 'builder': return <MobileBuilderPage setView={setView} />;
             case 'settings': return <MobileSettingsPage onInstallClick={handleInstallClick} canInstall={!!deferredPrompt} />;
+            case 'library': return <MobilePromptLibraryPage onSelectPrompt={(prompt) => { sessionStorage.setItem('initialPrompt', prompt); setView('builder'); }} />;
+            case 'help': return <MobileHelpPage />;
             case 'projects':
             default:
                 return <MobileProjectsPage onProjectClick={setSelectedProject} />;
@@ -542,7 +632,7 @@ export const MobileApp: React.FC = () => {
             
             <div className={`h-full w-full ${selectedProject ? 'hidden' : 'block'}`}>
                 {renderView()}
-                {view !== 'builder' && <BottomNavBar activeView={view} setView={setView} />}
+                <BottomNavBar activeView={view} setView={setView} />
             </div>
         </div>
     );

@@ -33,7 +33,37 @@ interface ChatViewProps {
   isAppGenerated: boolean;
   onToggleIdeaMode: () => void;
   isReadyToPrompt: boolean;
+  suggestions: string[];
+  onSuggestionClick: (suggestion: string) => void;
+  isGeneratingSuggestions: boolean;
 }
+
+const SuggestionPills: React.FC<{
+  suggestions: string[];
+  onClick: (suggestion: string) => void;
+  isLoading: boolean;
+}> = ({ suggestions, onClick, isLoading }) => {
+  if (isLoading || suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex-shrink-0 px-4 pb-2 flex items-center justify-center gap-2">
+      {suggestions.map((suggestion, index) => (
+        <button
+          key={index}
+          onClick={() => onClick(suggestion)}
+          className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 shadow-sm animate-fade-in-up"
+          style={{ animationDelay: `${index * 100}ms` }}
+        >
+          <SparklesIcon className="w-4 h-4 text-blue-500" />
+          <span>{suggestion}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 
 const ViewModeToggle: React.FC<{
   viewMode: ViewMode;
@@ -158,6 +188,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
   isAppGenerated,
   onToggleIdeaMode,
   isReadyToPrompt,
+  suggestions,
+  onSuggestionClick,
+  isGeneratingSuggestions,
 }) => {
   const [modalThoughts, setModalThoughts] = useState<string | null>(null);
 
@@ -223,15 +256,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
           )}
         </div>
         {promptInputLayout === 'inline' && (
-          <PromptInput
-            layoutStyle="inline"
-            onSend={onSend}
-            isLoading={isLoading}
-            isAppGenerated={isAppGenerated}
-            isIdeaMode={isIdeaMode}
-            onToggleIdeaMode={onToggleIdeaMode}
-            isReadyToPrompt={isReadyToPrompt}
-          />
+          <div className="flex flex-col">
+            <SuggestionPills
+              suggestions={suggestions}
+              onClick={onSuggestionClick}
+              isLoading={isGeneratingSuggestions || isLoading}
+            />
+            <PromptInput
+              layoutStyle="inline"
+              onSend={onSend}
+              isLoading={isLoading}
+              isAppGenerated={isAppGenerated}
+              isIdeaMode={isIdeaMode}
+              onToggleIdeaMode={onToggleIdeaMode}
+              isReadyToPrompt={isReadyToPrompt}
+            />
+          </div>
         )}
       </div>
       {mainContentSpan === 'md:col-span-2' && (

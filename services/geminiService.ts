@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret, AuthConfig } from "../types";
+import { Settings, GeneratedFile, TechStack, AiGeneratedTable, AgentConfig, Secret, AuthConfig, ChatMessage } from "../types";
 
 const GOOGLE_SIGN_IN_INSTRUCTION = `
 --- GOOGLE SIGN-IN INTEGRATION ---
@@ -1320,4 +1320,59 @@ Keep your answers concise and easy to understand.`;
       reject(new Error(`Failed to get a response from the AI. Details: ${detailedError}`));
     }
   });
+};
+
+export const generateSuggestions = async (
+  files: GeneratedFile[],
+  messages: ChatMessage[],
+  settings: Settings
+): Promise<string[]> => {
+  const apiKey = settings.geminiApiKey || process.env.API_KEY;
+  if (!apiKey || files.length === 0) {
+    return [];
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
+  const systemInstruction = `You are an expert software engineering assistant. Your task is to analyze the provided code and conversation history for a web application and suggest the next logical features to implement.
+- You MUST provide exactly three suggestions.
+- Each suggestion MUST be a concise, actionable phrase suitable for a button label (e.g., "Add dark mode toggle", "Implement user login", "Refactor the API calls").
+- You MUST respond ONLY with a valid JSON array of three strings. Do not include any other text, explanation, or markdown.
+
+Example response:
+["Add a dark mode toggle", "Implement user authentication", "Create a settings page"]`;
+
+  const filesString = JSON.stringify(files.map(f => ({ path: f.path, content: f.content.substring(0, 500) }))); // Truncate content
+  const historyString = JSON.stringify(messages.slice(-4).map(m => `${m.role}: ${m.content}`)); // Last 4 messages
+
+  const userPrompt = `Here is the current project structure and recent conversation. Suggest the next three features.
+  
+--- CURRENT FILES (truncated) ---
+${filesString}
+
+--- RECENT CONVERSATION ---
+${historyString}
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: settings.model || 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        temperature: 0.5,
+      },
+    });
+
+    const jsonString = response.text;
+    const suggestions = JSON.parse(jsonString);
+    if (Array.isArray(suggestions) && suggestions.every(s => typeof s === 'string')) {
+      return suggestions.slice(0, 3); // Ensure only 3 are returned
+    }
+    return [];
+  } catch (error) {
+    console.error("Error generating suggestions:", error);
+    return []; // Return empty array on failure
+  }
 };
