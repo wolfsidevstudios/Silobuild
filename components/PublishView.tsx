@@ -1,6 +1,6 @@
 import React from 'react';
 import { Project, Deployment } from '../types';
-import { GithubIcon, CloudUploadIcon, NetlifyIcon, VercelIcon } from './icons';
+import { GithubIcon, CloudUploadIcon, NetlifyIcon, VercelIcon, UsersIcon } from './icons';
 import { Spinner } from './Spinner';
 import { timeAgo } from '../utils/projectUtils';
 
@@ -15,6 +15,8 @@ interface PublishViewProps {
   onRedeployNetlify: () => void;
   onRedeployVercel: () => void;
   isRedeploying: ('netlify' | 'vercel') | null;
+  onPublishToCommunity: () => void;
+  isCommunityPublished: boolean;
 }
 
 const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployments }) => {
@@ -47,7 +49,7 @@ const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployment
     );
 };
 
-export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployNetlifyClick, onDeployVercelClick, onConnectGitHub, isPushing, onRedeployNetlify, onRedeployVercel, isRedeploying }) => {
+export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployNetlifyClick, onDeployVercelClick, onConnectGitHub, isPushing, onRedeployNetlify, onRedeployVercel, isRedeploying, onPublishToCommunity, isCommunityPublished }) => {
     const isGithubConnected = !!project?.githubUrl;
     const latestNetlifyDeployment = deployments.find(d => d.provider === 'netlify');
     const latestVercelDeployment = deployments.find(d => d.provider === 'vercel');
@@ -91,6 +93,30 @@ export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, 
                             <button onClick={onConnectGitHub} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors">
                                 <GithubIcon />
                                 <span>Connect to GitHub</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Community Showcase Section */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                        <UsersIcon className="w-6 h-6 text-blue-600"/>
+                        <h2 className="text-xl font-bold">Community Showcase</h2>
+                    </div>
+                    {isCommunityPublished ? (
+                        <div>
+                            <p className="text-sm text-green-600 font-medium mb-4">This project has been published to the community showcase!</p>
+                             <a href="#/dashboard/community" className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                <span>View in Showcase</span>
+                            </a>
+                        </div>
+                    ) : (
+                         <div>
+                            <p className="text-sm text-gray-600 mb-4">Share your creation with the Silo Build community to inspire others.</p>
+                            <button onClick={onPublishToCommunity} className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                <UsersIcon />
+                                <span>Publish to Community</span>
                             </button>
                         </div>
                     )}

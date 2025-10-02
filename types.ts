@@ -98,6 +98,7 @@ export interface Project {
   workflow?: WorkflowDefinition;
   thoughts?: string;
   versionHistory?: Version[];
+  communityId?: string;
 }
 
 export interface DecodedCredential {
@@ -194,4 +195,16 @@ export interface AuthConfig {
     github: AuthProviderConfig;
     x: AuthProviderConfig;
   };
+}
+
+export interface CommunityProject {
+  id: string;
+  created_at: string;
+  name: string;
+  description: string;
+  prompt: string;
+  preview_image_url: string;
+  author_name: string;
+  author_image_url?: string;
+  project_id: string;
 }
