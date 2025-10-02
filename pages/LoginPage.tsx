@@ -5,6 +5,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Settings } from '../types';
 import { generateHelpBotResponseStream } from '../services/geminiService';
 import { Spinner } from '../components/Spinner';
+import { SupabaseAuth } from '../components/SupabaseAuth';
 
 const GOOGLE_CLIENT_ID = '208835173647-6e2is6g6j3338hj4dq2reebcluk694jm.apps.googleusercontent.com';
 
@@ -163,7 +164,7 @@ const HelpBot: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
 
 export const LoginPage: React.FC = () => {
-  const { user, login, isGuest, loginAsGuest } = useAuth();
+  const { user, loginWithGoogle, isGuest, loginAsGuest } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [isBotOpen, setIsBotOpen] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
@@ -179,7 +180,7 @@ export const LoginPage: React.FC = () => {
         client_id: GOOGLE_CLIENT_ID,
         callback: (response) => {
           if (response.credential) {
-            login(response.credential);
+            loginWithGoogle(response.credential);
           }
         },
       });
@@ -202,7 +203,7 @@ export const LoginPage: React.FC = () => {
       // Also show the one-tap prompt for a seamless sign-in experience for returning users
       window.google.accounts.id.prompt();
     }
-  }, [user, isGuest, login]);
+  }, [user, isGuest, loginWithGoogle]);
   
   const handleSignInClick = () => {
     if (window.google) {
@@ -277,24 +278,23 @@ export const LoginPage: React.FC = () => {
                                 </div>
                             </div>
                         ) : (
-                             <div className="w-full max-w-sm bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-8 backdrop-blur-lg text-center">
+                            <div className="w-full max-w-sm bg-white/50 border border-gray-200 rounded-2xl shadow-2xl p-8 backdrop-blur-lg text-center">
                                 <h3 className="text-2xl font-bold mb-4">Ready to Build?</h3>
-                                <p className="text-gray-600 mb-6">Sign in to sync your projects across devices or continue as a guest.</p>
-                                <div className="flex justify-center">
-                                    <div ref={googleButtonContainerRef}></div>
-                                </div>
+                                <p className="text-gray-600 mb-6">Sign in to sync your projects or continue as a guest.</p>
+                                
+                                <SupabaseAuth />
+
                                 <div className="relative flex py-5 items-center">
                                     <div className="flex-grow border-t border-gray-300"></div>
-                                    <span className="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                                    <span className="flex-shrink mx-4 text-gray-400 text-xs">OR</span>
                                     <div className="flex-grow border-t border-gray-300"></div>
                                 </div>
-                                <button
-                                    onClick={loginAsGuest}
-                                    className="w-full text-center px-4 py-2 text-sm font-medium bg-white hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-full transition-colors"
-                                >
-                                    Continue as Guest
-                                </button>
-                                <p className="text-xs text-gray-500 mt-2">Projects will be saved on this device only.</p>
+
+                                <div className="flex justify-center" ref={googleButtonContainerRef}></div>
+                                
+                                <p className="text-xs text-gray-500 mt-6">
+                                    No account? <button onClick={loginAsGuest} className="font-semibold text-blue-600 hover:underline">Continue as a guest</button> to try it out.
+                                </p>
                             </div>
                         )}
                     </div>

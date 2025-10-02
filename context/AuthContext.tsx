@@ -1,35 +1,41 @@
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { DecodedCredential } from '../types';
-import { jwtDecode } from 'jwt-decode';
+import { supabase } from '../services/supabaseClient';
+import { Spinner } from '../components/Spinner';
+
+// Using a minimal type to avoid dependency issues with @supabase/supabase-js
+interface SupabaseUser {
+  id: string;
+  email?: string;
+  email_confirmed_at?: string;
+  user_metadata: { [key: string]: any };
+}
 
 interface AuthContextType {
   user: DecodedCredential | null;
   isGuest: boolean;
-  login: (credential: string) => void;
+  loginWithGoogle: (credential: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
+  signUpWithPassword: (email: string, password: string) => Promise<any>;
   logout: () => void;
   loginAsGuest: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// A static key for storing the user object itself. This should not be user-scoped.
 const USER_STORAGE_KEY = 'ai-app-builder-user';
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<DecodedCredential | null>(() => {
-    // On initial load, try to read the user from local storage.
-    try {
-      if (typeof window !== 'undefined') {
-        const item = window.localStorage.getItem(USER_STORAGE_KEY);
-        return item ? JSON.parse(item) : null;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error reading user from local storage", error);
-      return null;
-    }
-  });
+const mapSupabaseUserToCredential = (user: SupabaseUser): DecodedCredential => ({
+  name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+  picture: user.user_metadata?.picture || user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`,
+  email: user.email || '',
+  email_verified: !!user.email_confirmed_at,
+  sub: user.id
+});
 
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<DecodedCredential | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem('isGuest') === 'true';
@@ -37,24 +43,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return false;
   });
 
-  const login = (credential: string) => {
-    try {
-      const decoded: DecodedCredential = jwtDecode(credential);
-      // Persist user to local storage and update state
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(decoded));
+  useEffect(() => {
+    // Check for user session on initial load
+    const getInitialSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            const mappedUser = mapSupabaseUserToCredential(session.user as SupabaseUser);
+            setUser(mappedUser);
+            window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mappedUser));
+        }
+        setLoading(false);
+    };
+
+    getInitialSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const mappedUser = mapSupabaseUserToCredential(session.user as SupabaseUser);
+        setUser(mappedUser);
+        window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(mappedUser));
+        setIsGuest(false);
         sessionStorage.removeItem('isGuest');
-      }
-      setUser(decoded);
-      setIsGuest(false);
-    } catch (error) {
-      console.error("Failed to decode JWT:", error);
-      // Clear any invalid user data
-      if (typeof window !== 'undefined') {
+      } else {
+        setUser(null);
         window.localStorage.removeItem(USER_STORAGE_KEY);
       }
-      setUser(null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loginWithGoogle = async (credential: string) => {
+    const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: credential });
+    if (error) {
+        console.error("Google sign-in with Supabase failed:", error);
+        // Clear everything on failure
+        await logout();
+        throw error;
     }
+    // onAuthStateChange will handle setting the user
+  };
+  
+  const signInWithPassword = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
+
+  const signUpWithPassword = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
   };
 
   const loginAsGuest = () => {
@@ -64,21 +103,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     setUser(null);
     setIsGuest(true);
+    // Ensure we are signed out of supabase
+    supabase.auth.signOut();
   };
 
-  const logout = () => {
-    // Clear user from local storage and state
+  const logout = async () => {
+    await supabase.auth.signOut();
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(USER_STORAGE_KEY);
       sessionStorage.removeItem('isGuest');
+      if (window.google?.accounts) {
+        window.google.accounts.id.disableAutoSelect();
+      }
     }
-    setUser(null);
+    // onAuthStateChange will clear user state
     setIsGuest(false);
-    // You might also want to call google.accounts.id.disableAutoSelect() here
   };
+
+  // Render a loading state to prevent flash of login page for authenticated users
+  if (loading) {
+    return (
+        <div className="h-screen w-screen flex items-center justify-center">
+            <Spinner className="w-10 h-10" />
+        </div>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{ user, isGuest, login, logout, loginAsGuest }}>
+    <AuthContext.Provider value={{ user, isGuest, loginWithGoogle, signInWithPassword, signUpWithPassword, logout, loginAsGuest }}>
       {children}
     </AuthContext.Provider>
   );
