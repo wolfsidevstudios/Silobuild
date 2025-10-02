@@ -95,6 +95,11 @@ export interface CodeGenerationResponse {
     thought: string;
 }
 
+export interface CodeModificationResponse extends CodeGenerationResponse {
+    plan: string;
+    todo: string[];
+}
+
 const handleApiError = (error: unknown): never => {
     console.error("Error calling Gemini API:", error);
     if (error instanceof Error && error.message.includes('API key not valid')) {
@@ -126,16 +131,38 @@ export const generateInitialCode = async (prompt: string): Promise<CodeGeneratio
 };
 
 const modifyCodeSystemInstruction = `You are an expert web developer specializing in modern HTML, CSS, and JavaScript. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request.
-Ensure you return the **complete, updated content for all files**, not just the changed parts.
-The project's entry point is 'index.html'. You can create and modify 'style.css', 'script.js', and other files as needed.
-Unless the user specifically asks for a different style, try to maintain the existing modern, minimalist aesthetic (black/white background, pill-shaped buttons).
 
-Your response must be a JSON object containing two keys: 'files' and 'thought'.
-- The 'files' key should be an array of objects representing the full, updated state of all project files.
-- The 'thought' key should contain a friendly, conversational message explaining the changes you've made.`;
+First, create a short high-level plan and a detailed to-do list for the changes.
+Then, provide the complete, updated code for all files. Ensure you return the **complete content for all files**, not just the changed parts.
 
+Your response MUST be a JSON object with four keys:
+- 'plan': A string for the high-level plan.
+- 'todo': An array of strings for the checklist of tasks.
+- 'files': An array of objects representing the full, updated state of all project files.
+- 'thought': A friendly, conversational message explaining the changes you've made.`;
 
-export const modifyCode = async (prompt: string, existingFiles: CodeFile[]): Promise<CodeGenerationResponse> => {
+const modifyCodeResponseSchema = {
+    type: Type.OBJECT,
+    properties: {
+        plan: { type: Type.STRING },
+        todo: { type: Type.ARRAY, items: { type: Type.STRING } },
+        files: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    name: { type: Type.STRING },
+                    content: { type: Type.STRING },
+                },
+                required: ["name", "content"],
+            },
+        },
+        thought: { type: Type.STRING },
+    },
+    required: ["plan", "todo", "files", "thought"],
+};
+
+export const modifyCode = async (prompt: string, existingFiles: CodeFile[]): Promise<CodeModificationResponse> => {
     const { ai, modelName } = getApiClient();
 
     const fileContentString = existingFiles.map(file => 
@@ -151,11 +178,11 @@ export const modifyCode = async (prompt: string, existingFiles: CodeFile[]): Pro
             config: {
                 systemInstruction: modifyCodeSystemInstruction,
                 responseMimeType: "application/json",
-                responseSchema: codeResponseSchema,
+                responseSchema: modifyCodeResponseSchema,
             },
         });
         const parsedResponse = JSON.parse(response.text.trim());
-        if (!parsedResponse.files || !parsedResponse.thought) {
+        if (!parsedResponse.files || !parsedResponse.thought || !parsedResponse.plan || !parsedResponse.todo) {
             throw new Error("Invalid response structure from API");
         }
         return parsedResponse;

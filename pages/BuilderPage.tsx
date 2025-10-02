@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StudioHeader } from '../components/StudioHeader';
 import { ChatView } from '../components/ChatView';
 import { PromptInput } from '../components/PromptInput';
+// Fix: Import the WorkspaceView component, which was missing.
 import { WorkspaceView } from '../components/WorkspaceView';
 import { generateInitialCode, modifyCode } from '../services/geminiService';
 import { ChatMessage, CodeFile } from '../types';
@@ -73,13 +74,25 @@ export const BuilderPage: React.FC = () => {
         setMessages(prev => [...prev, newUserMessage]);
 
         try {
-            const result = files.length > 0
-                ? await modifyCode(prompt, files)
-                : await generateInitialCode(prompt);
+            if (files.length > 0) {
+                const result = await modifyCode(prompt, files);
+                const newPlanMessage: ChatMessage = { author: 'ai', plan: { plan: result.plan, todo: result.todo } };
+                setMessages(prev => [...prev, newPlanMessage]);
+                setFiles(result.files);
 
-            const newAiMessage: ChatMessage = { author: 'ai', message: result.thought };
-            setMessages(prev => [...prev, newAiMessage]);
-            setFiles(result.files);
+                // Add the follow-up "thought" message after a short delay
+                setTimeout(() => {
+                    const newThoughtMessage: ChatMessage = { author: 'ai', message: result.thought };
+                    setMessages(prev => [...prev, newThoughtMessage]);
+                }, 3000 + result.todo.length * 500); // Wait for plan animation to roughly finish
+
+            } else {
+                 const result = await generateInitialCode(prompt);
+                 const newAiMessage: ChatMessage = { author: 'ai', message: result.thought };
+                 setMessages(prev => [...prev, newAiMessage]);
+                 setFiles(result.files);
+            }
+
         } catch (error: any) {
             const errorMessage: ChatMessage = { author: 'ai', message: `Sorry, something went wrong: ${error.message}` };
             setMessages(prev => [...prev, errorMessage]);
@@ -93,7 +106,7 @@ export const BuilderPage: React.FC = () => {
             <StudioHeader />
             <main className="flex-1 flex flex-row min-h-0">
                 {/* Left Pane: Chat */}
-                <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col border-r border-gray-800">
+                <div className="relative w-full md:w-1/3 lg:w-1/4 flex flex-col border-r border-gray-800 bg-gray-900">
                     <ChatView messages={messages} isLoading={isLoading} />
                     <PromptInput onSend={handleSendPrompt} isLoading={isLoading} />
                 </div>
