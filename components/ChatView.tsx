@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BotIcon, CheckCircleIcon, LightbulbIcon } from './icons';
 import { ChatMessage as ChatMessageType } from '../types';
 import { Spinner } from './Spinner';
+import { ApiKeyCard } from './ApiKeyCard';
 
 const PlanMessage: React.FC<{ plan: { plan: string, todo: string[] } }> = ({ plan }) => {
     const [completedTodos, setCompletedTodos] = useState<number[]>([]);
@@ -100,6 +101,9 @@ const TextMessage: React.FC<{ author: 'user' | 'ai', message: string }> = ({ aut
 const ChatMessage: React.FC<{ message: ChatMessageType }> = ({ message }) => {
     if (message.plan) {
         return <PlanMessage plan={message.plan} />;
+    }
+    if (message.apiKeyRequest) {
+        return <ApiKeyCard />;
     }
     if (message.message) {
         return <TextMessage author={message.author} message={message.message} />;

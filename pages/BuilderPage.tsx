@@ -4,6 +4,7 @@ import { ChatView } from '../components/ChatView';
 import { PromptInput } from '../components/PromptInput';
 import { WorkspaceView } from '../components/WorkspaceView';
 import { DeployModal } from '../components/DeployModal';
+import { GitHubSaveModal } from '../components/GitHubSaveModal';
 import { generateInitialCode, modifyCode } from '../services/geminiService';
 import { ChatMessage, CodeFile } from '../types';
 
@@ -19,8 +20,12 @@ export const BuilderPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [projectName, setProjectName] = useState('Untitled Project');
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+    const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+    
+    // Deployment state
     const [vercelProjectId, setVercelProjectId] = useState<string | null>(null);
     const [vercelDeploymentUrl, setVercelDeploymentUrl] = useState<string | null>(null);
+    const [githubRepoUrl, setGithubRepoUrl] = useState<string | null>(null);
 
 
     // Effect for loading project on initial mount
@@ -58,6 +63,7 @@ export const BuilderPage: React.FC = () => {
                     setProjectName(savedProject.projectName || 'Untitled Project');
                     setVercelProjectId(savedProject.vercelProjectId || null);
                     setVercelDeploymentUrl(savedProject.vercelDeploymentUrl || null);
+                    setGithubRepoUrl(savedProject.githubRepoUrl || null);
                     return;
                 }
             } catch (e) {
@@ -79,11 +85,12 @@ export const BuilderPage: React.FC = () => {
                 projectName,
                 vercelProjectId,
                 vercelDeploymentUrl,
+                githubRepoUrl,
                 lastSaved: new Date().toISOString(),
             };
             localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(projectToSave));
         }
-    }, [files, messages, projectName, vercelProjectId, vercelDeploymentUrl]);
+    }, [files, messages, projectName, vercelProjectId, vercelDeploymentUrl, githubRepoUrl]);
 
     const handleSendPrompt = async (prompt: string) => {
         setIsLoading(true);
@@ -94,7 +101,12 @@ export const BuilderPage: React.FC = () => {
             if (files.length > 0) {
                 const result = await modifyCode(prompt, files);
                 const newPlanMessage: ChatMessage = { author: 'ai', plan: { plan: result.plan, todo: result.todo } };
-                setMessages(prev => [...prev, newPlanMessage]);
+                
+                const nextMessages: ChatMessage[] = [newPlanMessage];
+                if (result.requestsApiKey) {
+                    nextMessages.push({ author: 'ai', apiKeyRequest: true });
+                }
+                setMessages(prev => [...prev, ...nextMessages]);
                 setFiles(result.files);
 
                 setTimeout(() => {
@@ -104,8 +116,12 @@ export const BuilderPage: React.FC = () => {
 
             } else {
                  const result = await generateInitialCode(prompt);
-                 const newAiMessage: ChatMessage = { author: 'ai', message: result.thought };
-                 setMessages(prev => [...prev, newAiMessage]);
+                 const nextMessages: ChatMessage[] = [];
+                 if (result.requestsApiKey) {
+                    nextMessages.push({ author: 'ai', apiKeyRequest: true });
+                 }
+                 nextMessages.push({ author: 'ai', message: result.thought });
+                 setMessages(prev => [...prev, ...nextMessages]);
                  setFiles(result.files);
             }
 
@@ -128,6 +144,7 @@ export const BuilderPage: React.FC = () => {
                 projectName={projectName}
                 onProjectNameChange={setProjectName}
                 onDeployClick={() => setIsDeployModalOpen(true)}
+                onSaveToGitHubClick={() => setIsGitHubModalOpen(true)}
             />
             <main className="flex-1 flex flex-row min-h-0">
                 <div className="relative w-full md:w-1/3 lg:w-1/4 flex flex-col border-r border-gray-800 bg-gray-900">
@@ -145,6 +162,13 @@ export const BuilderPage: React.FC = () => {
                 projectName={projectName}
                 projectId={vercelProjectId}
                 onDeploySuccess={handleDeploySuccess}
+            />
+            <GitHubSaveModal
+                isOpen={isGitHubModalOpen}
+                onClose={() => setIsGitHubModalOpen(false)}
+                files={files}
+                onSaveSuccess={(url) => setGithubRepoUrl(url)}
+                existingRepoUrl={githubRepoUrl}
             />
         </div>
     );

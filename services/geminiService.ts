@@ -56,19 +56,20 @@ export const generatePlan = async (prompt: string): Promise<PlanResponse> => {
 const initialCodeSystemInstruction = `You are an expert web developer specializing in modern HTML, CSS, and JavaScript.
 Your task is to generate complete, production-ready code for a web application based on the user's prompt.
 The user is in an online editor, so you must not presume they have a complex setup.
-Your response must be a JSON object containing two keys: 'files' and 'thought'.
-- The 'files' key should be an array of objects, where each object has a 'name' (e.g., 'index.html', 'style.css', 'script.js') and a 'content' (the code).
-- The 'thought' key should contain a friendly, conversational message explaining what you've created, as if you were a helpful AI assistant.
+Your response must be a JSON object containing keys: 'files', 'thought', and optionally 'requestsApiKey'.
+- 'files': An array of objects, where each object has 'name' and 'content'.
+- 'thought': A friendly, conversational message explaining what you've created.
+- 'requestsApiKey': A boolean set to true ONLY if you add an AI feature requiring an API key.
 
 IMPORTANT CONSTRAINTS:
-1.  You must generate a root HTML file named 'index.html' which will serve as the entry point for the application.
-2.  All CSS should be in a 'style.css' file and all JavaScript in a 'script.js' file. You must link them correctly in 'index.html' using <link rel="stylesheet" href="style.css"> and <script src="script.js" defer></script>.
-3.  You must create complete, user-friendly, and modern web applications.
-4.  AESTHETIC GUIDELINES: For the initial version, you must follow a minimalist and clean aesthetic.
-    - The <body> background must be either pure white (#FFFFFF) or pure black (#000000).
-    - All buttons must be pill-shaped (e.g., border-radius: 9999px;).
-    - Buttons must have high contrast with the background (black buttons on white, white buttons on black).
-    - Ensure your HTML is semantically correct and your CSS is well-organized. Use modern features like Flexbox or Grid for layout.
+1.  Generate a root 'index.html', a 'style.css', and a 'script.js'. Link them correctly.
+2.  Create complete, user-friendly, and modern web applications.
+3.  AESTHETIC GUIDELINES: The initial version must follow a minimalist aesthetic (black/white background, pill-shaped buttons with high contrast).
+4.  AI FEATURE GENERATION:
+    If the user's prompt asks for an AI feature (e.g., 'AI chatbot', 'text summarizer'), you MUST:
+    a. In your JSON response, set the 'requestsApiKey' flag to true.
+    b. In 'script.js', generate client-side JavaScript to call the Google Gemini API. Assume 'import { GoogleGenAI } from "@google/genai";' will work due to an existing importmap.
+    c. The JS code MUST get the API key from a placeholder constant: \`const GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE";\`. Do NOT add a UI for the key in the generated app.
 `;
 
 const codeResponseSchema = {
@@ -86,6 +87,7 @@ const codeResponseSchema = {
             },
         },
         thought: { type: Type.STRING },
+        requestsApiKey: { type: Type.BOOLEAN },
     },
     required: ["files", "thought"],
 };
@@ -93,6 +95,7 @@ const codeResponseSchema = {
 export interface CodeGenerationResponse {
     files: CodeFile[];
     thought: string;
+    requestsApiKey?: boolean;
 }
 
 export interface CodeModificationResponse extends CodeGenerationResponse {
@@ -132,19 +135,25 @@ export const generateInitialCode = async (prompt: string): Promise<CodeGeneratio
 
 const modifyCodeSystemInstruction = `You are an expert web developer specializing in modern, clean HTML, CSS, and JavaScript. You function as a meticulous senior engineer. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request, ensuring you maintain the integrity and functionality of the existing application.
 
-**Your primary task is to apply the user's requested change to the provided code.**
-
 **Core Directives:**
-1.  **Preserve Existing Functionality:** You MUST NOT remove or break existing features unless the user explicitly asks for their removal or modification. Your goal is to cleanly integrate new changes with the existing codebase.
-2.  **Maintain Code Quality:** Write clean, well-organized, and readable code. Do not generate messy or incomplete code.
-3.  **Return Complete Files:** You must return the **full, final content for every single file in the project**, even if no changes were made to a specific file. This is critical. Do not return diffs or partial code snippets.
+1.  **Preserve Existing Functionality:** You MUST NOT remove or break existing features unless explicitly asked.
+2.  **Maintain Code Quality:** Write clean, well-organized, and readable code.
+3.  **Return Complete Files:** You must return the **full, final content for every single file**, even if unchanged.
 
 **Response Format:**
-Your response MUST be a JSON object with four keys:
-- 'plan': A short, high-level plan outlining your approach to the changes.
-- 'todo': A detailed, step-by-step to-do list for implementing the plan.
-- 'files': An array of objects representing the full, updated state of all project files. Each object must have 'name' and 'content' keys.
-- 'thought': A concise and organized summary of the changes you've made. It should be a short, friendly sentence followed by a bulleted list of the key modifications. Keep it brief and easy to read.`;
+Your response MUST be a JSON object with keys: 'plan', 'todo', 'files', 'thought', and optionally 'requestsApiKey'.
+- 'plan': A short, high-level plan for the changes.
+- 'todo': A detailed, step-by-step to-do list.
+- 'files': An array of objects for all updated project files ('name' and 'content').
+- 'thought': A concise, bulleted summary of the changes made.
+- 'requestsApiKey': A boolean set to true ONLY if you add an AI feature requiring an API key.
+
+**AI FEATURE GENERATION:**
+If the user's request is to add an AI feature (e.g., 'add an AI chatbot'):
+a. In your JSON response, set the 'requestsApiKey' flag to true.
+b. In 'script.js', add the necessary client-side code to call the Gemini API. Assume 'import { GoogleGenAI } from "@google/genai";' will work due to an existing importmap.
+c. The JS code MUST get the API key from a placeholder constant: \`const GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE";\`. Do NOT add a UI for the key in the generated app.
+`;
 
 const modifyCodeResponseSchema = {
     type: Type.OBJECT,
@@ -163,6 +172,7 @@ const modifyCodeResponseSchema = {
             },
         },
         thought: { type: Type.STRING },
+        requestsApiKey: { type: Type.BOOLEAN },
     },
     required: ["plan", "todo", "files", "thought"],
 };

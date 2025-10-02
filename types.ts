@@ -5,6 +5,7 @@ export interface ChatMessage {
         plan: string;
         todo: string[];
     };
+    apiKeyRequest?: boolean;
 }
 
 export interface CodeFile {

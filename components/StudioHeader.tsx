@@ -1,12 +1,14 @@
 import React from 'react';
+import { GitHubIcon } from './icons';
 
 interface StudioHeaderProps {
     projectName: string;
     onProjectNameChange: (name: string) => void;
     onDeployClick: () => void;
+    onSaveToGitHubClick: () => void;
 }
 
-export const StudioHeader: React.FC<StudioHeaderProps> = ({ projectName, onProjectNameChange, onDeployClick }) => {
+export const StudioHeader: React.FC<StudioHeaderProps> = ({ projectName, onProjectNameChange, onDeployClick, onSaveToGitHubClick }) => {
   return (
     <header className="flex-shrink-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,6 +26,13 @@ export const StudioHeader: React.FC<StudioHeaderProps> = ({ projectName, onProje
             />
           </div>
           <div className="flex items-center gap-4">
+            <button
+                onClick={onSaveToGitHubClick}
+                className="flex items-center gap-2 bg-gray-800 text-white px-3 py-2 rounded-full font-semibold hover:bg-gray-700 transition-colors text-sm"
+            >
+                <GitHubIcon className="w-4 h-4" />
+                Save
+            </button>
             <button 
                 onClick={onDeployClick}
                 className="bg-white text-black px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm"
