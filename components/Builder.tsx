@@ -22,6 +22,10 @@ import { VersionHistoryModal } from './VersionHistoryModal';
 import { ReactIcon, HtmlIcon, SvelteIcon, MobileIcon, UpArrowIcon, KeyIcon } from './icons';
 import { prompts } from '../data/prompts';
 import { useUsageLimit } from '../hooks/useUsageLimit';
+import { PublishToCommunityModal } from './PublishToCommunityModal';
+import { ShareUrlModal } from './ShareUrlModal';
+import { supabase } from '../services/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 const initialSettings: Settings = {
   geminiApiKey: '',
@@ -121,6 +125,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [teams] = useLocalStorage<Team[]>('silo-build-teams', []);
   const [schema, setSchema] = useLocalStorage<Table[]>('silo-build-schema', []);
   const { recordUsage } = useUsageLimit();
+  const { user } = useAuth();
+
 
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -139,6 +145,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isRedeploying, setIsRedeploying] = useState<'netlify' | 'vercel' | null>(null);
+  
+  // --- COMMUNITY PUBLISH STATE ---
+  const [isCommunityPublishModalOpen, setIsCommunityPublishModalOpen] = useState(false);
+  const [isPublishingToCommunity, setIsPublishingToCommunity] = useState(false);
+  const [communityPublishError, setCommunityPublishError] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+
   
   // --- CREATION FLOW STATE ---
   const [creationStage, setCreationStage] = useState<'stack' | 'prompt'>('stack');
@@ -675,6 +688,68 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     }
   };
 
+  const handlePublishToCommunity = async (name: string, description: string, imageDataUrl: string) => {
+    if (!currentProject || !user || !currentProject.previewFile) {
+        setCommunityPublishError("Missing project data, user info, or preview file.");
+        return;
+    }
+
+    setIsPublishingToCommunity(true);
+    setCommunityPublishError(null);
+
+    try {
+        const res = await fetch(imageDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], 'preview.png', { type: 'image/png' });
+        
+        const filePath = `${user.sub}/${currentProject.id}-${Date.now()}.png`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('project-previews')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+            .from('project-previews')
+            .getPublicUrl(uploadData.path);
+            
+        const projectToPublish = {
+            name,
+            description,
+            prompt: [...messages].reverse().find(m => m.role === 'user')?.content || 'No prompt found.',
+            preview_image_url: urlData.publicUrl,
+            author_name: user.name,
+            author_image_url: user.picture,
+            project_id: currentProject.id,
+            user_id: user.sub,
+            preview_content: currentProject.previewFile.content,
+        };
+
+        const { data: insertData, error: insertError } = await supabase
+            .from('community_projects')
+            .insert([projectToPublish])
+            .select()
+            .single();
+
+        if (insertError) throw insertError;
+        
+        const communityProjectId = insertData.id;
+        const updatedProject = { ...currentProject, communityId: communityProjectId };
+        setCurrentProject(updatedProject);
+        setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+        
+        setIsCommunityPublishModalOpen(false);
+        setShareUrl(`${window.location.origin}${window.location.pathname}#/community/app/${insertData.id}`);
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        setCommunityPublishError(message);
+        console.error(error);
+    } finally {
+        setIsPublishingToCommunity(false);
+    }
+};
+
   const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
   const handleSkipToBuilder = () => {
     if (!techStack) return;
@@ -818,7 +893,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} suggestions={suggestions} onSuggestionClick={handleSuggestionClick} isGeneratingSuggestions={isGeneratingSuggestions} />}
         {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
         {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
-        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} onRedeployNetlify={handleRedeployNetlify} onRedeployVercel={handleRedeployVercel} isRedeploying={isRedeploying} />}
+        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} onRedeployNetlify={handleRedeployNetlify} onRedeployVercel={handleRedeployVercel} isRedeploying={isRedeploying} onPublishToCommunity={() => setIsCommunityPublishModalOpen(true)} isCommunityPublished={!!currentProject?.communityId} />}
         {appMode === 'WORKFLOW' && (workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full text-gray-500">No workflow defined.</div>)}
       </main>
       {promptInputLayout === 'floating' && <PromptInput onSend={executeBuild} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />}
@@ -828,6 +903,8 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
       <VercelDeployModal isOpen={isVercelDeployModalOpen} onClose={() => { setIsVercelDeployModalOpen(false); setVercelDeploymentError(null); }} onDeploy={handleVercelDeploy} isDeploying={isVercelDeploying} initialProjectName={currentProject?.name} initialToken={settings.vercelPat} deploymentError={vercelDeploymentError} />
       <AddAuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onConfirm={handleAddAuth} />
       <VersionHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={currentProject?.versionHistory || []} onRestore={handleRestoreVersion} />
+      <PublishToCommunityModal isOpen={isCommunityPublishModalOpen} onClose={() => setIsCommunityPublishModalOpen(false)} onPublish={handlePublishToCommunity} isPublishing={isPublishingToCommunity} projectName={currentProject?.name || ''} previewContent={currentProject?.previewFile?.content || ''} publishError={communityPublishError} />
+      <ShareUrlModal isOpen={!!shareUrl} onClose={() => setShareUrl(null)} url={shareUrl || ''} />
     </div>
   );
 };

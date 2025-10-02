@@ -207,4 +207,5 @@ export interface CommunityProject {
   author_name: string;
   author_image_url?: string;
   project_id: string;
+  preview_content?: string;
 }

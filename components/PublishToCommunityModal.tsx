@@ -10,6 +10,7 @@ interface PublishToCommunityModalProps {
   isPublishing: boolean;
   projectName: string;
   previewContent: string;
+  publishError: string | null;
 }
 
 export const PublishToCommunityModal: React.FC<PublishToCommunityModalProps> = ({
@@ -19,10 +20,12 @@ export const PublishToCommunityModal: React.FC<PublishToCommunityModalProps> = (
   isPublishing,
   projectName,
   previewContent,
+  publishError,
 }) => {
   const [name, setName] = useState(projectName);
   const [description, setDescription] = useState('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -32,18 +35,24 @@ export const PublishToCommunityModal: React.FC<PublishToCommunityModalProps> = (
   }, [isOpen, projectName]);
 
   const handlePublish = async () => {
-    if (!name.trim() || !description.trim() || !iframeRef.current) return;
+    if (!name.trim() || !description.trim() || !iframeRef.current || !iframeRef.current.contentWindow) return;
+    setIsCapturing(true);
     try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const canvas = await html2canvas(iframeRef.current.contentWindow.document.body, {
             useCORS: true,
             allowTaint: true,
             logging: false,
+            scale: 0.5,
         });
-        const imageDataUrl = canvas.toDataURL('image/png');
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
         onPublish(name, description, imageDataUrl);
     } catch (error) {
         console.error("Error capturing screenshot:", error);
         alert("Failed to capture screenshot. Please try again.");
+    } finally {
+        setIsCapturing(false);
     }
   };
 
@@ -70,22 +79,24 @@ export const PublishToCommunityModal: React.FC<PublishToCommunityModalProps> = (
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail Preview</label>
-            <div className="aspect-w-16 aspect-h-10 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+            <div className="aspect-[16/10] bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
               <iframe
                 ref={iframeRef}
                 srcDoc={previewContent}
                 title="Thumbnail Preview"
-                className="w-full h-full border-0 transform scale-[0.3] origin-top-left"
+                className="w-full h-full border-0"
                 sandbox="allow-scripts allow-same-origin"
                 scrolling="no"
               />
+               {(isPublishing || isCapturing) && <div className="absolute inset-0 bg-white/50 flex items-center justify-center"><Spinner /></div>}
             </div>
           </div>
         </div>
+        {publishError && <p className="text-red-500 text-sm mt-4">{publishError}</p>}
         <div className="flex justify-end gap-3 mt-6">
           <button onClick={onClose} disabled={isPublishing} className="px-4 py-2 text-sm rounded-full font-semibold hover:bg-gray-100 border border-gray-300 transition-colors">Cancel</button>
-          <button onClick={handlePublish} disabled={isPublishing || !name.trim() || !description.trim()} className="flex items-center justify-center gap-2 min-w-[100px] bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
-            {isPublishing ? <Spinner /> : 'Publish'}
+          <button onClick={handlePublish} disabled={isPublishing || isCapturing || !name.trim() || !description.trim()} className="flex items-center justify-center gap-2 min-w-[100px] bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400">
+            {isPublishing || isCapturing ? <Spinner /> : 'Publish'}
           </button>
         </div>
       </div>

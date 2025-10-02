@@ -11,6 +11,7 @@ import { AgentBuilderPage } from './pages/AgentBuilderPage';
 import { MobileApp } from './pages/MobileApp';
 import { prompts } from './data/prompts';
 import { showLocalNotification } from './utils/projectUtils';
+import { CommunityAppPage } from './pages/CommunityAppPage';
 
 const isMobile = () => window.innerWidth < 768;
 
@@ -108,6 +109,11 @@ export const App: React.FC = () => {
 
   if (route.startsWith('#/privacy')) {
     return <PrivacyPolicyPage />;
+  }
+
+  if (route.startsWith('#/community/app/')) {
+    const communityProjectId = route.split('/')[3];
+    return <CommunityAppPage communityProjectId={communityProjectId} />;
   }
 
   if (route.startsWith('#/dashboard')) {
