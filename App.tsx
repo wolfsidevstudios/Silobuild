@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LandingPage } from './pages/LoginPage';
 import { AuthPage } from './pages/AuthPage';
 import { ProjectsPage } from './pages/ProjectsPage';
+import { BuilderPage } from './pages/BuilderPage';
 
 export const App: React.FC = () => {
   const [route, setRoute] = useState(window.location.hash);
@@ -23,6 +24,9 @@ export const App: React.FC = () => {
     }
     if (route.startsWith('#/projects')) {
       return <ProjectsPage />;
+    }
+    if (route.startsWith('#/builder')) {
+        return <BuilderPage />;
     }
     return <LandingPage />;
   };
