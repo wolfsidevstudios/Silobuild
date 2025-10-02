@@ -138,6 +138,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
   const [promptForCredentials, setPromptForCredentials] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isRedeploying, setIsRedeploying] = useState<'netlify' | 'vercel' | null>(null);
   
   // --- CREATION FLOW STATE ---
   const [creationStage, setCreationStage] = useState<'stack' | 'prompt'>('stack');
@@ -417,16 +418,24 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
     setMultiFileCode(prev => [...prev, { path, content: '' }]);
     return true;
   };
-  const handleNewDeployment = (deployment: Deployment) => setDeployments(prev => [deployment, ...prev.filter(d => d.url !== deployment.url)]);
+
+  const handleNewDeployment = (deployment: Deployment) => {
+    const newDeployments = [deployment, ...(currentProject?.deployments || [])];
+    setDeployments(newDeployments);
+    if (currentProject) {
+        const updatedProject: Project = {
+            ...currentProject,
+            deployments: newDeployments,
+            updatedAt: new Date().toISOString(),
+        };
+        setCurrentProject(updatedProject);
+        setProjects(prev => prev.map(p => p.id === updatedProject.id ? updatedProject : p));
+    }
+  };
+
   const handleDeploy = async (token: string, newSiteName: string) => {
-    if (!token) {
-        setDeploymentError("Netlify token is missing.");
-        return;
-    }
-    if (!currentProject) {
-        setDeploymentError("Project data is not available.");
-        return;
-    }
+    if (!token) { setDeploymentError("Netlify token is missing."); return; }
+    if (!currentProject) { setDeploymentError("Project data is not available."); return; }
 
     setIsDeploying(true);
     setDeploymentError(null);
@@ -436,26 +445,18 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         const zip = new JSZip();
         const { stack } = currentProject;
 
-        // Step 1: Prepare the zip file with correct content
         if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
             if (multiFileCode.length === 0) throw new Error("Project has no source files to build and deploy.");
-            
             multiFileCode.forEach(file => zip.file(file.path, file.content));
-            
-            const netlifyTomlContent = `[build]
-  command = "npm install && npm run build"
-  publish = "dist"
-`;
-            zip.file('netlify.toml', netlifyTomlContent);
+            zip.file('netlify.toml', `[build]\n  command = "npm install && npm run build"\n  publish = "dist"\n`);
         } else if (stack === 'html' || stack === 'react-native') {
-            if (!previewFile) throw new Error("Preview file is missing for this project type.");
+            if (!previewFile) throw new Error("Preview file is missing.");
             zip.file('index.html', previewFile.content);
         } else {
-            throw new Error(`Deployment for the "${stack}" tech stack is not currently supported.`);
+            throw new Error(`Deployment for "${stack}" is not supported.`);
         }
         const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-        // Step 2: Create a new site on Netlify
         let siteName = (newSiteName || currentProject.name || 'silo-build-app').toLowerCase().replace(/[^a-z0-9-]/g, '-');
         
         let createSiteResponse = await fetch(`https://api.netlify.com/api/v1/sites`, {
@@ -464,7 +465,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
             body: JSON.stringify({ name: siteName }),
         });
 
-        // If name is taken (422), try a randomized name
         if (createSiteResponse.status === 422) {
             const errorData = await createSiteResponse.json();
             if (errorData.message?.includes('must be unique')) {
@@ -483,7 +483,6 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         }
         const siteData = await createSiteResponse.json();
 
-        // Step 3: Deploy the zip file to the new site
         const deployResponse = await fetch(`https://api.netlify.com/api/v1/sites/${siteData.id}/deploys`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${token}` },
@@ -492,17 +491,13 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
         if (!deployResponse.ok) {
             const err = await deployResponse.json();
-            // Attempt to delete the created site if deploy fails
             try {
                 await fetch(`https://api.netlify.com/api/v1/sites/${siteData.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-            } catch (deleteError) {
-                console.error("Failed to clean up created Netlify site after deploy failure.", deleteError);
-            }
-            throw new Error(`Failed to deploy to new Netlify site: ${err.message || deployResponse.statusText}`);
+            } catch (deleteError) { console.error("Failed to clean up Netlify site.", deleteError); }
+            throw new Error(`Failed to deploy: ${err.message || deployResponse.statusText}`);
         }
         
-        // Success
-        handleNewDeployment({ url: siteData.ssl_url || siteData.url, timestamp: new Date().toISOString() });
+        handleNewDeployment({ url: siteData.ssl_url || siteData.url, timestamp: new Date().toISOString(), siteId: siteData.id, provider: 'netlify' });
         setIsDeployModalOpen(false);
 
     } catch (error) {
@@ -511,15 +506,54 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsDeploying(false);
     }
   };
+
+  const handleRedeployNetlify = async () => {
+    if (!currentProject || !settings.netlifyPat) return;
+    const latestNetlifyDeployment = deployments.find(d => d.provider === 'netlify');
+    if (!latestNetlifyDeployment?.siteId) { alert("Could not find a previous Netlify deployment to update."); return; }
+    if (!window.confirm(`Are you sure you want to redeploy to ${latestNetlifyDeployment.url}?`)) return;
+    
+    setIsRedeploying('netlify');
+    setDeploymentError(null);
+    
+    try {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        const { stack } = currentProject;
+
+        if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
+            multiFileCode.forEach(file => zip.file(file.path, file.content));
+            zip.file('netlify.toml', `[build]\n  command = "npm install && npm run build"\n  publish = "dist"\n`);
+        } else if (stack === 'html' || stack === 'react-native') {
+            if (!previewFile) throw new Error("Preview file is missing.");
+            zip.file('index.html', previewFile.content);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        
+        const deployResponse = await fetch(`https://api.netlify.com/api/v1/sites/${latestNetlifyDeployment.siteId}/deploys`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/zip', Authorization: `Bearer ${settings.netlifyPat}` },
+            body: zipBlob,
+        });
+
+        if (!deployResponse.ok) {
+            const err = await deployResponse.json();
+            throw new Error(`Failed to redeploy: ${err.message || deployResponse.statusText}`);
+        }
+        
+        handleNewDeployment({ url: latestNetlifyDeployment.url, timestamp: new Date().toISOString(), siteId: latestNetlifyDeployment.siteId, provider: 'netlify' });
+
+    } catch (error) {
+        setDeploymentError(`Redeployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(deploymentError);
+    } finally {
+        setIsRedeploying(null);
+    }
+  };
+
   const handleVercelDeploy = async (token: string, newSiteName: string) => {
-    if (!token) {
-        setVercelDeploymentError("Vercel token is missing.");
-        return;
-    }
-    if (!currentProject) {
-        setVercelDeploymentError("Project data is not available.");
-        return;
-    }
+    if (!token) { setVercelDeploymentError("Vercel token is missing."); return; }
+    if (!currentProject) { setVercelDeploymentError("Project data is not available."); return; }
 
     setIsVercelDeploying(true);
     setVercelDeploymentError(null);
@@ -528,51 +562,36 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         const { stack } = currentProject;
         const filesToDeploy: { file: string; data: string }[] = [];
         
-        const vercelJsonContent = `{
-"rewrites": [
-{ "source": "/(.*)", "destination": "/index.html" }
-]
-}`;
-
         if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
-            if (multiFileCode.length === 0) throw new Error("Project has no source files to build and deploy.");
             multiFileCode.forEach(f => filesToDeploy.push({ file: f.path, data: f.content }));
         } else if (stack === 'html' || stack === 'react-native') {
-            if (!previewFile) throw new Error("Preview file is missing for this project type.");
+            if (!previewFile) throw new Error("Preview file is missing.");
             filesToDeploy.push({ file: 'index.html', data: previewFile.content });
         } else {
-            throw new Error(`Deployment for the "${stack}" tech stack is not currently supported on Vercel.`);
+            throw new Error(`Deployment for "${stack}" is not supported on Vercel.`);
         }
 
-        filesToDeploy.push({ file: 'vercel.json', data: vercelJsonContent });
+        filesToDeploy.push({ file: 'vercel.json', data: `{"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]}` });
         
-        const vercelApi = 'https://api.vercel.com/v13/deployments';
         const projectName = (newSiteName || currentProject.name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
         
-        const response = await fetch(`${vercelApi}?forceNew=1`, {
+        const response = await fetch(`https://api.vercel.com/v13/deployments?forceNew=1`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: projectName,
                 files: filesToDeploy,
-                projectSettings: {
-                    framework: stack === 'react' || stack === 'svelte' || stack === 'vue' ? 'vite' : null,
-                }
+                projectSettings: { framework: stack === 'react' || stack === 'svelte' || stack === 'vue' ? 'vite' : null }
             }),
         });
         
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(`Failed to create Vercel deployment: ${err.error?.message || response.statusText}`);
+            throw new Error(`Vercel deployment failed: ${err.error?.message || response.statusText}`);
         }
 
         const deploymentData = await response.json();
-        const deploymentUrl = `https://${deploymentData.url}`;
-
-        handleNewDeployment({ url: deploymentUrl, timestamp: new Date().toISOString() });
+        handleNewDeployment({ url: `https://${deploymentData.url}`, timestamp: new Date().toISOString(), siteId: deploymentData.projectId, provider: 'vercel' });
         setIsVercelDeployModalOpen(false);
 
     } catch (error) {
@@ -581,6 +600,54 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         setIsVercelDeploying(false);
     }
   };
+  
+   const handleRedeployVercel = async () => {
+    if (!currentProject || !settings.vercelPat) return;
+    const latestVercelDeployment = deployments.find(d => d.provider === 'vercel');
+    if (!latestVercelDeployment?.siteId) { alert("Could not find a previous Vercel deployment to update."); return; }
+    if (!window.confirm(`Are you sure you want to redeploy to ${latestVercelDeployment.url}?`)) return;
+
+    setIsRedeploying('vercel');
+    setVercelDeploymentError(null);
+
+    try {
+        const { stack } = currentProject;
+        const filesToDeploy: { file: string; data: string }[] = [];
+        
+        if (stack === 'react' || stack === 'vue' || stack === 'svelte') {
+            multiFileCode.forEach(f => filesToDeploy.push({ file: f.path, data: f.content }));
+        } else if (stack === 'html' || stack === 'react-native') {
+            if (!previewFile) throw new Error("Preview file is missing.");
+            filesToDeploy.push({ file: 'index.html', data: previewFile.content });
+        }
+        filesToDeploy.push({ file: 'vercel.json', data: `{"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]}` });
+        
+        const response = await fetch('https://api.vercel.com/v13/deployments', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${settings.vercelPat}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: currentProject.name.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                project: latestVercelDeployment.siteId,
+                files: filesToDeploy,
+                projectSettings: { framework: stack === 'react' || stack === 'svelte' || stack === 'vue' ? 'vite' : null }
+            }),
+        });
+        
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(`Vercel redeployment failed: ${err.error?.message || response.statusText}`);
+        }
+
+        const deploymentData = await response.json();
+        handleNewDeployment({ url: `https://${deploymentData.url}`, timestamp: new Date().toISOString(), siteId: latestVercelDeployment.siteId, provider: 'vercel' });
+    } catch (error) {
+        setVercelDeploymentError(`Redeployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(vercelDeploymentError);
+    } finally {
+        setIsRedeploying(null);
+    }
+  };
+
   const handleDownload = () => { if (currentProject) downloadProjectAsZip({ ...currentProject, files: multiFileCode, previewFile }); };
   const handleSkipToBuilder = () => {
     if (!techStack) return;
@@ -704,7 +771,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
 
   // --- FULL BUILDER UI ---
   const promptInputLayout = preferences.layout?.promptInputLayout || 'floating';
-  const isBusy = isLoading || isPushing;
+  const isBusy = isLoading || isPushing || !!isRedeploying;
   return (
     <div className="h-screen w-screen bg-white text-gray-900 flex flex-col font-sans overflow-hidden">
       <Header 
@@ -718,7 +785,7 @@ export const Builder: React.FC<BuilderProps> = ({ projectId }) => {
         {appMode === 'CHAT' && <ChatView messages={messages} multiFileCode={multiFileCode} previewFile={previewFile} viewMode={chatModeView} setViewMode={setChatModeView} isLoading={isLoading} error={error} generationPlan={generationPlan} generatedFilesProgress={generatedFilesProgress} generationSummary={generationSummary} isIdeaMode={isIdeaMode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} onCredentialSubmit={handleCredentialSubmit} promptInputLayout={promptInputLayout} onSend={executeBuild} isAppGenerated={true} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} />}
         {appMode === 'CODE' && <WorkspaceView files={multiFileCode} onFileUpdate={handleFileUpdate} onFileDelete={handleFileDelete} onFileAdd={handleFileAdd} />}
         {appMode === 'PREVIEW' && <PreviewView file={previewFile} onToggleMacPreview={() => setIsMacPreviewVisible(true)} deployments={deployments} techStack={techStack} />}
-        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} />}
+        {appMode === 'PUBLISH' && <PublishView project={currentProject} deployments={deployments} onCommitAndPush={handleCommitAndPush} onDeployNetlifyClick={() => setIsDeployModalOpen(true)} onDeployVercelClick={() => setIsVercelDeployModalOpen(true)} onConnectGitHub={() => setIsSaveModalOpen(true)} isPushing={isPushing} onRedeployNetlify={handleRedeployNetlify} onRedeployVercel={handleRedeployVercel} isRedeploying={isRedeploying} />}
         {appMode === 'WORKFLOW' && (workflow ? <WorkflowBuilderPage workflow={workflow} /> : <div className="flex items-center justify-center h-full text-gray-500">No workflow defined.</div>)}
       </main>
       {promptInputLayout === 'floating' && <PromptInput onSend={executeBuild} isLoading={isBusy} isAppGenerated={true} isIdeaMode={isIdeaMode} onToggleIdeaMode={() => setIsIdeaMode(p => !p)} isReadyToPrompt={true} layoutStyle="floating" />}

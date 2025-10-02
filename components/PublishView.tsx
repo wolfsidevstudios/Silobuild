@@ -12,6 +12,9 @@ interface PublishViewProps {
   onDeployVercelClick: () => void;
   onConnectGitHub: () => void;
   isPushing: boolean;
+  onRedeployNetlify: () => void;
+  onRedeployVercel: () => void;
+  isRedeploying: ('netlify' | 'vercel') | null;
 }
 
 const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployments }) => {
@@ -20,14 +23,14 @@ const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployment
     }
     return (
          <ul className="space-y-3">
-            {deployments.map((dep) => (
-              <li key={dep.url} className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center text-sm">
+            {deployments.map((dep, i) => (
+              <li key={`${dep.url}-${i}`} className="bg-gray-50 border border-gray-200 rounded-md p-3 flex justify-between items-center text-sm">
                 <div>
                   <a href={dep.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-mono truncate">
                     {dep.url}
                   </a>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {timeAgo(dep.timestamp)}
+                  <p className="text-xs text-gray-500 mt-1 capitalize">
+                    {dep.provider} &middot; {timeAgo(dep.timestamp)}
                   </p>
                 </div>
                 <a
@@ -44,8 +47,10 @@ const DeploymentHistory: React.FC<{ deployments: Deployment[] }> = ({ deployment
     );
 };
 
-export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployNetlifyClick, onDeployVercelClick, onConnectGitHub, isPushing }) => {
+export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, onCommitAndPush, onDeployNetlifyClick, onDeployVercelClick, onConnectGitHub, isPushing, onRedeployNetlify, onRedeployVercel, isRedeploying }) => {
     const isGithubConnected = !!project?.githubUrl;
+    const latestNetlifyDeployment = deployments.find(d => d.provider === 'netlify');
+    const latestVercelDeployment = deployments.find(d => d.provider === 'vercel');
 
     if (!project) {
         return (
@@ -92,26 +97,64 @@ export const PublishView: React.FC<PublishViewProps> = ({ project, deployments, 
                 </div>
 
                 {/* Deployments Section */}
+                 <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                        <CloudUploadIcon className="w-6 h-6"/>
+                        <h2 className="text-xl font-bold">Deployments</h2>
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Netlify */}
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col">
+                            <div className="flex items-center gap-2 mb-4"><NetlifyIcon /> <h3 className="font-semibold">Netlify</h3></div>
+                            {latestNetlifyDeployment ? (
+                                <>
+                                    <div className="flex-1">
+                                        <p className="text-xs text-gray-500">Latest deployment:</p>
+                                        <a href={latestNetlifyDeployment.url} target="_blank" rel="noopener noreferrer" className="text-sm font-mono text-blue-600 hover:underline break-all">{latestNetlifyDeployment.url}</a>
+                                        <p className="text-xs text-gray-500 mt-1">{timeAgo(latestNetlifyDeployment.timestamp)}</p>
+                                    </div>
+                                    <button onClick={onRedeployNetlify} disabled={isRedeploying === 'netlify'} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors disabled:bg-gray-400">
+                                        {isRedeploying === 'netlify' ? <Spinner /> : <CloudUploadIcon />} {isRedeploying === 'netlify' ? 'Deploying...' : 'Redeploy'}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                <p className="text-sm text-gray-500 flex-1">No Netlify deployments yet for this project.</p>
+                                <button onClick={onDeployNetlifyClick} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors">
+                                    <NetlifyIcon /> Deploy to Netlify
+                                </button>
+                                </>
+                            )}
+                        </div>
+                        {/* Vercel */}
+                         <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col">
+                            <div className="flex items-center gap-2 mb-4"><VercelIcon className="h-4 text-black"/> <h3 className="font-semibold">Vercel</h3></div>
+                            {latestVercelDeployment ? (
+                                <>
+                                    <div className="flex-1">
+                                        <p className="text-xs text-gray-500">Latest deployment:</p>
+                                        <a href={latestVercelDeployment.url} target="_blank" rel="noopener noreferrer" className="text-sm font-mono text-blue-600 hover:underline break-all">{latestVercelDeployment.url}</a>
+                                        <p className="text-xs text-gray-500 mt-1">{timeAgo(latestVercelDeployment.timestamp)}</p>
+                                    </div>
+                                    <button onClick={onRedeployVercel} disabled={isRedeploying === 'vercel'} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-lg transition-colors disabled:bg-gray-400">
+                                        {isRedeploying === 'vercel' ? <Spinner /> : <CloudUploadIcon />} {isRedeploying === 'vercel' ? 'Deploying...' : 'Redeploy'}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                <p className="text-sm text-gray-500 flex-1">No Vercel deployments yet for this project.</p>
+                                <button onClick={onDeployVercelClick} className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-lg transition-colors">
+                                    <VercelIcon className="h-4" /> Deploy to Vercel
+                                </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <CloudUploadIcon className="w-6 h-6"/>
-                            <h2 className="text-xl font-bold">Deployments</h2>
-                        </div>
-                         <div className="flex items-center gap-2">
-                            <button onClick={onDeployNetlifyClick} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-teal-500 hover:bg-teal-600 text-white rounded-md transition-colors">
-                                <NetlifyIcon /> Deploy to Netlify
-                            </button>
-                            <button onClick={onDeployVercelClick} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-black hover:bg-gray-800 text-white rounded-md transition-colors">
-                                <VercelIcon className="h-4" /> Deploy to Vercel
-                            </button>
-                        </div>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">Deploy your project to a live URL using Netlify or Vercel.</p>
-                     <div className="mt-4 border-t pt-4">
-                        <h3 className="font-semibold mb-3">Deployment History</h3>
-                        <DeploymentHistory deployments={deployments} />
-                    </div>
+                     <h3 className="font-semibold mb-3">Deployment History</h3>
+                     <DeploymentHistory deployments={deployments} />
                 </div>
             </div>
         </div>

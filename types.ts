@@ -59,6 +59,8 @@ export interface Settings {
 export interface Deployment {
   url: string;
   timestamp: string;
+  siteId?: string;
+  provider?: 'netlify' | 'vercel';
 }
 
 // New types for Agent Builder
