@@ -17,22 +17,9 @@ const isMobile = () => window.innerWidth < 768;
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isGuest } = useAuth();
-  const [isChecking, setIsChecking] = useState(true);
 
-  useEffect(() => {
-    // Give the auth context a moment to load the user from local storage
-    const timer = setTimeout(() => setIsChecking(false), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isChecking) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <Spinner className="w-10 h-10" />
-      </div>
-    );
-  }
-
+  // The main loading state is now handled by the App component,
+  // so we can reliably check the user status here.
   if (!user && !isGuest) {
     window.location.hash = '#/';
     return null;
@@ -44,7 +31,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const App: React.FC = () => {
   const [isMobileView, setIsMobileView] = useState(isMobile());
   const [route, setRoute] = useState(window.location.hash);
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, loading } = useAuth();
 
   useEffect(() => {
     let intervalId: number | undefined;
@@ -89,6 +76,16 @@ export const App: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  // Handle the auth loading state globally. This prevents race conditions
+  // where the app tries to render a protected route before the user is loaded.
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <Spinner className="w-10 h-10" />
+      </div>
+    );
+  }
 
   if (isMobileView) {
     return <MobileApp />;

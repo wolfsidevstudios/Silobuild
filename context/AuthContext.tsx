@@ -15,6 +15,7 @@ interface SupabaseUser {
 interface AuthContextType {
   user: DecodedCredential | null;
   isGuest: boolean;
+  loading: boolean;
   loginWithGoogle: (credential: string) => void;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signUpWithPassword: (email: string, password: string) => Promise<any>;
@@ -122,16 +123,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsGuest(false);
   };
 
-  if (loading) {
-    return (
-        <div className="h-screen w-screen flex items-center justify-center">
-            <Spinner className="w-10 h-10" />
-        </div>
-    );
-  }
-
   return (
-    <AuthContext.Provider value={{ user, isGuest, loginWithGoogle, signInWithPassword, signUpWithPassword, logout, loginAsGuest }}>
+    <AuthContext.Provider value={{ user, isGuest, loading, loginWithGoogle, signInWithPassword, signUpWithPassword, logout, loginAsGuest }}>
       {children}
     </AuthContext.Provider>
   );
