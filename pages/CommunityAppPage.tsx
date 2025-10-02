@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { CommunityProject } from '../types';
 import { Spinner } from '../components/Spinner';
+import { timeAgo } from '../utils/projectUtils';
 
 interface CommunityAppPageProps {
   communityProjectId: string;
@@ -11,6 +12,7 @@ export const CommunityAppPage: React.FC<CommunityAppPageProps> = ({ communityPro
     const [project, setProject] = useState<CommunityProject | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
     
     useEffect(() => {
         const fetchProject = async () => {
@@ -45,9 +47,14 @@ export const CommunityAppPage: React.FC<CommunityAppPageProps> = ({ communityPro
     const handleRemix = () => {
         if (project?.prompt) {
             sessionStorage.setItem('initialPrompt', project.prompt);
-            // Redirect to the main page which will then route to the builder
-            window.location.href = window.location.origin + window.location.pathname;
+            window.location.href = window.location.origin + window.location.pathname + '#/builder';
         }
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
     
     if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-gray-100"><Spinner className="w-10 h-10" /></div>;
@@ -55,27 +62,35 @@ export const CommunityAppPage: React.FC<CommunityAppPageProps> = ({ communityPro
     if (!project || !project.preview_content) return <div className="h-screen w-screen flex items-center justify-center bg-gray-100 text-gray-600 p-4">This project does not have any content to display.</div>;
 
     return (
-        <div className="h-screen w-screen flex flex-col bg-gray-800">
-            <main className="flex-1">
-                <iframe
-                    srcDoc={project.preview_content}
-                    title={project.name}
-                    className="w-full h-full border-0"
-                    sandbox="allow-scripts allow-same-origin"
-                />
-            </main>
-            <footer className="flex-shrink-0 bg-white/10 backdrop-blur-md p-3 flex items-center justify-between border-t border-white/20">
-                <a href={window.location.origin + window.location.pathname} className="flex items-center gap-2" title="Made with Silo Build">
-                    <img src="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" alt="Silo Build Logo" className="h-6 w-auto" />
-                    <span className="text-white text-sm font-semibold hidden sm:inline">Made with Silo Build</span>
-                </a>
-                <button
-                    onClick={handleRemix}
-                    className="bg-blue-600 text-white px-4 py-2 text-sm rounded-full font-semibold hover:bg-blue-700 transition-colors"
-                >
-                    Remix This App
-                </button>
-            </footer>
+        <div className="h-screen w-screen flex flex-col bg-gray-100">
+             <div className="w-full h-full max-w-none bg-white flex flex-col overflow-hidden">
+                <div className="flex-1 bg-gray-100">
+                    <iframe
+                        srcDoc={project.preview_content}
+                        title={project.name}
+                        className="w-full h-full border-0"
+                        sandbox="allow-scripts allow-same-origin"
+                    />
+                </div>
+                <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-white grid grid-cols-1 sm:grid-cols-3 items-center gap-4">
+                    <div className="col-span-1 sm:col-span-2">
+                         <h3 className="font-bold text-lg text-gray-900 truncate">{project.name}</h3>
+                         <p className="text-sm text-gray-600 mt-1 line-clamp-1">{project.description}</p>
+                         <div className="flex items-center gap-2 mt-2">
+                            <img src={project.author_image_url || 'https://www.gravatar.com/avatar/?d=mp'} alt={project.author_name} className="w-6 h-6 rounded-full" />
+                            <a href="#/dashboard/community" className="text-xs text-gray-500 hover:underline">by {project.author_name} &middot; {timeAgo(project.created_at)}</a>
+                         </div>
+                    </div>
+                    <div className="flex items-center justify-start sm:justify-end gap-2">
+                        <button onClick={handleCopy} className="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+                            {copied ? 'Copied!' : 'Copy Link'}
+                        </button>
+                        <button onClick={handleRemix} className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                            Remix App
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
