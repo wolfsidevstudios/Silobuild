@@ -67,21 +67,19 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files }) => {
 
     return (
         <div className="flex-1 flex flex-col bg-gray-900 min-h-0">
-            <div className="flex-shrink-0 border-b border-gray-800 flex justify-center p-2">
+            <div className="flex-shrink-0 border-b border-gray-800 flex justify-end p-2 pr-4">
                 <div className="relative flex items-center bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/10">
                     {/* The sliding white pill */}
                     <div 
-                        className={`absolute top-1 left-1 h-[calc(100%-8px)] w-28 bg-white rounded-full shadow-lg transform transition-transform duration-300 ease-in-out ${activeTab === 'preview' ? 'translate-x-full' : 'translate-x-0'}`}
+                        className={`absolute top-1 left-1 h-[calc(100%-8px)] w-10 bg-white rounded-full shadow-lg transform transition-transform duration-300 ease-in-out ${activeTab === 'preview' ? 'translate-x-full' : 'translate-x-0'}`}
                     ></div>
                     <TabButton 
                         icon={<CodeBracketIcon className="w-5 h-5"/>} 
-                        label="Code"
                         isActive={activeTab === 'code'}
                         onClick={() => setActiveTab('code')}
                     />
                     <TabButton 
                         icon={<EyeIcon className="w-5 h-5"/>} 
-                        label="Preview"
                         isActive={activeTab === 'preview'}
                         onClick={() => setActiveTab('preview')}
                     />
@@ -94,12 +92,11 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ files }) => {
     );
 };
 
-const TabButton: React.FC<{icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void}> = ({ icon, label, isActive, onClick }) => (
+const TabButton: React.FC<{icon: React.ReactNode, isActive: boolean, onClick: () => void}> = ({ icon, isActive, onClick }) => (
     <button 
         onClick={onClick}
-        className={`relative z-10 flex w-28 justify-center items-center gap-2 py-2 px-4 rounded-full text-sm font-medium transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-opacity-75 ${isActive ? 'text-black' : 'text-gray-300 hover:text-white'}`}
+        className={`relative z-10 flex w-10 h-10 justify-center items-center rounded-full text-sm font-medium transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-opacity-75 ${isActive ? 'text-black' : 'text-gray-300 hover:text-white'}`}
     >
         {icon}
-        {label}
     </button>
 );
