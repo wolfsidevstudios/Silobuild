@@ -19,10 +19,7 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
     };
 
     return (
-        <div className="w-full flex flex-col items-center justify-center text-center relative max-h-screen overflow-hidden">
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-            <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-
+        <div className="w-full flex flex-col items-center justify-center text-center relative">
             <div className="relative z-10 w-full max-w-2xl px-4">
                 <h1 className="text-5xl md:text-6xl font-black text-white mb-4">
                     What should we build today?
@@ -64,10 +61,6 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
                     </div>
                 </form>
             </div>
-            
-            <div className="absolute bottom-[-150px] left-1/2 -translate-x-1/2 w-[150%] h-[300px] bg-gradient-to-t from-blue-500/50 to-transparent blur-3xl rounded-full" style={{
-                background: 'radial-gradient(ellipse at 50% 100%, rgba(59, 130, 246, 0.3), transparent 60%)'
-            }}></div>
         </div>
     );
 };

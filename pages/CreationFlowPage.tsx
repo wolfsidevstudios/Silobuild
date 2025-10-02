@@ -76,8 +76,17 @@ export const CreationFlowPage: React.FC = () => {
         }
     };
 
+    const backgroundStyle = step === 'prompt' ? {
+        backgroundImage: 'url(https://i.ibb.co/svn4YNLr/Google-AI-Studio-2025-10-02-T23-13-58-033-Z.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+    } : {};
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 p-4">
+        <div
+            className={`flex flex-col items-center justify-center min-h-screen transition-colors duration-300 ${step !== 'prompt' ? 'bg-gray-950 p-4' : ''}`}
+            style={backgroundStyle}
+        >
             {renderContent()}
         </div>
     );
