@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { CodeFile } from '../types';
 
-declare global {
-    var svelte: any;
-}
-
 interface PreviewViewProps {
     files: CodeFile[];
 }
@@ -17,109 +13,51 @@ const PreviewError: React.FC<{ error: string }> = ({ error }) => (
 )
 
 export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
+    const [previewContent, setPreviewContent] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
-    const shadowHostRef = useRef<HTMLDivElement>(null);
-    const componentInstanceRef = useRef<any | null>(null);
-    const blobUrlsRef = useRef<string[]>([]);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
-        const hostElement = shadowHostRef.current;
-        if (!hostElement) return;
-
-        // Cleanup previous render before starting a new one
-        if (componentInstanceRef.current) {
-            try { componentInstanceRef.current.$destroy(); } catch (e) { /* ignore */ }
-            componentInstanceRef.current = null;
-        }
-        blobUrlsRef.current.forEach(URL.revokeObjectURL);
-        blobUrlsRef.current = [];
-        
-        let shadowRoot = hostElement.shadowRoot;
-        if (!shadowRoot) {
-            shadowRoot = hostElement.attachShadow({ mode: 'open' });
-        }
-        shadowRoot.innerHTML = '';
         setError(null);
 
-        const compileAndRun = async () => {
-            if (!shadowRoot) return;
-
-            try {
-                if (typeof window.svelte === 'undefined' || typeof window.svelte.compile !== 'function') {
-                    throw new Error("Svelte compiler (window.svelte.compile) is not available.");
-                }
-
-                const svelteFiles = files.filter(f => f.name.endsWith('.svelte'));
-                if (svelteFiles.length === 0) return;
-
-                const appSvelteFile = svelteFiles.find(f => f.name === 'App.svelte');
-                if (!appSvelteFile) {
-                    throw new Error("Entry component 'App.svelte' not found.");
-                }
-
-                const componentUrlMap = new Map<string, string>();
-                let combinedCss = '';
-                const newBlobUrls: string[] = [];
-
-                // Compile all dependency Svelte components first
-                for (const file of svelteFiles) {
-                    if (file.name === 'App.svelte') continue;
-
-                    // In a more advanced version, we would recursively resolve imports here too.
-                    const { js, css } = window.svelte.compile(file.content, { generate: 'dom' });
-                    if (css && css.code) combinedCss += css.code;
-                    
-                    const blob = new Blob([js.code], { type: 'application/javascript' });
-                    const url = URL.createObjectURL(blob);
-                    newBlobUrls.push(url);
-                    componentUrlMap.set(file.name, url);
-                }
-
-                // Process the main App.svelte file, replacing imports with blob URLs
-                let processedAppContent = appSvelteFile.content;
-                for (const [fileName, url] of componentUrlMap.entries()) {
-                    const importRegex = new RegExp(`(import\\s+.*\\s+from\\s+)['"](.\\/)?${fileName}['"]`, 'g');
-                    processedAppContent = processedAppContent.replace(importRegex, `$1'${url}'`);
-                }
-                
-                // Compile the processed App.svelte
-                const { js: appJs, css: appCss } = window.svelte.compile(processedAppContent, { generate: 'dom' });
-                if (appCss && appCss.code) combinedCss += appCss.code;
-
-                // Add all CSS to the shadow DOM
-                if (combinedCss) {
-                    const styleEl = document.createElement('style');
-                    styleEl.textContent = combinedCss;
-                    shadowRoot.appendChild(styleEl);
-                }
-
-                const mountPoint = document.createElement('div');
-                shadowRoot.appendChild(mountPoint);
-
-                const appUrl = `data:text/javascript;base64,${btoa(appJs.code)}`;
-                const module = await import(/* @vite-ignore */ appUrl);
-                
-                if (!module.default) throw new Error("Compiled 'App.svelte' is missing a default export.");
-                
-                const SvelteComponent = module.default;
-                componentInstanceRef.current = new SvelteComponent({ target: mountPoint });
-                blobUrlsRef.current = newBlobUrls; // Store URLs for future cleanup
-
-            } catch (e: any) {
-                console.error("Svelte Preview Error:", e);
-                setError(e.message);
+        const htmlFile = files.find(f => f.name === 'index.html');
+        if (!htmlFile) {
+            setPreviewContent('');
+            if (files.length > 0) {
+                setError("Entry file 'index.html' not found.");
             }
-        };
+            return;
+        }
 
-        compileAndRun();
+        let htmlContent = htmlFile.content;
 
-        // The main cleanup function is implicitly returned by useEffect
-        return () => {
-            if (componentInstanceRef.current) {
-                try { componentInstanceRef.current.$destroy(); } catch (e) { /* ignore */ }
+        const cssFile = files.find(f => f.name === 'style.css');
+        if (cssFile) {
+            // Replace stylesheet link with inline style tag
+            const styleTag = `<style>${cssFile.content}</style>`;
+            const linkRegex = /<link\s+.*?href="style\.css".*?>/i;
+            if (linkRegex.test(htmlContent)) {
+                 htmlContent = htmlContent.replace(linkRegex, styleTag);
+            } else {
+                // If not found, inject into head
+                htmlContent = htmlContent.replace('</head>', `${styleTag}</head>`);
             }
-            blobUrlsRef.current.forEach(URL.revokeObjectURL);
-        };
+        }
+
+        const jsFile = files.find(f => f.name === 'script.js');
+        if (jsFile) {
+            // Replace script link with inline script tag
+            const scriptTag = `<script>${jsFile.content}</script>`;
+            const scriptRegex = /<script\s+.*?src="script\.js".*?>\s*<\/script>/i;
+             if (scriptRegex.test(htmlContent)) {
+                htmlContent = htmlContent.replace(scriptRegex, scriptTag);
+            } else {
+                // If not found, inject before closing body
+                htmlContent = htmlContent.replace('</body>', `${scriptTag}</body>`);
+            }
+        }
+
+        setPreviewContent(htmlContent);
 
     }, [files]);
     
@@ -144,11 +82,18 @@ export const PreviewView: React.FC<PreviewViewProps> = ({ files }) => {
                 {/* Content */}
                 <div className="flex-1 bg-white text-gray-800 overflow-auto">
                     {error && <div className="p-4"><PreviewError error={error} /></div>}
-                    <div ref={shadowHostRef} className="w-full h-full"></div>
-                    {!error && (!files.find(f => f.name.endsWith('.svelte'))) && (
+                    {!error && previewContent ? (
+                         <iframe
+                            ref={iframeRef}
+                            srcDoc={previewContent}
+                            title="Preview"
+                            sandbox="allow-scripts allow-same-origin"
+                            className="w-full h-full border-0"
+                         />
+                    ) : (
                          <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center">
                             <h1 className="text-2xl font-bold text-gray-900">Live Preview</h1>
-                            <p className="mt-2 text-gray-600">Your generated Svelte component will appear here.</p>
+                            <p className="mt-2 text-gray-600">Your generated website will appear here.</p>
                         </div>
                     )}
                 </div>

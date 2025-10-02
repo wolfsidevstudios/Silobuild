@@ -17,7 +17,7 @@ const getApiClient = () => {
     return { ai, modelName };
 }
 
-const planSystemInstruction = `You are a principal software architect. Based on the user's prompt, create a high-level plan and a detailed to-do list for building the application using Svelte and Tailwind CSS. The plan should be a short paragraph. The todo list should be a bulleted list of actionable steps.
+const planSystemInstruction = `You are a principal software architect. Based on the user's prompt, create a high-level plan and a detailed to-do list for building the application using modern HTML, CSS, and JavaScript. The plan should be a short paragraph. The todo list should be a bulleted list of actionable steps that includes creating the HTML structure, CSS styling (following the modern aesthetic of black/white background and pill buttons), and JavaScript functionality.
 Your response must be a JSON object with two keys: 'plan' (a string) and 'todo' (an array of strings).`;
 
 const planResponseSchema = {
@@ -53,18 +53,22 @@ export const generatePlan = async (prompt: string): Promise<PlanResponse> => {
     }
 };
 
-const initialCodeSystemInstruction = `You are an expert web developer specializing in Svelte and Tailwind CSS.
+const initialCodeSystemInstruction = `You are an expert web developer specializing in modern HTML, CSS, and JavaScript.
 Your task is to generate complete, production-ready code for a web application based on the user's prompt.
 The user is in an online editor, so you must not presume they have a complex setup.
 Your response must be a JSON object containing two keys: 'files' and 'thought'.
-- The 'files' key should be an array of objects, where each object has a 'name' (e.g., 'App.svelte', 'styles.css', 'utils.js') and a 'content' (the code).
+- The 'files' key should be an array of objects, where each object has a 'name' (e.g., 'index.html', 'style.css', 'script.js') and a 'content' (the code).
 - The 'thought' key should contain a friendly, conversational message explaining what you've created, as if you were a helpful AI assistant.
 
 IMPORTANT CONSTRAINTS:
-1.  You must generate a root Svelte component named 'App.svelte' which will serve as the entry point for the application.
-2.  You can create multiple Svelte components (.svelte files) and import them into each other or into 'App.svelte'.
-3.  If you use Tailwind CSS, you must include the CDN script link within a <svelte:head> tag in App.svelte, like this: <svelte:head><script src="https://cdn.tailwindcss.com"></script></svelte:head>.
-4.  Do not generate a 'main.js' or 'index.html' file. The preview environment handles mounting 'App.svelte'.
+1.  You must generate a root HTML file named 'index.html' which will serve as the entry point for the application.
+2.  All CSS should be in a 'style.css' file and all JavaScript in a 'script.js' file. You must link them correctly in 'index.html' using <link rel="stylesheet" href="style.css"> and <script src="script.js" defer></script>.
+3.  You must create complete, user-friendly, and modern web applications.
+4.  AESTHETIC GUIDELINES: For the initial version, you must follow a minimalist and clean aesthetic.
+    - The <body> background must be either pure white (#FFFFFF) or pure black (#000000).
+    - All buttons must be pill-shaped (e.g., border-radius: 9999px;).
+    - Buttons must have high contrast with the background (black buttons on white, white buttons on black).
+    - Ensure your HTML is semantically correct and your CSS is well-organized. Use modern features like Flexbox or Grid for layout.
 `;
 
 const codeResponseSchema = {
@@ -121,10 +125,10 @@ export const generateInitialCode = async (prompt: string): Promise<CodeGeneratio
     }
 };
 
-const modifyCodeSystemInstruction = `You are an expert web developer specializing in Svelte and Tailwind CSS. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request.
+const modifyCodeSystemInstruction = `You are an expert web developer specializing in modern HTML, CSS, and JavaScript. The user has provided you with the current set of code files for their project. Your task is to modify the code based on the user's request.
 Ensure you return the **complete, updated content for all files**, not just the changed parts.
-Your Svelte code must have a root component named 'App.svelte'. You can create and modify other '.svelte' files as needed.
-If you use Tailwind CSS, ensure the CDN script tag is present in a <svelte:head> tag in App.svelte.
+The project's entry point is 'index.html'. You can create and modify 'style.css', 'script.js', and other files as needed.
+Unless the user specifically asks for a different style, try to maintain the existing modern, minimalist aesthetic (black/white background, pill-shaped buttons).
 
 Your response must be a JSON object containing two keys: 'files' and 'thought'.
 - The 'files' key should be an array of objects representing the full, updated state of all project files.
