@@ -6,6 +6,8 @@ import { WorkspaceView } from '../components/WorkspaceView';
 import { generateInitialCode, modifyCode } from '../services/geminiService';
 import { ChatMessage, CodeFile } from '../types';
 
+const AUTOSAVE_KEY = 'silo_builder_current_project';
+
 const initialMessages: ChatMessage[] = [
     { author: 'ai', message: "Your project is ready! Let me know what changes you'd like to make." },
 ];
@@ -15,8 +17,25 @@ export const BuilderPage: React.FC = () => {
     const [files, setFiles] = useState<CodeFile[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Effect for loading project on initial mount
     useEffect(() => {
-        // Load initial files passed from the creation flow via sessionStorage
+        // 1. Try to load from autosave
+        const savedProjectJson = localStorage.getItem(AUTOSAVE_KEY);
+        if (savedProjectJson) {
+            try {
+                const savedProject = JSON.parse(savedProjectJson);
+                if (savedProject.files && savedProject.messages) {
+                    setFiles(savedProject.files);
+                    setMessages(savedProject.messages);
+                    return; // Project loaded, exit
+                }
+            } catch (e) {
+                console.error("Failed to parse autosaved project from localStorage", e);
+                localStorage.removeItem(AUTOSAVE_KEY); // Clear corrupted data
+            }
+        }
+
+        // 2. If no autosave, try to load from creation flow (sessionStorage)
         const initialFilesJson = sessionStorage.getItem('initial_files');
         if (initialFilesJson) {
             try {
@@ -25,15 +44,28 @@ export const BuilderPage: React.FC = () => {
                 setMessages(initialMessages);
                 // Clear the storage so it's not reused on refresh
                 sessionStorage.removeItem('initial_files');
+                return; // New project loaded, exit
             } catch (e) {
                 console.error("Failed to parse initial files from sessionStorage", e);
-                setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
             }
-        } else {
-             // Fallback for direct navigation or if state is lost
-             setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
         }
+        
+        // 3. Fallback for direct navigation or if state is lost
+        setMessages([{ author: 'ai', message: "Hello! Describe the component you want to build to get started." }]);
     }, []);
+
+    // Effect for autosaving project on changes
+    useEffect(() => {
+        // Don't save if there are no files yet, to avoid overwriting a valid project with an empty state on load.
+        if (files.length > 0) {
+            const projectToSave = {
+                files,
+                messages,
+                lastSaved: new Date().toISOString(),
+            };
+            localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(projectToSave));
+        }
+    }, [files, messages]);
 
     const handleSendPrompt = async (prompt: string) => {
         setIsLoading(true);
