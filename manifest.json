@@ -1,6 +1,6 @@
 {
   "short_name": "Silo Build",
-  "name": "Silo Build: From Prompt to Product",
+  "name": "Silo Build - Build Apps with AI",
   "icons": [
     {
       "src": "https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png",
@@ -15,6 +15,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#F8F7F4",
-  "background_color": "#F8F7F4"
+  "theme_color": "#030712",
+  "background_color": "#030712"
 }

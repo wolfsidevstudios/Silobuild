@@ -3,51 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Silo Build</title>
+    <title>Silo Build - Build Apps with AI</title>
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#F8F7F4" />
+    <meta name="theme-color" content="#030712" />
     <link rel="apple-touch-icon" href="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" />
     <link rel="icon" type="image/png" href="https://i.ibb.co/svVCNWvV/Google-AI-Studio-2025-09-29-T00-23-01-230-Z-modified.png" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #FFFFFF;
+        background-color: #030712;
+        color: #f9fafb;
       }
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-      @keyframes fade-in-up {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      .animate-fade-in-up {
-        animation: fade-in-up 0.5s ease-out forwards;
-        opacity: 0;
-      }
+      /* Add Google Icons link */
+      @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
     </style>
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.1.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "react/": "https://aistudiocdn.com/react@^19.1.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0",
-    "google-one-tap": "https://aistudiocdn.com/google-one-tap@^1.0.6",
-    "jszip": "https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm",
-    "file-saver": "https://aistudiocdn.com/file-saver@^2.0.5",
-    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm",
-    "html2canvas": "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm",
-    "jwt-decode": "https://aistudiocdn.com/jwt-decode@^4.0.0"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.1.1",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+        "react/": "https://aistudiocdn.com/react@^19.1.1/"
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
