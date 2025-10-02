@@ -19,6 +19,9 @@ export const BuilderPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [projectName, setProjectName] = useState('Untitled Project');
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+    const [vercelProjectId, setVercelProjectId] = useState<string | null>(null);
+    const [vercelDeploymentUrl, setVercelDeploymentUrl] = useState<string | null>(null);
+
 
     // Effect for loading project on initial mount
     useEffect(() => {
@@ -53,6 +56,8 @@ export const BuilderPage: React.FC = () => {
                     setFiles(savedProject.files);
                     setMessages(savedProject.messages);
                     setProjectName(savedProject.projectName || 'Untitled Project');
+                    setVercelProjectId(savedProject.vercelProjectId || null);
+                    setVercelDeploymentUrl(savedProject.vercelDeploymentUrl || null);
                     return;
                 }
             } catch (e) {
@@ -72,11 +77,13 @@ export const BuilderPage: React.FC = () => {
                 files,
                 messages,
                 projectName,
+                vercelProjectId,
+                vercelDeploymentUrl,
                 lastSaved: new Date().toISOString(),
             };
             localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(projectToSave));
         }
-    }, [files, messages, projectName]);
+    }, [files, messages, projectName, vercelProjectId, vercelDeploymentUrl]);
 
     const handleSendPrompt = async (prompt: string) => {
         setIsLoading(true);
@@ -110,6 +117,11 @@ export const BuilderPage: React.FC = () => {
         }
     };
 
+    const handleDeploySuccess = ({ projectId, url }: { projectId: string; url: string }) => {
+        setVercelProjectId(projectId);
+        setVercelDeploymentUrl(url);
+    };
+
     return (
         <div className="flex flex-col h-screen bg-gray-950 text-white overflow-hidden">
             <StudioHeader 
@@ -131,6 +143,8 @@ export const BuilderPage: React.FC = () => {
                 onClose={() => setIsDeployModalOpen(false)}
                 files={files}
                 projectName={projectName}
+                projectId={vercelProjectId}
+                onDeploySuccess={handleDeploySuccess}
             />
         </div>
     );

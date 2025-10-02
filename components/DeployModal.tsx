@@ -10,7 +10,12 @@ interface VercelFile {
     data: string;
 }
 
-const deployToVercel = async (accessToken: string, files: CodeFile[], projectName: string): Promise<string> => {
+interface VercelDeploymentResponse {
+    url: string;
+    projectId: string;
+}
+
+const deployToVercel = async (accessToken: string, files: CodeFile[], projectName: string, projectId: string | null): Promise<VercelDeploymentResponse> => {
     if (!accessToken) {
         throw new Error("Vercel Access Token is required.");
     }
@@ -24,13 +29,18 @@ const deployToVercel = async (accessToken: string, files: CodeFile[], projectNam
         vercelFiles.push({ file: 'vercel.json', data: JSON.stringify({ framework: null }) });
     }
 
-    const body = {
-        name: projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 50) || 'silo-build-project',
+    const body: any = {
         files: vercelFiles,
         projectSettings: {
             framework: null
         }
     };
+    
+    if (projectId) {
+        body.projectId = projectId;
+    } else {
+        body.name = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 50) || 'silo-build-project';
+    }
 
     const response = await fetch(VERCEL_API_URL, {
         method: 'POST',
@@ -48,20 +58,21 @@ const deployToVercel = async (accessToken: string, files: CodeFile[], projectNam
         throw new Error(data.error?.message || 'Failed to create deployment on Vercel.');
     }
 
-    return `https://${data.url}`;
+    return { url: `https://${data.url}`, projectId: data.projectId };
 };
-
 
 interface DeployModalProps {
     isOpen: boolean;
     onClose: () => void;
     files: CodeFile[];
     projectName: string;
+    projectId: string | null;
+    onDeploySuccess: (data: VercelDeploymentResponse) => void;
 }
 
 const VERCEL_TOKEN_KEY = 'vercel_access_token';
 
-export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files, projectName }) => {
+export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files, projectName, projectId, onDeploySuccess }) => {
     const [accessToken, setAccessToken] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -86,8 +97,9 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files
         setError(null);
         try {
             localStorage.setItem(VERCEL_TOKEN_KEY, accessToken);
-            const url = await deployToVercel(accessToken, files, projectName);
+            const { url, projectId: newProjectId } = await deployToVercel(accessToken, files, projectName, projectId);
             setDeploymentUrl(url);
+            onDeploySuccess({ url, projectId: newProjectId });
         } catch (err: any) {
             setError(err.message || 'An unknown error occurred.');
         } finally {
@@ -110,7 +122,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files
             return (
                 <div className="text-center p-8">
                     <Spinner className="w-10 h-10 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold">Deploying to Vercel...</h3>
+                    <h3 className="text-lg font-semibold">{projectId ? 'Redeploying project...' : 'Deploying to Vercel...'}</h3>
                     <p className="text-gray-400 text-sm mt-1">This may take a moment.</p>
                 </div>
             );
@@ -136,7 +148,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files
         if (deploymentUrl) {
             return (
                  <div className="p-6">
-                    <h3 className="text-lg font-semibold text-green-400">Deployment Successful!</h3>
+                    <h3 className="text-lg font-semibold text-green-400">{projectId ? 'Redeployment Successful!' : 'Deployment Successful!'}</h3>
                     <p className="text-sm text-gray-400 mt-1">Your project is live.</p>
                     <div className="mt-4 flex items-center bg-gray-800 border border-gray-700 rounded-lg p-2">
                         <input
@@ -162,9 +174,12 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files
         
         return (
              <div className="p-6">
-                <h2 className="text-xl font-bold">Deploy to Vercel</h2>
+                <h2 className="text-xl font-bold">{projectId ? 'Redeploy Project' : 'Deploy to Vercel'}</h2>
                 <p className="text-gray-400 mt-2 text-sm">
-                    Enter your Vercel Access Token to deploy your project. You can create a token <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">here</a>.
+                     {projectId 
+                        ? 'A new version of your project will be deployed to your existing Vercel URL.'
+                        : <>Enter your Vercel Access Token to deploy your project. You can create a token <a href="https://vercel.com/account/tokens" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">here</a>.</>
+                    }
                 </p>
                 <div className="mt-6 space-y-4">
                     <div>
@@ -192,7 +207,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, files
                             disabled={!accessToken.trim()}
                             className="bg-white text-black px-5 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                            Deploy Project
+                            {projectId ? 'Redeploy Project' : 'Deploy Project'}
                         </button>
                     </div>
                 </div>
