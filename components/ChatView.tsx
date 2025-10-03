@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BotIcon, CheckCircleIcon, LightbulbIcon } from './icons';
+import { BotIcon, CheckCircleIcon, LightbulbIcon, HashtagIcon } from './icons';
 import { ChatMessage as ChatMessageType } from '../types';
 import { Spinner } from './Spinner';
 import { ApiKeyCard } from './ApiKeyCard';
@@ -98,12 +98,34 @@ const TextMessage: React.FC<{ author: 'user' | 'ai', message: string }> = ({ aut
     );
 };
 
+const CodeContextCard: React.FC<{ code: string }> = ({ code }) => {
+    return (
+        <div className="flex items-start gap-3 my-4 justify-end">
+             <div className="p-3 rounded-2xl max-w-xs md:max-w-md bg-blue-900/50 border border-blue-700/50 text-blue-200">
+                <div className="flex items-center gap-2 text-xs font-semibold mb-2 text-blue-300">
+                    <HashtagIcon className="w-4 h-4" />
+                    <span>CODE CONTEXT</span>
+                </div>
+                <pre className="text-xs bg-black/30 p-2 rounded-md overflow-x-auto whitespace-pre-wrap max-h-32">
+                    <code>{code}</code>
+                </pre>
+            </div>
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 text-gray-300 font-bold">
+                D
+            </div>
+        </div>
+    );
+};
+
 const ChatMessage: React.FC<{ message: ChatMessageType }> = ({ message }) => {
     if (message.plan) {
         return <PlanMessage plan={message.plan} />;
     }
     if (message.apiKeyRequest) {
         return <ApiKeyCard />;
+    }
+     if (message.codeContext) {
+        return <CodeContextCard code={message.codeContext} />;
     }
     if (message.message) {
         return <TextMessage author={message.author} message={message.message} />;

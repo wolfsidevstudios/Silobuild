@@ -21,6 +21,7 @@ export const BuilderPage: React.FC = () => {
     const [projectName, setProjectName] = useState('Untitled Project');
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
     const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+    const [codeContext, setCodeContext] = useState<string | null>(null);
     
     // Deployment state
     const [vercelProjectId, setVercelProjectId] = useState<string | null>(null);
@@ -94,12 +95,22 @@ export const BuilderPage: React.FC = () => {
 
     const handleSendPrompt = async (prompt: string) => {
         setIsLoading(true);
+        
+        let fullPrompt = prompt;
+        
+        if (codeContext) {
+            fullPrompt = `Here is some context code from my editor:\n\`\`\`\n${codeContext}\n\`\`\`\n\nBased on that context, please apply this change: ${prompt}`;
+            // Remove the temporary context card from the messages
+            setMessages(prev => prev.filter(m => !m.codeContext));
+            setCodeContext(null);
+        }
+        
         const newUserMessage: ChatMessage = { author: 'user', message: prompt };
         setMessages(prev => [...prev, newUserMessage]);
 
         try {
             if (files.length > 0) {
-                const result = await modifyCode(prompt, files);
+                const result = await modifyCode(fullPrompt, files);
                 const newPlanMessage: ChatMessage = { author: 'ai', plan: { plan: result.plan, todo: result.todo } };
                 
                 const nextMessages: ChatMessage[] = [newPlanMessage];
@@ -115,7 +126,7 @@ export const BuilderPage: React.FC = () => {
                 }, 3000 + result.todo.length * 500);
 
             } else {
-                 const result = await generateInitialCode(prompt);
+                 const result = await generateInitialCode(fullPrompt);
                  const nextMessages: ChatMessage[] = [];
                  if (result.requestsApiKey) {
                     nextMessages.push({ author: 'ai', apiKeyRequest: true });
@@ -132,6 +143,26 @@ export const BuilderPage: React.FC = () => {
             setIsLoading(false);
         }
     };
+    
+    const handleFileContentChange = (fileName: string, newContent: string) => {
+        setFiles(prevFiles => 
+            prevFiles.map(file => 
+                file.name === fileName ? { ...file, content: newContent } : file
+            )
+        );
+    };
+
+    const handleFixCode = async (codeToFix: string) => {
+        const prompt = `Please analyze the following code snippet for any errors and fix them. Make sure to return the complete, corrected code for all files.\n\nCode snippet to fix:\n\`\`\`\n${codeToFix}\n\`\`\``;
+        await handleSendPrompt(prompt);
+    };
+
+    const handleAskAboutCode = (code: string) => {
+        const newContextMessage: ChatMessage = { author: 'user', codeContext: code };
+        setMessages(prev => [...prev, newContextMessage]);
+        setCodeContext(code);
+    };
+
 
     const handleDeploySuccess = ({ projectId, url }: { projectId: string; url: string }) => {
         setVercelProjectId(projectId);
@@ -152,7 +183,12 @@ export const BuilderPage: React.FC = () => {
                     <PromptInput onSend={handleSendPrompt} isLoading={isLoading} />
                 </div>
                 <div className="flex-1 flex flex-col">
-                    <WorkspaceView files={files} />
+                    <WorkspaceView 
+                        files={files} 
+                        onFileContentChange={handleFileContentChange}
+                        onFixCode={handleFixCode}
+                        onAskAboutCode={handleAskAboutCode}
+                    />
                 </div>
             </main>
             <DeployModal

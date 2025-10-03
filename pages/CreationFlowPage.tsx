@@ -4,7 +4,8 @@ import { PlanReviewView, Plan } from '../components/PlanReviewView';
 import { GeneratingView } from '../components/GeneratingView';
 import { generatePlan, generateInitialCode } from '../services/geminiService';
 import { CodeFile } from '../types';
-import { ApiKeyModal } from '../components/ApiKeyModal';
+// FIX: ApiKeyModal is no longer needed as the API key is handled by environment variables.
+// import { ApiKeyModal } from '../components/ApiKeyModal';
 
 type CreationStep = 'prompt' | 'review' | 'generating' | 'error';
 
@@ -14,7 +15,8 @@ export const CreationFlowPage: React.FC = () => {
     const [plan, setPlan] = useState<Plan | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [generatedFiles, setGeneratedFiles] = useState<CodeFile[]>([]);
-    const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+    // FIX: State for API key modal is removed.
+    // const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
 
     const proceedWithPlanGeneration = async (currentPrompt: string) => {
         setStep('review');
@@ -28,22 +30,19 @@ export const CreationFlowPage: React.FC = () => {
         }
     };
 
+    // FIX: Removed API key check. The `getApiClient` service now handles this via environment variables.
     const handlePromptSubmit = async (submittedPrompt: string) => {
         setPrompt(submittedPrompt);
-        const apiKey = localStorage.getItem('gemini_api_key');
-        if (!apiKey || apiKey.trim() === '') {
-            setIsApiKeyModalOpen(true);
-            return;
-        }
         await proceedWithPlanGeneration(submittedPrompt);
     };
 
-    const handleApiKeySave = async (apiKey: string) => {
-        localStorage.setItem('gemini_api_key', apiKey);
-        setIsApiKeyModalOpen(false);
-        // Now that key is saved, proceed with plan generation for the stored prompt
-        await proceedWithPlanGeneration(prompt);
-    };
+    // FIX: This handler is no longer needed.
+    // const handleApiKeySave = async (apiKey: string) => {
+    //     localStorage.setItem('gemini_api_key', apiKey);
+    //     setIsApiKeyModalOpen(false);
+    //     // Now that key is saved, proceed with plan generation for the stored prompt
+    //     await proceedWithPlanGeneration(prompt);
+    // };
 
     const handlePlanApprove = async () => {
         setStep('generating');
@@ -106,10 +105,11 @@ export const CreationFlowPage: React.FC = () => {
             style={backgroundStyle}
         >
             {renderContent()}
-            <ApiKeyModal
+            {/* FIX: ApiKeyModal removed from render. */}
+            {/* <ApiKeyModal
                 isOpen={isApiKeyModalOpen}
                 onSave={handleApiKeySave}
-            />
+            /> */}
         </div>
     );
 };

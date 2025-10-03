@@ -6,6 +6,7 @@ export interface ChatMessage {
         todo: string[];
     };
     apiKeyRequest?: boolean;
+    codeContext?: string;
 }
 
 export interface CodeFile {
