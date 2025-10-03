@@ -1,17 +1,13 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { CodeFile } from '../types';
 
-// FIX: Updated to align with API key and model usage guidelines.
 const getApiClient = () => {
-    // Per coding guidelines, API key must be obtained from process.env.API_KEY.
-    const apiKey = process.env.API_KEY;
+    const apiKey = localStorage.getItem('gemini_api_key');
 
     if (!apiKey) {
-        throw new Error("Gemini API Key not found. Please ensure process.env.API_KEY is set.");
+        throw new Error("Gemini API Key not found. Please add it via the pop-up or in the Settings page.");
     }
     
-    // Per coding guidelines, only 'gemini-2.5-flash' should be used for general text tasks.
-    // Model selection from UI/localStorage is not permitted.
     const modelName = 'gemini-2.5-flash';
     
     const ai = new GoogleGenAI({ apiKey });
@@ -109,8 +105,7 @@ const handleApiError = (error: unknown): never => {
     if (error instanceof Error && error.message.includes('API key not valid')) {
          throw new Error("Your Gemini API Key is not valid. Please check it in the Settings page.");
     }
-    // FIX: Updated error message to reflect API key source.
-    throw new Error("Failed to get a response from the AI. Please check your network connection and ensure the API key is correctly configured in the environment.");
+    throw new Error("Failed to get a response from the AI. Please check your network connection and API Key in Settings.");
 };
 
 export const generateInitialCode = async (prompt: string): Promise<CodeGenerationResponse> => {
