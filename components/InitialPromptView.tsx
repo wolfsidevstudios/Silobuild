@@ -19,7 +19,11 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
     };
 
     return (
-        <div className="w-full flex flex-col items-center justify-center text-center relative">
+        <div className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden">
+            {/* Animated Gradient Blobs */}
+            <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 w-[40rem] h-[40rem] blob opacity-60"></div>
+            <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-[30rem] h-[30rem] blob opacity-40" style={{ animationDelay: '-5s' }}></div>
+            
             <div className="relative z-10 w-full max-w-2xl px-4">
                 <h1 className="text-5xl md:text-6xl font-black text-white mb-4">
                     What should we build today?
