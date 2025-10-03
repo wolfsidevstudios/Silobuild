@@ -19,11 +19,10 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
     };
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden">
-            {/* Animated Gradient Blobs */}
-            <div className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3 w-screen h-screen blob opacity-70"></div>
-            <div className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3 w-screen h-screen blob opacity-50" style={{ animationDelay: '-5s' }}></div>
-            
+        <div 
+            className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(99, 36, 36, 0.5) 0%, #030712 70%)' }}
+        >
             <div className="relative z-10 w-full max-w-2xl px-4">
                 <h1 className="text-5xl md:text-6xl font-black text-white mb-4">
                     What should we build today?
@@ -33,7 +32,7 @@ export const InitialPromptView: React.FC<InitialPromptViewProps> = ({ onSubmit }
                 </p>
 
                 <form onSubmit={handleSubmit} className="w-full">
-                    <div className="bg-black/50 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-4">
+                    <div className="bg-[#2c1e1e]/70 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4">
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
